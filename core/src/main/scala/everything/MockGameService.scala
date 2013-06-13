@@ -20,11 +20,11 @@ object MockGameService extends GameService with Mockery {
     RFuture.failure(new Throwable("TODO"))
   }
 
-  def getCard (ident :CardIdent) :RFuture[Card] = {
-    RFuture.failure(new Throwable("TODO"))
+  def getCard (ident :CardIdent) = {
+    RFuture.success(FakeData.yanluoCard)
   }
 
-  def getGrid (pup :Powerup, expectHave :Boolean) :RFuture[(Grid, GameStatus)] = {
+  def getGrid (pup :Powerup, expectHave :Boolean) = {
     val grid = new Grid
     grid.gridId = 1
     grid.status = GridStatus.NORMAL
@@ -35,12 +35,12 @@ object MockGameService extends GameService with Mockery {
     RFuture.success((grid, status(42, 2, 0)))
   }
 
-  def flipCard (gridId :Int, pos :Int, expectCost :Int) :RFuture[(CardResult, GameStatus)] = {
+  def flipCard (gridId :Int, pos :Int, expectCost :Int) = {
     RFuture.success((CardResult(FakeData.yanluoCard, 5, 10, Seq()), status(42, 1, 0)))
   }
 
-  def sellCard (thingId :Int, created :Long) :RFuture[(Int, Boolean)] = {
-    RFuture.failure(new Throwable("TODO"))
+  def sellCard (thingId :Int, created :Long) = {
+    RFuture.success((99, None))
   }
 
   def getGiftCardInfo (thingId :Int, created :Long) :RFuture[(Int,Seq[FriendCardInfo])] = {

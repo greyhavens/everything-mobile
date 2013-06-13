@@ -29,6 +29,7 @@ object UI {
   def textFont (size :Int) = graphics.createFont("Helvetica", Font.Style.PLAIN, size)
 
   val cardCfg = new TextConfig(0xFF000000).withFont(textFont(12)) // TODO
+  val statusCfg = new TextConfig(0xFF000000).withFont(textFont(24)) // TODO
 
   def sheet = SimpleStyles.newSheet
 
@@ -53,6 +54,13 @@ object UI {
     val title = cardCfg.layout(card.name)
     cardCfg.renderCX(image.canvas, title, image.width/2, 2)
     // TODO: image, rarity
+    image
+  }
+
+  def statusImage (status :String) = {
+    val image = graphics.createImage(cardFront.width, cardFront.height)
+    val slay = statusCfg.layout(status)
+    statusCfg.renderCX(image.canvas, slay, image.width/2, (image.height - slay.height)/2)
     image
   }
 

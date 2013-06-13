@@ -21,6 +21,11 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
     case (card, idx) => cards.put(idx, card)
   }
 
+  val slots = RMap.create[Int,SlotStatus]
+  grid.slots.zipWithIndex.foreach {
+    case (status, idx) => slots.put(idx, status)
+  }
+
   val unflipped = RMap.create[Rarity,Int]
   grid.unflipped.zipWithIndex.foreach {
     case (count, idx) => unflipped.put(Rarity.values.apply(idx), count)
@@ -75,11 +80,20 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
 
   def cardWidget (ii :Int) = {
     val view = UI.imageButton(UI.cardBack).onClick(flipCard(ii) _)
-    cards.getView(ii).connectNotify { card :ThingCard =>
-      if (card != null) {
-        view.icon.update(Icons.image(UI.cardImage(card)))
-      }
+    slots.get(ii) match {
+      case SlotStatus.UNFLIPPED|SlotStatus.FLIPPED =>
+        cards.getView(ii).connectNotify { card :ThingCard =>
+          if (card != null) {
+            view.icon.update(Icons.image(UI.cardImage(card)))
+          }
+        }
+      case _ => // ignore
     }
+    slots.getView(ii).connectNotify { status :SlotStatus => status match {
+      case SlotStatus.GIFTED => view.icon.update(Icons.image(UI.statusImage("Gifted")))
+      case   SlotStatus.SOLD => view.icon.update(Icons.image(UI.statusImage("Sold")))
+      case _ => // ignore
+    }}
     view
   }
 
@@ -91,10 +105,10 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
           noteStatus(status)
           // TODO: delay this until after reveal animation
           cards.put(pos, result.card.toThingCard)
-          grid.slots(pos) = SlotStatus.FLIPPED // TODO reactify?
+          slots.put(pos, SlotStatus.FLIPPED)
           val r = result.card.thing.rarity
           unflipped.put(r, unflipped.get(r)-1)
-          game.screens.push(new CardScreen(game, result), game.screens.slide)
+          game.screens.push(new CardScreen(game, result, pos, slots), game.screens.slide)
       })
   }
 }

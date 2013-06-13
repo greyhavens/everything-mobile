@@ -7,7 +7,8 @@ package everything
 import playn.core.PlayN._
 import playn.core._
 import playn.core.util.Clock
-import react.{IntValue, Signal}
+import react.{IntValue, Signal, RMap}
+import scala.collection.JavaConversions._
 import tripleplay.game.{Screen, ScreenStack}
 
 import com.threerings.everything.data._
@@ -21,11 +22,13 @@ class Everything extends Game.Default(33) {
   val gameSvc :GameService = MockGameService
 
   val coins = new IntValue(0)
+  val likes = RMap.create[Int,Boolean]
 
   override def init ()  {
     keyboard.setListener(new Keyboard.Adapter {
       override def onKeyDown (event :Keyboard.Event) = keyDown.emit(event.key)
     })
+
     // wire up a 'reboot' of the UI on pressing 'r'
     keyDown.connect(slot[Key] {
       case key if (key == Key.R) =>
@@ -38,6 +41,8 @@ class Everything extends Game.Default(33) {
     val tzOffset = 0 // TODO
     everySvc.validateSession(tzOffset).onSuccess { s :SessionData =>
       coins.update(s.coins)
+      for (id <- s.likes) likes.put(id, true)
+      for (id <- s.dislikes) likes.put(id, false)
     }
 
     // TODO: push "connecting" screen while waiting for session validation?

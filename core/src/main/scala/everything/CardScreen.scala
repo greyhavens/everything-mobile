@@ -7,12 +7,14 @@ package everything
 import playn.core.PlayN.assets
 import playn.core._
 import playn.core.util.Callback
+import react.RMap
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
 
-import com.threerings.everything.data.{Card, Category, Rarity}
+import com.threerings.everything.data._
 
-class CardScreen (game :Everything, info :CardResult) extends EveryScreen(game) {
+class CardScreen (game :Everything, info :CardResult, pos :Int, slots :RMap[Int,SlotStatus])
+    extends EveryScreen(game) {
 
   override def createUI (root :Root) {
     root.add(new Label(info.card.thing.name),
@@ -23,9 +25,9 @@ class CardScreen (game :Everything, info :CardResult) extends EveryScreen(game) 
              new Label(s"Rarity: ${info.card.thing.rarity} - E${info.card.thing.rarity.saleValue}"),
              new Label(status(info.haveCount, info.thingsRemaining, info.card)),
              new Group(AxisLayout.horizontal()).add(
-               new Button("Sell"),
-               new Button("Gift"),
-               new Button("Share"),
+               new Button("Sell").onClick(sellCard _),
+               new Button("Gift").onClick(giftCard _),
+               new Button("Share").onClick(shareCard _),
                new Button("Keep").onClick(pop _)))
 
     // TODO: trophies!
@@ -60,5 +62,26 @@ class CardScreen (game :Everything, info :CardResult) extends EveryScreen(game) 
       }
     })
     label
+  }
+
+  protected def sellCard (btn :Button) {
+    game.gameSvc.sellCard(info.card.thing.thingId, info.card.received.getTime).onFailure(onFailure).
+      onSuccess(slot[(Int,Option[Boolean])] {
+        case (coins, like) =>
+          game.coins.update(coins)
+          val catId = info.card.getSeries.categoryId
+          like match {
+            case Some(like) => game.likes.put(catId, like)
+            case None => game.likes.remove(catId)
+          }
+          slots.put(pos, SlotStatus.SOLD)
+          pop()
+      })
+  }
+
+  protected def giftCard (btn :Button) {
+  }
+
+  protected def shareCard (btn :Button) {
   }
 }

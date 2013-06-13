@@ -40,7 +40,7 @@ trait GameService {
 
   /** Sells the specified card.
     * @return (player's new coin balance, new 'like' value for this category). */
-  def sellCard (thingId :Int, created :Long) :RFuture[(Int, Boolean)]
+  def sellCard (thingId :Int, created :Long) :RFuture[(Int, Option[Boolean])]
 
   /** Fetches info on `thingId` for gifting.
     * @return (number of things in `thingId`'s series, friend status of non-card-havers). */
