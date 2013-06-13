@@ -21,16 +21,16 @@ class MainMenuScreen (game :Everything) extends UIScreen {
              new Label("Game").addStyles(Style.FONT.is(UI.menuFont)),
              UI.stretchShim,
              new Group(AxisLayout.vertical.offEqualize).add(
-               new Button("Flip Cards!").addStyles(btnStyle).onClick(viewGrid),
-               new Button("News").addStyles(btnStyle).onClick(viewNews),
-               new Button("Collection").addStyles(btnStyle).onClick(viewCollection),
-               new Button("Shop").addStyles(btnStyle).onClick(viewShop)),
+               new Button("Flip Cards!").addStyles(btnStyle).onClick(viewGrid _),
+               new Button("News").addStyles(btnStyle).onClick(viewNews _),
+               new Button("Collection").addStyles(btnStyle).onClick(viewCollection _),
+               new Button("Shop").addStyles(btnStyle).onClick(viewShop _)),
              UI.stretchShim)
     root.setSize(width, height)
   }
 
   protected def viewGrid () {
-    // TODO: game.screens.push(new FlipCardsScreen(game), game.screens.slide)
+    game.screens.push(new FlipCardsScreen(game), game.screens.slide)
   }
 
   protected def viewNews () {

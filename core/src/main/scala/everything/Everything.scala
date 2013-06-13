@@ -7,13 +7,27 @@ package everything
 import playn.core.PlayN._
 import playn.core._
 import playn.core.util.Clock
-import tripleplay.game.ScreenStack
+import react.Signal
+import tripleplay.game.{Screen, ScreenStack}
 
 class Everything extends Game.Default(33) {
 
   val screens = new ScreenStack
+  val keyDown = Signal.create[Key]()
 
   override def init ()  {
+    keyboard.setListener(new Keyboard.Adapter {
+      override def onKeyDown (event :Keyboard.Event) = keyDown.emit(event.key)
+    })
+    // wire up a 'reboot' of the UI on pressing 'r'
+    keyDown.connect(slot[Key] {
+      case key if (key == Key.R) =>
+        screens.remove(new ScreenStack.Predicate {
+          def apply (screen :Screen) = true
+        })
+        screens.push(new MainMenuScreen(this))
+    })
+    // and start with our main menu
     screens.push(new MainMenuScreen(this))
   }
 
