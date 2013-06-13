@@ -2,7 +2,7 @@
 // The Everything Game - slot machine plus encyclopedia equals educational fun!
 // Copyright © 2009-2013 Three Rings Design, Inc.
 
-import react.{Slot, UnitSlot}
+import react.{AbstractSignal, AbstractValue, Slot, UnitSlot}
 
 /** Global stuffs; mostly implicits to make using React/TriplePlay more pleasant. */
 package object everything {
@@ -15,7 +15,7 @@ package object everything {
     override def onEmit = f()
   }
 
-  implicit def toReactFun[A,B] (f :A => B) = new react.Function[A,B] {
+  def rf[A,B] (f :A => B) = new react.Function[A,B] {
     def apply (a :A) = f(a)
   }
 

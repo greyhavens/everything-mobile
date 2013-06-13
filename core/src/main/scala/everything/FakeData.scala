@@ -4,7 +4,7 @@
 
 package everything
 
-import com.threerings.everything.data.{Category, Card, PlayerName, Rarity, Thing}
+import com.threerings.everything.data._
 import java.util.Date
 
 object FakeData {

@@ -7,6 +7,7 @@ package everything
 import tripleplay.game.{ScreenStack, UIScreen}
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
+import tripleplay.util.DestroyableBag
 
 abstract class EveryScreen (game :Everything) extends UIScreen {
 
@@ -19,6 +20,12 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
 
   def createUI (root :Root)
 
-  protected def popTransition :ScreenStack.Transition = game.screens.slide.left
-  protected def pop () = game.screens.remove(this, popTransition)
+  protected val onFailure = (cause :Throwable) => {
+    cause.printStackTrace(System.err) // TODO: display UI
+  }
+
+  protected def popTransition :ScreenStack.Transition = game.screens.slide.right
+  protected def pop () :Unit = game.screens.remove(this, popTransition)
+
+  protected val _dbag = new DestroyableBag
 }

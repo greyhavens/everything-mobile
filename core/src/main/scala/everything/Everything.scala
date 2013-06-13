@@ -7,13 +7,20 @@ package everything
 import playn.core.PlayN._
 import playn.core._
 import playn.core.util.Clock
-import react.Signal
+import react.{IntValue, Signal}
 import tripleplay.game.{Screen, ScreenStack}
+
+import com.threerings.everything.data._
 
 class Everything extends Game.Default(33) {
 
   val screens = new ScreenStack
   val keyDown = Signal.create[Key]()
+
+  val everySvc :EveryService = MockEveryService
+  val gameSvc :GameService = MockGameService
+
+  val coins = new IntValue(0)
 
   override def init ()  {
     keyboard.setListener(new Keyboard.Adapter {
@@ -27,7 +34,13 @@ class Everything extends Game.Default(33) {
         })
         screens.push(new MainMenuScreen(this))
     })
-    // and start with our main menu
+
+    val tzOffset = 0 // TODO
+    everySvc.validateSession(tzOffset).onSuccess { s :SessionData =>
+      coins.update(s.coins)
+    }
+
+    // TODO: push "connecting" screen while waiting for session validation?
     screens.push(new MainMenuScreen(this))
   }
 

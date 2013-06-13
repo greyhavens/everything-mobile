@@ -9,11 +9,11 @@ import tripleplay.game.UIScreen
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
 
-class MainMenuScreen (game :Everything) extends UIScreen {
+import com.threerings.everything.data._
 
-  override def wasAdded () {
-    val root = iface.createRoot(AxisLayout.vertical, UI.sheet, layer)
-    root.addStyles(Style.BACKGROUND.is(Background.image(assets.getImage("images/page_repeat.png"))))
+class MainMenuScreen (game :Everything) extends EveryScreen(game) {
+
+  override def createUI (root :Root) {
     val btnStyle = Style.FONT.is(UI.menuFont)
     root.add(UI.stretchShim,
              new Label("The").addStyles(Style.FONT.is(UI.menuFont)),
@@ -26,11 +26,16 @@ class MainMenuScreen (game :Everything) extends UIScreen {
                new Button("Collection").addStyles(btnStyle).onClick(viewCollection _),
                new Button("Shop").addStyles(btnStyle).onClick(viewShop _)),
              UI.stretchShim)
-    root.setSize(width, height)
   }
 
-  protected def viewGrid () {
-    game.screens.push(new FlipCardsScreen(game), game.screens.slide)
+  protected def viewGrid (flip :Button) {
+    // TODO: display a spinner over the button while we load the grid data
+    val pup :Powerup = null // TODO
+    val expectHave = false // TODO
+    game.gameSvc.getGrid(pup, expectHave).onFailure(onFailure).onSuccess(slot[(Grid,GameStatus)] {
+      case (grid, status) =>
+        game.screens.push(new FlipCardsScreen(game, status, grid), game.screens.slide)
+    })
   }
 
   protected def viewNews () {

@@ -12,23 +12,34 @@ import tripleplay.ui.layout.AxisLayout
 
 import com.threerings.everything.data.{Card, Category, Rarity}
 
-class CardScreen (game :Everything, card :Card) extends EveryScreen(game) {
+class CardScreen (game :Everything, info :CardResult) extends EveryScreen(game) {
 
   override def createUI (root :Root) {
-    // could also be "You already have this card"
-    val status = "You have 5 of 10 " + card.getSeries.name
-    root.add(new Label(card.thing.name),
-             new Label(Category.getHierarchy(card.categories)),
-             new Label(s"${card.position} of ${card.things}"),
+    root.add(new Label(info.card.thing.name),
+             new Label(Category.getHierarchy(info.card.categories)),
+             new Label(s"${info.card.position} of ${info.card.things}"),
              // TODO: tap image to flip card over
-             AxisLayout.stretch(imageLabel(card.thing.image)),
-             new Label(s"Rarity: ${card.thing.rarity} - E${card.thing.rarity.saleValue}"),
-             new Label(status),
+             AxisLayout.stretch(imageLabel(info.card.thing.image)),
+             new Label(s"Rarity: ${info.card.thing.rarity} - E${info.card.thing.rarity.saleValue}"),
+             new Label(status(info.haveCount, info.thingsRemaining, info.card)),
              new Group(AxisLayout.horizontal()).add(
                new Button("Sell"),
                new Button("Gift"),
                new Button("Share"),
-               new Button("Keep")))
+               new Button("Keep").onClick(pop _)))
+
+    // TODO: trophies!
+  }
+
+  def status (have :Int, remain :Int, card :Card) = {
+    if (have > 1) s"You already have $have of these cards."
+    else if (have > 0) "You already have this card."
+    else if (remain == 1) "You only need one more card to complete this series!"
+    else if (remain == 0) s"You have completed the ${card.getSeries.name} series!"
+    else {
+      val total = card.getSeries.things
+      "You have ${total - remain} of $total ${card.getSeries.name}."
+    }
   }
 
   def imageLabel (hash :String) = {
@@ -36,7 +47,7 @@ class CardScreen (game :Everything, card :Card) extends EveryScreen(game) {
       override def getStyleClass = classOf[Label]
     }
     label.onClick(unitSlot {
-      game.screens.push(new CardBackScreen(game, card), game.screens.flip)
+      game.screens.push(new CardBackScreen(game, info.card), game.screens.flip)
     })
     val image = assets.getRemoteImage( // TODO: more proper
       s"http://s3.amazonaws.com/everything.threerings.net/${hash}.jpg")
