@@ -58,7 +58,7 @@ trait GameService {
 
   /** Fetches info for this player's shop.
     * @return (player's current coin balance, player's current powerup counts) */
-  def getShopInfo () :RFuture[(Int, Map[Powerup,Int])]
+  def getShopInfo () :RFuture[(Int, java.util.Map[Powerup,JInteger])]
 
   /** Buys the specified powerup. */
   def buyPowerup (pup :Powerup) :RFuture[Unit]

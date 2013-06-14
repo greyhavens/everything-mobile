@@ -23,6 +23,7 @@ class Everything extends Game.Default(33) {
 
   val coins = new IntValue(0)
   val likes = RMap.create[Int,Boolean]
+  val pups = RMap.create[Powerup,JInteger]
 
   override def init ()  {
     keyboard.setListener(new Keyboard.Adapter {
@@ -34,6 +35,7 @@ class Everything extends Game.Default(33) {
       coins.update(s.coins)
       for (id <- s.likes) likes.put(id, true)
       for (id <- s.dislikes) likes.put(id, false)
+      pups.putAll(s.powerups)
     }
 
     // TODO: push "connecting" screen while waiting for session validation?

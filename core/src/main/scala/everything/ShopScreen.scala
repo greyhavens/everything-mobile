@@ -12,6 +12,14 @@ import com.threerings.everything.data._
 class ShopScreen (game :Everything) extends EveryScreen(game) {
 
   override def createUI (root :Root) {
+    // refresh our powerup and coin state
+    game.gameSvc.getShopInfo().onSuccess(slot {
+      case (coins, pups) =>
+        game.coins.update(coins)
+        game.pups.putAll(pups)
+    })
+
+    // and build our UI
     def headerLabel (text :String) = new Label(text).addStyles(Style.FONT.is(UI.headerFont))
 
     val (cd, cl, cr) = (TableLayout.COL.fixed, TableLayout.COL.alignLeft,
@@ -27,13 +35,19 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
     val pups = new Group(new TableLayout(cd, cl, cr, cd).gaps(10, 5)).
       setStylesheet(Stylesheet.builder.add(classOf[Label], Style.FONT.is(UI.textFont(10))).create)
 
-    pups.add(UI.shim(5, 5), headerLabel("Powerup (Have)"), headerLabel("Cost"), UI.shim(5, 5))
+    pups.add(UI.shim(5, 5), headerLabel("Powerup"), headerLabel("Cost"), UI.shim(5, 5))
 
     PupInfo foreach { case (pup, name, descrip) =>
+      val descVal = game.pups.getView(pup).map(rf { (_ :JInteger) match {
+        case null  => descrip
+        case count => s"descrip (Have ${count}.)"
+      }})
+      val descLbl = new Label()
+      _dbag.add(descVal.connectNotify(descLbl.text.slot))
       pups.add(new Label(Icons.image(UI.getImage(s"pup/${pup.name.toLowerCase}.png"))),
-               new Group(AxisLayout.vertical, Style.HALIGN.left).add(
-                 new Label(name + " (?)"),
-                 new Label(descrip).addStyles(Style.HALIGN.left, Style.TEXT_WRAP.on)),
+               new Group(AxisLayout.vertical.gap(1), Style.HALIGN.left).add(
+                 new Label(name),
+                 descLbl.addStyles(Style.HALIGN.left, Style.TEXT_WRAP.on)),
                new Group(AxisLayout.vertical, Style.HALIGN.right).add(
                  UI.moneyIcon(pup.cost),
                  new Label(if (pup.charges > 1) s"for ${pup.charges}" else "")),

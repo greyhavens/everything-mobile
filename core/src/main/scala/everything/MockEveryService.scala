@@ -4,9 +4,7 @@
 
 package everything
 
-import java.lang.{Integer => JInteger}
 import java.util.{ArrayList, HashMap}
-
 import react.RFuture
 
 import com.threerings.everything.data._

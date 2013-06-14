@@ -4,7 +4,7 @@
 
 package everything
 
-import java.util.Date
+import java.util.{Date, HashMap}
 import react.{IntValue, RFuture}
 
 import com.threerings.everything.data._
@@ -14,6 +14,7 @@ object MockGameService extends GameService with Mockery {
 
   val coins = new IntValue(42)
   val freeFlips = new IntValue(2)
+  val pups = new HashMap[Powerup,JInteger]
 
   val grid = {
     val grid = new Grid
@@ -92,16 +93,21 @@ object MockGameService extends GameService with Mockery {
     RFuture.failure(new Throwable("TODO"))
   }
 
-  def getShopInfo () :RFuture[(Int, Map[Powerup,Int])] = {
-    RFuture.failure(new Throwable("TODO"))
-  }
+  def getShopInfo () = RFuture.success((coins.get, pups))
 
   def buyPowerup (pup :Powerup) :RFuture[Unit] = {
     RFuture.failure(new Throwable("TODO"))
   }
 
   def usePowerup (gridId :Int, pup :Powerup) :RFuture[Grid] = {
-    RFuture.failure(new Throwable("TODO"))
+    def unbox (count :JInteger) = if (count == null) 0 else count.intValue
+    unbox(pups.get(pup)) match {
+      case 0 => RFuture.failure(new Throwable("Lack powerup"))
+      case n =>
+        pups.put(pup, n-1)
+        // TODO: apply powerup to grid?
+        RFuture.success(grid)
+    }
   }
 
   protected def status (unflipped :Array[Int]) :GameStatus = {

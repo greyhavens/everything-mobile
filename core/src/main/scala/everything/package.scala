@@ -7,6 +7,8 @@ import react.{AbstractSignal, AbstractValue, Slot, UnitSlot}
 /** Global stuffs; mostly implicits to make using React/TriplePlay more pleasant. */
 package object everything {
 
+  type JInteger = java.lang.Integer
+
   implicit def toSlot[A] (f :Function1[A,_]) = new Slot[A] {
     override def onEmit (value :A) = f(value)
   }
