@@ -56,14 +56,16 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   def pop () :Unit = game.screens.remove(this, popTransition)
   protected def popTransition :ScreenStack.Transition = game.screens.slide.right
 
+  def createUI (root :Root)
+
   override def wasAdded () {
     val root = iface.createRoot(AxisLayout.vertical, UI.sheet, layer)
-    root.addStyles(Style.BACKGROUND.is(Background.image(_pageRepeat).inset(10)))
+    root.addStyles(Style.BACKGROUND.is(background))
     createUI(root)
     root.setSize(width, height)
   }
 
-  def createUI (root :Root)
+  protected def background :Background = Background.image(_pageRepeat).inset(10)
 
   protected val onFailure = (cause :Throwable) => {
     cause.printStackTrace(System.err) // TODO: display UI
