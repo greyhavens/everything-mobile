@@ -23,7 +23,7 @@ class CardScreen (game :Everything, cache :UI.ImageCache, info :CardResult,
              new Label(s"Rarity: ${info.card.thing.rarity} - E${info.card.thing.rarity.value}"),
              new Label(status(info.haveCount, info.thingsRemaining, info.card)),
              new Group(AxisLayout.horizontal().gap(15)).add(
-               new Button("Sell").onClick(sellCard _),
+               new Button("Sell").onClick(maybeSellCard _),
                new Button("Gift").onClick(giftCard _),
                new Button("Share").onClick(shareCard _),
                new Button("Keep").onClick(pop _)))
@@ -60,7 +60,15 @@ class CardScreen (game :Everything, cache :UI.ImageCache, info :CardResult,
     label
   }
 
-  protected def sellCard (btn :Button) {
+  protected def maybeSellCard (btn :Button) {
+    val amount = info.card.thing.rarity.saleValue
+    new Dialog(s"Sell Card", s"Sell ${info.card.thing.name} for E $amount") {
+      override def okLabel = "Yes"
+      override def cancelLabel = "No"
+    }.onOK(sellCard).display()
+  }
+
+  protected def sellCard () {
     game.gameSvc.sellCard(info.card.thing.thingId, info.card.received.getTime).onFailure(onFailure).
       onSuccess(slot[(Int,Option[Boolean])] {
         case (coins, like) =>

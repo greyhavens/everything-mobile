@@ -38,6 +38,7 @@ object UI {
 
   val titleFont = graphics.createFont("Helvetica", Font.Style.BOLD, 48)
   val menuFont = graphics.createFont("Helvetica", Font.Style.BOLD, 24)
+  val headerFont = graphics.createFont("Helvetica", Font.Style.BOLD, 16);
   def textFont (size :Int) = graphics.createFont("Helvetica", Font.Style.PLAIN, size)
 
   val cardCfg = new TextConfig(textColor).withFont(textFont(12)) // TODO

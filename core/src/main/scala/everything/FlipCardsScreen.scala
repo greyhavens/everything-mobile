@@ -4,7 +4,7 @@
 
 package everything
 
-import react.{IntValue, RMap}
+import react.{Functions, IntValue, RMap, Values}
 import tripleplay.ui._
 import tripleplay.ui.layout.{AxisLayout, TableLayout}
 
@@ -34,21 +34,22 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
   val cache = new UI.ImageCache
 
   override def createUI (root :Root) {
+    val haveFree = freeFlips.map(Functions.greaterThan(0))
+    val lackFree = freeFlips.map(Functions.lessThanEqual(0))
+    val showNextFree = Values.and(lackFree, nextFlipCost.map(Functions.greaterThan(0)))
+    val showNoFlips = Values.and(lackFree, nextFlipCost.map(Functions.lessThanEqual(0)))
+
     val header = new Group(AxisLayout.horizontal()).add(
       new Button("Back").onClick(unitSlot { pop() }),
       UI.shim(15, 5),
-      new Group(new TableLayout(TableLayout.COL, TableLayout.COL.alignRight).gaps(0, 10)).add(
-        // TODO: display next flip cost here instead of free flips when out of free flips
-        //   if (status.freeFlips > 0) {
-        //     _info.at(0, 0).setText("Free flips left: " + status.freeFlips);
-        //   } else if (status.nextFlipCost > 0) {
-        //     _info.at(0, 0).setWidget(new CoinLabel("Next flip costs ", status.nextFlipCost));
-        //   } else {
-        //     _info.at(0, 0).setText("No more flips.");
-        //   }
-        //   _info.at(0, 1).setWidget(new CoinLabel("You have ", _ctx.getCoins()), "right");
-        new Label("Free flips:"), new ValueLabel(freeFlips),
-        new Label("You have:"), UI.moneyIcon(game.coins, _dbag)))
+      new Group(new TableLayout(TableLayout.COL.alignRight,
+                                TableLayout.COL.alignRight).gaps(0, 10)).add(
+        new Label("You have:"), UI.moneyIcon(game.coins, _dbag),
+        new Label("Free flips:").bindVisible(haveFree),
+        new ValueLabel(freeFlips).bindVisible(haveFree),
+        new Label("Next flip:").bindVisible(showNextFree),
+        UI.moneyIcon(nextFlipCost, _dbag).bindVisible(showNextFree),
+        TableLayout.colspan(new Label("No more flips.").bindVisible(showNoFlips), 2)))
 
     val cards = new Group(new TableLayout(4).gaps(10, 10))
     for (ii <- 0 until 16) cards.add(cardWidget(ii))
@@ -104,7 +105,16 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
       case SlotStatus.UNFLIPPED|SlotStatus.FLIPPED =>
         // TODO: shake the card or display a spinner to indicate that we're loading
         game.gameSvc.flipCard(grid.gridId, pos, nextFlipCost.get).
-          onFailure(onFailure).onSuccess(slot[(CardResult, GameStatus)] {
+          onFailure((cause :Throwable) => cause.getMessage match {
+            case "e.nsf_for_flip" =>
+              new Dialog("Oops, Out of Coins!", "Wait 'til tomorrow for more free flips?\n" +
+                "Or get coins now and keep flipping!") {
+                override def cancelLabel = "Wait"
+                override def okLabel = "Get Coins!"
+              }.onOK(new ShopScreen(game).push()).display()
+            case _ => onFailure.apply(cause)
+          }).
+          onSuccess(slot[(CardResult, GameStatus)] {
             case (result, status) =>
               noteStatus(status)
               // TODO: delay this until after reveal animation
@@ -115,7 +125,7 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
               game.screens.push(new CardScreen(game, cache, result, slots.put(pos, _)),
                                 game.screens.slide)
           })
-      case _ => // nada, we sold or gifted it
+      case _ => // nada, we have already sold or gifted it
     }
   }
 }

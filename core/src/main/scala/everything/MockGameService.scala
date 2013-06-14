@@ -54,7 +54,7 @@ object MockGameService extends GameService with Mockery {
       case SlotStatus.UNFLIPPED =>
         val cost = nextFlipCost(grid.unflipped)
         // charge 'em
-        if (freeFlips.get == 0 && coins.get < cost) RFuture.failure(new Exception("NSF!"))
+        if (freeFlips.get == 0 && coins.get < cost) RFuture.failure(new Exception("e.nsf_for_flip"))
         else {
           if (freeFlips.get > 0) freeFlips.decrementClamp(1, 0)
           else coins.decrementClamp(cost, 0)

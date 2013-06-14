@@ -9,7 +9,7 @@ import playn.core._
 import playn.core.util.Clock
 import react.{IntValue, Signal, RMap}
 import scala.collection.JavaConversions._
-import tripleplay.game.{Screen, ScreenStack}
+import tripleplay.game.ScreenStack
 
 import com.threerings.everything.data._
 
@@ -29,15 +29,6 @@ class Everything extends Game.Default(33) {
       override def onKeyDown (event :Keyboard.Event) = keyDown.emit(event.key)
     })
 
-    // wire up a 'reboot' of the UI on pressing 'r'
-    keyDown.connect(slot[Key] {
-      case key if (key == Key.R) =>
-        screens.remove(new ScreenStack.Predicate {
-          def apply (screen :Screen) = true
-        })
-        screens.push(new MainMenuScreen(this))
-    })
-
     val tzOffset = 0 // TODO
     everySvc.validateSession(tzOffset).onSuccess { s :SessionData =>
       coins.update(s.coins)
@@ -46,7 +37,7 @@ class Everything extends Game.Default(33) {
     }
 
     // TODO: push "connecting" screen while waiting for session validation?
-    screens.push(new MainMenuScreen(this))
+    new MainMenuScreen(this).push()
   }
 
   override def update (delta :Int) {

@@ -33,20 +33,19 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
     val pup :Powerup = null // TODO
     val expectHave = false // TODO
     game.gameSvc.getGrid(pup, expectHave).onFailure(onFailure).onSuccess(slot[(Grid,GameStatus)] {
-      case (grid, status) =>
-        game.screens.push(new FlipCardsScreen(game, status, grid), game.screens.slide)
+      case (grid, status) => new FlipCardsScreen(game, status, grid).push()
     })
   }
 
   protected def viewNews () {
-    // TODO: game.screens.push(new NewsScreen(game), game.screens.slide)
+    // TODO: new NewsScreen(game).push()
   }
 
   protected def viewCollection () {
-    // TODO: game.screens.push(new CollectionScreen(game), game.screens.slide)
+    // TODO: new CollectionScreen(game).push()
   }
 
   protected def viewShop () {
-    // TODO: game.screens.push(new ShopScreen(game), game.screens.slide)
+    new ShopScreen(game).push()
   }
 }
