@@ -7,18 +7,23 @@ package everything
 import playn.core.{Layer, Pointer}
 import pythagoras.f.Point
 import tripleplay.ui._
+import tripleplay.ui.layout.TableLayout
 
 import com.threerings.everything.data.{Card, Category}
 
 class CardBackScreen (game :Everything, card :Card) extends EveryScreen(game) {
 
   override def createUI (root :Root) {
+    root.setStylesheet(Stylesheet.builder.add(classOf[Label], Style.HALIGN.left).create)
     root.add(new Label(card.thing.name),
              new Label(Category.getHierarchy(card.categories)),
              new Label(s"${card.position} of ${card.things}"),
+             UI.shim(5, 5),
              new Label(card.thing.descrip).addStyles(Style.TEXT_WRAP.on),
+             UI.shim(5, 5),
              new Label("Facts:"),
-             new Label(card.thing.facts).addStyles(Style.TEXT_WRAP.on),
+             formatFacts(card.thing.facts.split("\n")),
+             UI.shim(5, 5),
              new Label("Source: " + nameSource(card.thing.source)), // TODO: link
              new Label("Flipped on: " + card.received))
 
@@ -41,5 +46,10 @@ class CardBackScreen (game :Everything, card :Card) extends EveryScreen(game) {
     }
   }
 
-  override protected def popTransition = game.screens.flip.unflip
+  def formatFacts (facts :Array[String]) = {
+    (new Group(new TableLayout(TableLayout.COL.fixed, TableLayout.COL.stretch).alignTop.gaps(5, 5)) /: facts)((g, f) =>
+      g.add(new Label("•"), new Label(f).addStyles(Style.TEXT_WRAP.on)))
+  }
+
+  override protected def popTransition = game.screens.flip.unflip.duration(400)
 }

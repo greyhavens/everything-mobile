@@ -4,17 +4,15 @@
 
 package everything
 
-import playn.core.PlayN.assets
 import playn.core._
 import playn.core.util.Callback
-import react.RMap
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
 
 import com.threerings.everything.data._
 
-class CardScreen (game :Everything, info :CardResult, pos :Int, slots :RMap[Int,SlotStatus])
-    extends EveryScreen(game) {
+class CardScreen (game :Everything, cache :UI.ImageCache, info :CardResult,
+                  upStatus :SlotStatus => Unit) extends EveryScreen(game) {
 
   override def createUI (root :Root) {
     root.add(new Label(info.card.thing.name),
@@ -22,9 +20,9 @@ class CardScreen (game :Everything, info :CardResult, pos :Int, slots :RMap[Int,
              new Label(s"${info.card.position} of ${info.card.things}"),
              // TODO: tap image to flip card over
              AxisLayout.stretch(imageLabel(info.card.thing.image)),
-             new Label(s"Rarity: ${info.card.thing.rarity} - E${info.card.thing.rarity.saleValue}"),
+             new Label(s"Rarity: ${info.card.thing.rarity} - E${info.card.thing.rarity.value}"),
              new Label(status(info.haveCount, info.thingsRemaining, info.card)),
-             new Group(AxisLayout.horizontal()).add(
+             new Group(AxisLayout.horizontal().gap(15)).add(
                new Button("Sell").onClick(sellCard _),
                new Button("Gift").onClick(giftCard _),
                new Button("Share").onClick(shareCard _),
@@ -49,11 +47,9 @@ class CardScreen (game :Everything, info :CardResult, pos :Int, slots :RMap[Int,
       override def getStyleClass = classOf[Label]
     }
     label.onClick(unitSlot {
-      game.screens.push(new CardBackScreen(game, info.card), game.screens.flip)
+      game.screens.push(new CardBackScreen(game, info.card), game.screens.flip.duration(400))
     })
-    val image = assets.getRemoteImage( // TODO: more proper
-      s"http://s3.amazonaws.com/everything.threerings.net/${hash}.jpg")
-    image.addCallback(new Callback[Image] {
+    cache(hash).addCallback(new Callback[Image] {
       def onSuccess (image :Image) {
         label.icon.update(Icons.image(image))
       }
@@ -74,7 +70,7 @@ class CardScreen (game :Everything, info :CardResult, pos :Int, slots :RMap[Int,
             case Some(like) => game.likes.put(catId, like)
             case None => game.likes.remove(catId)
           }
-          slots.put(pos, SlotStatus.SOLD)
+          upStatus(SlotStatus.SOLD)
           pop()
       })
   }

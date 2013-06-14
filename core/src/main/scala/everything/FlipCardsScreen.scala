@@ -31,6 +31,8 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
     case (count, idx) => unflipped.put(Rarity.values.apply(idx), count)
   }
 
+  val cache = new UI.ImageCache
+
   override def createUI (root :Root) {
     val header = new Group(AxisLayout.horizontal()).add(
       new Button("Back").onClick(unitSlot { pop() }),
@@ -84,31 +86,36 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
       case SlotStatus.UNFLIPPED|SlotStatus.FLIPPED =>
         cards.getView(ii).connectNotify { card :ThingCard =>
           if (card != null) {
-            view.icon.update(Icons.image(UI.cardImage(card)))
+            view.icon.update(Icons.image(UI.cardImage(cache, card)))
           }
         }
       case _ => // ignore
     }
     slots.getView(ii).connectNotify { status :SlotStatus => status match {
-      case SlotStatus.GIFTED => view.icon.update(Icons.image(UI.statusImage("Gifted")))
-      case   SlotStatus.SOLD => view.icon.update(Icons.image(UI.statusImage("Sold")))
+      case SlotStatus.GIFTED => view.icon.update(Icons.image(UI.statusImage("Gifted!")))
+      case   SlotStatus.SOLD => view.icon.update(Icons.image(UI.statusImage("Sold!")))
       case _ => // ignore
     }}
     view
   }
 
   def flipCard (pos :Int)(btn :Button) {
-    // TODO: shake the card or display a spinner to indicate that we're loading
-    game.gameSvc.flipCard(grid.gridId, pos, nextFlipCost.get).
-      onFailure(onFailure).onSuccess(slot[(CardResult, GameStatus)] {
-        case (result, status) =>
-          noteStatus(status)
-          // TODO: delay this until after reveal animation
-          cards.put(pos, result.card.toThingCard)
-          slots.put(pos, SlotStatus.FLIPPED)
-          val r = result.card.thing.rarity
-          unflipped.put(r, unflipped.get(r)-1)
-          game.screens.push(new CardScreen(game, result, pos, slots), game.screens.slide)
-      })
+    slots.get(pos) match {
+      case SlotStatus.UNFLIPPED|SlotStatus.FLIPPED =>
+        // TODO: shake the card or display a spinner to indicate that we're loading
+        game.gameSvc.flipCard(grid.gridId, pos, nextFlipCost.get).
+          onFailure(onFailure).onSuccess(slot[(CardResult, GameStatus)] {
+            case (result, status) =>
+              noteStatus(status)
+              // TODO: delay this until after reveal animation
+              cards.put(pos, result.card.toThingCard)
+              slots.put(pos, SlotStatus.FLIPPED)
+              val r = result.card.thing.rarity
+              unflipped.put(r, unflipped.get(r)-1)
+              game.screens.push(new CardScreen(game, cache, result, slots.put(pos, _)),
+                                game.screens.slide)
+          })
+      case _ => // nada, we sold or gifted it
+    }
   }
 }

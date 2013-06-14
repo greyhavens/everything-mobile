@@ -16,6 +16,10 @@ object FakeData {
   val general = category(2, "General", 1, mikeD)
   val psychopomps = category(3, "Psychopomps", 2, mikeD)
 
+  val cuisine = category(4, "Cuisine", 0, mikeB)
+  val british = category(5, "British", 4, mikeD)
+  val chocolates = category(6, "UK Chocolates", 5, mikeD)
+
   val yanluo = thing(
     id = 1,
     categoryId = psychopomps.categoryId,
@@ -33,8 +37,27 @@ object FakeData {
     creator = mikeD
   )
 
-  val yanluoCard = card(
-    mikeB, Array(mythology, general, psychopomps), yanluo, 6, 10, new Date(), mikeD)
+  def yanluoCard (created :Long) = card(
+    mikeB, Array(mythology, general, psychopomps), yanluo, 6, 10, new Date(created), mikeD)
+
+  val maltesers = thing(
+    id = 2,
+    categoryId = chocolates.categoryId,
+    name = "Maltesers",
+    rarity = Rarity.I,
+    image = "31ea1e7601351b4eacd43b36b674ff823e9e29f4",
+    descrip = "Maltesers are a confectionery product manufactured by Mars, Incorporated.",
+    facts = "Maltesers consist of a roughly spherical malt honeycomb centre, " +
+      "surrounded by milk chocolate.\n" +
+      "Maltesers were created by Forrest Mars, Sr. in 1936, and originally known " +
+      "as \"Energy Balls\"\n" +
+      "The current Maltesers' slogan is \"The lighter way to enjoy chocolate\"",
+    source = "http://en.wikipedia.org/wiki/Maltesers",
+    creator = mikeD
+  )
+
+  def maltesersCard (created :Long) = card(
+    mikeB, Array(cuisine, british, chocolates), maltesers, 3, 15, new Date(created), mikeD)
 
   def player (name :String, surname :String, userId :Int, fbId :Long) = {
     val nm = PlayerName.create(userId)

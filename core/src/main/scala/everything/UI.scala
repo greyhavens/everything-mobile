@@ -4,8 +4,11 @@
 
 package everything
 
-import playn.core._
+import scala.collection.mutable.{Map => MMap}
+
 import playn.core.PlayN._
+import playn.core._
+import playn.core.util.Callback
 
 import react.Functions
 import react.IntValue
@@ -19,6 +22,15 @@ import com.threerings.everything.data.ThingCard
 
 object UI {
 
+  class ImageCache {
+    def apply (hash :String) :Image = {
+      _images.getOrElseUpdate(hash, assets.getRemoteImage( // TODO: more proper
+        s"http://s3.amazonaws.com/everything.threerings.net/${hash}.jpg"))
+    }
+    private val _images = MMap[String,Image]()
+  }
+
+  val textColor = 0xFF442D17
   val coinsIcon = getImage("money.png")
   val cardFront = getImage("card_front.png")
   val cardBack = getImage("card_back.png")
@@ -28,8 +40,8 @@ object UI {
   val menuFont = graphics.createFont("Helvetica", Font.Style.BOLD, 24)
   def textFont (size :Int) = graphics.createFont("Helvetica", Font.Style.PLAIN, size)
 
-  val cardCfg = new TextConfig(0xFF000000).withFont(textFont(12)) // TODO
-  val statusCfg = new TextConfig(0xFF000000).withFont(textFont(24)) // TODO
+  val cardCfg = new TextConfig(textColor).withFont(textFont(12)) // TODO
+  val statusCfg = new TextConfig(textColor).withFont(textFont(24)) // TODO
 
   def sheet = SimpleStyles.newSheet
 
@@ -40,21 +52,36 @@ object UI {
   def shim (width :Float, height :Float) = new Shim(width, height)
 
   /** Creates a label that displays a currency amount. */
-  def moneyIcon (coins :IntValue, dbag :DestroyableBag) = {
-    val label = new Label(coinsIcon)
+  def moneyIcon (coins :Int) = new Label(coins.toString, Icons.image(coinsIcon))
+
+  /** Creates a label that displays a (reactive) currency amount. */
+  def moneyIcon (coins :IntValue, dbag :DestroyableBag) :Label = {
+    val label = moneyIcon(0)
     dbag.add(coins.map(Functions.TO_STRING).connectNotify(label.text.slot()))
     label
   }
 
   def getImage (path :String) = assets.getImage(s"images/$path")
 
-  def cardImage (card :ThingCard) = {
-    val image = graphics.createImage(cardFront.width, cardFront.height)
-    image.canvas.drawImage(cardFront, 0, 0)
+  def cardImage (cache :ImageCache, card :ThingCard) = {
+    val cardimg = graphics.createImage(cardFront.width, cardFront.height)
+    cardimg.canvas.drawImage(cardFront, 0, 0)
     val title = cardCfg.layout(card.name)
-    cardCfg.renderCX(image.canvas, title, image.width/2, 2)
-    // TODO: image, rarity
-    image
+    cardCfg.renderCX(cardimg.canvas, title, cardimg.width/2, 2)
+    cache(card.image).addCallback(new Callback[Image] {
+      def onSuccess (thing :Image) {
+        // these are hardcoded because the image is asymmetric and has built-in shadow... blah.
+        val scale = math.min(42/thing.width, 50/thing.height)
+        val (swidth, sheight) = (thing.width*scale, thing.height*scale)
+        val (sx, sy) = (math.round((64-swidth)/2), math.round((78-sheight)/2))
+        cardimg.canvas.setFillColor(textColor).fillRect(sx-1, sy-1, swidth+2, sheight+2)
+        cardimg.canvas.drawImage(thing, sx, sy, swidth, sheight)
+      }
+      def onFailure (cause :Throwable) {} // nada
+    })
+    val rarity = cardCfg.layout(card.rarity.toString)
+    cardCfg.renderCX(cardimg.canvas, rarity, cardimg.width/2, cardimg.height-rarity.height-2)
+    cardimg
   }
 
   def statusImage (status :String) = {
