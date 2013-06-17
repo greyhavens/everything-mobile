@@ -13,6 +13,8 @@ import com.threerings.everything.data._
 
 class MainMenuScreen (game :Everything) extends EveryScreen(game) {
 
+  // TODO: disable things until game.authed is true
+
   override def createUI (root :Root) {
     val btnStyle = Style.FONT.is(UI.menuFont)
     root.add(UI.stretchShim,
