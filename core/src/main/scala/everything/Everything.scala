@@ -42,15 +42,6 @@ class Everything (fb :Facebook) extends Game.Default(33) {
     val main = new MainMenuScreen(this);
     main.push()
 
-    auth()
-
-    keyDown.connect(slot[Key] {
-      case key if (key == Key.A) => auth()
-    })
-  }
-
-  protected def auth () {
-    println("Authing!")
     // make sure we're authed with Facebook and then auth with the Everything server
     fb.authenticate().flatMap(rf { fbId :String =>
       val tzOffset = 0 // TODO
