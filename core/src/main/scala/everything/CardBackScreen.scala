@@ -17,7 +17,7 @@ class CardBackScreen (game :Everything, card :Card) extends EveryScreen(game) {
     root.setStylesheet(Stylesheet.builder.add(classOf[Label], Style.HALIGN.left).create)
     root.add(new Label(card.thing.name),
              new Label(Category.getHierarchy(card.categories)),
-             new Label(s"${card.position} of ${card.things}"),
+             new Label(s"${card.position+1} of ${card.things}"),
              UI.shim(5, 5),
              new Label(card.thing.descrip).addStyles(Style.TEXT_WRAP.on),
              UI.shim(5, 5),

@@ -18,10 +18,12 @@ class Everything (fb :Facebook) extends Game.Default(33) {
   val screens = new ScreenStack
   val keyDown = Signal.create[Key]()
 
-  val svcURL = "http://localhost:8080/json/" // TODO
-  val everySvc :EveryService = new EveryServiceClient(this, svcURL + "everything")
-  val gameSvc  :GameService  = MockGameService
+  val mock = false
+  val svcURL = "http://everything-candidate.herokuapp.com/json/" // TODO
+  val everySvc :EveryService = if (mock) MockEveryService else new EveryServiceClient(this, svcURL)
+  val gameSvc  :GameService  = if (mock) MockGameService  else new GameServiceClient(this, svcURL)
 
+  val self = Value.create[PlayerName](null)
   val authed = Value.create(false)
   val coins = new IntValue(0)
   val likes = RMap.create[Int,Boolean]
@@ -47,6 +49,7 @@ class Everything (fb :Facebook) extends Game.Default(33) {
       val tzOffset = 0 // TODO
       everySvc.validateSession(fbId, fb.authToken, tzOffset)
     }).onFailure(onFailure).onSuccess { s :SessionData =>
+      self.update(s.name)
       coins.update(s.coins)
       for (id <- s.likes) likes.put(id, true)
       for (id <- s.dislikes) likes.put(id, false)

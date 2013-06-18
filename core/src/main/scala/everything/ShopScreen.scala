@@ -13,10 +13,9 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
 
   override def createUI (root :Root) {
     // refresh our powerup and coin state
-    game.gameSvc.getShopInfo().onSuccess(slot {
-      case (coins, pups) =>
-        game.coins.update(coins)
-        game.pups.putAll(pups)
+    game.gameSvc.getShopInfo().onSuccess(slot { res =>
+      game.coins.update(res.coins)
+      game.pups.putAll(res.pups)
     })
 
     // and build our UI

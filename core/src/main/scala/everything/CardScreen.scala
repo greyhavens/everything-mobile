@@ -10,19 +10,27 @@ import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
 
 import com.threerings.everything.data._
+import com.threerings.everything.rpc.JSON._
 
-class CardScreen (game :Everything, cache :UI.ImageCache, info :CardResult,
+class CardScreen (game :Everything, cache :UI.ImageCache, card :Card, counts :Option[(Int,Int)],
                   upStatus :SlotStatus => Unit) extends EveryScreen(game) {
 
+  def this (game :Everything, cache :UI.ImageCache, info :CardResult, upStatus :SlotStatus => Unit) =
+    this(game, cache, info.card, Some(info.haveCount -> info.thingsRemaining), upStatus)
+
   override def createUI (root :Root) {
-    root.add(new Label(info.card.thing.name),
-             new Label(Category.getHierarchy(info.card.categories)),
-             new Label(s"${info.card.position} of ${info.card.things}"),
+    root.add(new Label(card.thing.name),
+             new Label(Category.getHierarchy(card.categories)),
+             new Label(s"${card.position+1} of ${card.things}"),
              // TODO: tap image to flip card over
-             AxisLayout.stretch(imageLabel(info.card.thing.image)),
-             new Label(s"Rarity: ${info.card.thing.rarity} - E${info.card.thing.rarity.value}"),
-             new Label(status(info.haveCount, info.thingsRemaining, info.card)),
-             new Group(AxisLayout.horizontal().gap(15)).add(
+             AxisLayout.stretch(imageLabel(card.thing.image)),
+             new Label(s"Rarity: ${card.thing.rarity} - E${card.thing.rarity.value}"))
+    counts match {
+      case Some((haveCount, thingsRemaining)) =>
+        root.add(new Label(status(haveCount, thingsRemaining, card)))
+      case None => // skip it
+    }
+    root.add(new Group(AxisLayout.horizontal().gap(15)).add(
                new Button("Sell").onClick(maybeSellCard _),
                new Button("Gift").onClick(giftCard _),
                new Button("Share").onClick(shareCard _),
@@ -47,7 +55,7 @@ class CardScreen (game :Everything, cache :UI.ImageCache, info :CardResult,
       override def getStyleClass = classOf[Label]
     }
     label.onClick(unitSlot {
-      game.screens.push(new CardBackScreen(game, info.card), game.screens.flip.duration(400))
+      game.screens.push(new CardBackScreen(game, card), game.screens.flip.duration(400))
     })
     cache(hash).addCallback(new Callback[Image] {
       def onSuccess (image :Image) {
@@ -61,25 +69,24 @@ class CardScreen (game :Everything, cache :UI.ImageCache, info :CardResult,
   }
 
   protected def maybeSellCard (btn :Button) {
-    val amount = info.card.thing.rarity.saleValue
-    new Dialog(s"Sell Card", s"Sell ${info.card.thing.name} for E $amount") {
+    val amount = card.thing.rarity.saleValue
+    new Dialog(s"Sell Card", s"Sell ${card.thing.name} for E $amount") {
       override def okLabel = "Yes"
       override def cancelLabel = "No"
     }.onOK(sellCard).display()
   }
 
   protected def sellCard () {
-    game.gameSvc.sellCard(info.card.thing.thingId, info.card.received.getTime).onFailure(onFailure).
-      onSuccess(slot[(Int,Option[Boolean])] {
-        case (coins, like) =>
-          game.coins.update(coins)
-          val catId = info.card.getSeries.categoryId
-          like match {
-            case Some(like) => game.likes.put(catId, like)
-            case None => game.likes.remove(catId)
-          }
-          upStatus(SlotStatus.SOLD)
-          pop()
+    game.gameSvc.sellCard(card.thing.thingId, card.received.getTime).onFailure(onFailure).
+      onSuccess(slot { res =>
+        game.coins.update(res.coins)
+        val catId = card.getSeries.categoryId
+        res.newLike match {
+          case null => game.likes.remove(catId)
+          case like => game.likes.put(catId, like)
+        }
+        upStatus(SlotStatus.SOLD)
+        pop()
       })
   }
 

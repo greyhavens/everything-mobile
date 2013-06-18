@@ -32,10 +32,10 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
 
   protected def viewGrid (flip :Button) {
     // TODO: display a spinner over the button while we load the grid data
-    val pup :Powerup = null // TODO
+    val pup :Powerup = Powerup.NOOP // TODO
     val expectHave = false // TODO
-    game.gameSvc.getGrid(pup, expectHave).onFailure(onFailure).onSuccess(slot[(Grid,GameStatus)] {
-      case (grid, status) => new FlipCardsScreen(game, status, grid).push()
+    game.gameSvc.getGrid(pup, expectHave).onFailure(onFailure).onSuccess(slot { res =>
+      new FlipCardsScreen(game, res.status, res.grid).push()
     })
   }
 

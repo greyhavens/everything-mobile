@@ -7,23 +7,24 @@ import react.{AbstractSignal, AbstractValue, Slot, UnitSlot}
 /** Global stuffs; mostly implicits to make using React/TriplePlay more pleasant. */
 package object everything {
 
-  type JInteger = java.lang.Integer
-
-  implicit def toSlot[A] (f :Function1[A,_]) = new Slot[A] {
-    override def onEmit (value :A) = f(value)
-  }
-
-  implicit def toUnitSlot (f :() => Unit) = new UnitSlot {
-    override def onEmit = f()
-  }
+  type JBoolean  = java.lang.Boolean
+  type JInteger  = java.lang.Integer
+  type JMap[K,V] = java.util.Map[K,V]
 
   def rf[A,B] (f :A => B) = new react.Function[A,B] {
     def apply (a :A) = f(a)
   }
 
-  // we have to call this one non-implicitly, so give it the good name
+  implicit def slot[A] (f :Function1[A,_]) = new Slot[A] {
+    override def onEmit (value :A) = f(value)
+  }
+
   def slot[A] (pf :PartialFunction[A,_]) = new Slot[A] {
     override def onEmit (value :A) = if (pf.isDefinedAt(value)) pf.apply(value)
+  }
+
+  implicit def toUnitSlot (f :() => Unit) = new UnitSlot {
+    override def onEmit = f()
   }
 
   def unitSlot (action : =>Any) = new UnitSlot {

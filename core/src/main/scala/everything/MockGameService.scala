@@ -8,6 +8,7 @@ import java.util.{Date, HashMap}
 import react.{IntValue, RFuture}
 
 import com.threerings.everything.data._
+import com.threerings.everything.rpc.JSON._
 
 /** A mocked `GameService` which allows us to test interaction locally. */
 object MockGameService extends GameService with Mockery {
@@ -32,11 +33,11 @@ object MockGameService extends GameService with Mockery {
     if (pos % 2 == 0) FakeData.yanluoCard(start+pos) else FakeData.maltesersCard(start+pos)
   }
 
-  def getCollection (ownerId :Int) :RFuture[PlayerCollection] = {
+  def getCollection (ownerId :Int) = {
     RFuture.failure(new Throwable("TODO"))
   }
 
-  def getSeries (ownerId :Int, categoryId :Int) :RFuture[Series] = {
+  def getSeries (ownerId :Int, categoryId :Int) = {
     RFuture.failure(new Throwable("TODO"))
   }
 
@@ -45,12 +46,12 @@ object MockGameService extends GameService with Mockery {
   }
 
   def getGrid (pup :Powerup, expectHave :Boolean) = {
-    RFuture.success((grid, status(grid.unflipped)))
+    RFuture.success(new GridResult(grid, status(grid.unflipped)))
   }
 
   def flipCard (gridId :Int, pos :Int, expectCost :Int) = {
     val card = cards(pos)
-    val cardres = CardResult(card, 1, 10, Seq())
+    def cardres = new FlipCardResult(card, 1, 10, Array(), status(grid.unflipped))
     grid.slots(pos) match {
       case SlotStatus.UNFLIPPED =>
         val cost = nextFlipCost(grid.unflipped)
@@ -62,11 +63,11 @@ object MockGameService extends GameService with Mockery {
           grid.slots(pos) = SlotStatus.FLIPPED
           grid.unflipped(card.thing.rarity.ordinal) -= 1
           grid.flipped(pos) = card.toThingCard
-          RFuture.success((cardres, status(grid.unflipped)))
+          RFuture.success(cardres)
         }
 
       case SlotStatus.FLIPPED =>
-        RFuture.success((cardres, status(grid.unflipped)))
+        RFuture.success(cardres)
 
       case _ => RFuture.failure(new Exception(s"Card gone: ${grid.slots(pos)}"))
     }
@@ -76,30 +77,32 @@ object MockGameService extends GameService with Mockery {
     val revenue = (if (thingId == 1) Rarity.III else Rarity.I).saleValue
     val pos = cards.indexWhere(c => c.thing.thingId == thingId && c.received.getTime == created)
     grid.slots(pos) = SlotStatus.SOLD
-    RFuture.success((coins.increment(revenue), None))
+    RFuture.success(new SellCardResult(coins.increment(revenue), null))
   }
 
-  def getGiftCardInfo (thingId :Int, created :Long) :RFuture[(Int,Seq[FriendCardInfo])] = {
+  def getGiftCardInfo (thingId :Int, created :Long) = {
     RFuture.failure(new Throwable("TODO"))
   }
 
-  def giftCard (thingId :Int, created :Long, friendId :Int, message :String) {
-  }
-
-  def setLike (catId :Int, like :Option[Boolean]) {
-  }
-
-  def openGift (thingId :Int, created :Long) :RFuture[(CardResult, String)] = {
+  def giftCard (thingId :Int, created :Long, friendId :Int, message :String) = {
     RFuture.failure(new Throwable("TODO"))
   }
 
-  def getShopInfo () = RFuture.success((coins.get, pups))
-
-  def buyPowerup (pup :Powerup) :RFuture[Unit] = {
+  def setLike (catId :Int, like :Option[Boolean]) = {
     RFuture.failure(new Throwable("TODO"))
   }
 
-  def usePowerup (gridId :Int, pup :Powerup) :RFuture[Grid] = {
+  def openGift (thingId :Int, created :Long) = {
+    RFuture.failure(new Throwable("TODO"))
+  }
+
+  def getShopInfo () = RFuture.success(new ShopInfo(coins.get, pups))
+
+  def buyPowerup (pup :Powerup) = {
+    RFuture.failure(new Throwable("TODO"))
+  }
+
+  def usePowerup (gridId :Int, pup :Powerup) = {
     def unbox (count :JInteger) = if (count == null) 0 else count.intValue
     unbox(pups.get(pup)) match {
       case 0 => RFuture.failure(new Throwable("Lack powerup"))

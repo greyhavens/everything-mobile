@@ -4,34 +4,50 @@
 
 package everything
 
-import com.google.gson.Gson
+import com.google.gson.{GsonBuilder, LongSerializationPolicy}
 import playn.core.PlayN._
 import playn.core._
 import playn.core.util.Callback
-import react.{RFuture, RPromise}
+import react.{RFuture, RPromise, Try}
 import scala.collection.JavaConversions._
 
 abstract class GsonService (game :Everything, baseURL :String) {
 
   def request[R] (method :String, clazz :Class[R]) :RFuture[R] = request(method, null, clazz)
 
-  def request[R] (method :String, args :AnyRef, clazz :Class[R]) :RFuture[R] = {
+  def request[R] (method :String, args :AnyRef, clazz :Class[R]) :RFuture[R] =
+    doRequest(method, args, body => _gson.fromJson(body, clazz))
+
+  def invoke[R] (method :String, args :AnyRef) :RFuture[Unit] =
+    doRequest(method, args, body => ())
+
+  protected def doRequest[R] (method :String, args :AnyRef, rfun :String => R) = {
     val promise = RPromise.create[R]
     val bldr = net.req(s"$baseURL/$method")
-    if (args != null) bldr.setPayload(_gson.toJson(args))
+    if (args != null) {
+      val pay = _gson.toJson(args)
+      println("REQ " + pay)
+      bldr.setPayload(pay)
+    }
     game.authToken match {
       case None => // nada
       case Some(authTok) => bldr.addHeader("Cookie", s"auth=$authTok")
     }
     bldr.execute(new Callback[Net.Response] {
-      def onSuccess (rsp :Net.Response) = try {
-        noteAuthCookie(rsp)
-        promise.succeed(_gson.fromJson(rsp.payloadString, clazz))
-      } catch {
-        case e :Throwable => promise.fail(e)
+      def onSuccess (rsp :Net.Response) = {
+        val result = try {
+          if (rsp.responseCode != 200)
+            throw new Net.HttpException(rsp.responseCode, rsp.payloadString)
+          noteAuthCookie(rsp)
+          println("RSP " + rsp.payloadString)
+          Try.success(rfun(rsp.payloadString))
+        } catch {
+          case e :Throwable => Try.failure[R](e)
+        }
+        promise.completer.onEmit(result)
       }
       def onFailure (cause :Throwable) = {
-        println("Fail " + cause)
+        log.warn(s"Service call failed [baseURL=$baseURL, method=$method, error=$cause]")
         promise.fail(cause)
       }
     })
@@ -51,5 +67,7 @@ abstract class GsonService (game :Everything, baseURL :String) {
     }
   }
 
-  protected val _gson = new Gson
+  protected val _gson = new GsonBuilder().
+    setLongSerializationPolicy(LongSerializationPolicy.STRING).
+    create()
 }

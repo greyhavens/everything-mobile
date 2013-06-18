@@ -25,7 +25,7 @@ object FakeData {
     categoryId = psychopomps.categoryId,
     name = "Yanluo",
     rarity = Rarity.III,
-    image = "62966384e14f645f94d1c4c595a38eb1112d53c2",
+    image = "62966384e14f645f94d1c4c595a38eb1112d53c2.jpg",
     descrip = "In asian mythology, Yanluo is the god of death and the ruler of Diyu, " +
       "or the underworld.",
     facts = "Yanluo is portrayed as a large man with a scowling red face, " +
@@ -45,7 +45,7 @@ object FakeData {
     categoryId = chocolates.categoryId,
     name = "Maltesers",
     rarity = Rarity.I,
-    image = "31ea1e7601351b4eacd43b36b674ff823e9e29f4",
+    image = "31ea1e7601351b4eacd43b36b674ff823e9e29f4.jpg",
     descrip = "Maltesers are a confectionery product manufactured by Mars, Incorporated.",
     facts = "Maltesers consist of a roughly spherical malt honeycomb centre, " +
       "surrounded by milk chocolate.\n" +
