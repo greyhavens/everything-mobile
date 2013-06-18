@@ -75,7 +75,7 @@ object MockGameService extends GameService with Mockery {
 
   def sellCard (thingId :Int, created :Long) = {
     val revenue = (if (thingId == 1) Rarity.III else Rarity.I).saleValue
-    val pos = cards.indexWhere(c => c.thing.thingId == thingId && c.received.getTime == created)
+    val pos = cards.indexWhere(c => c.thing.thingId == thingId && c.received == created)
     grid.slots(pos) = SlotStatus.SOLD
     RFuture.success(new SellCardResult(coins.increment(revenue), null))
   }

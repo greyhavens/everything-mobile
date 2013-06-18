@@ -5,7 +5,6 @@
 package everything
 
 import com.threerings.everything.data._
-import java.util.Date
 
 object FakeData {
 
@@ -38,7 +37,7 @@ object FakeData {
   )
 
   def yanluoCard (created :Long) = card(
-    mikeB, Array(mythology, general, psychopomps), yanluo, 6, 10, new Date(created), mikeD)
+    mikeB, Array(mythology, general, psychopomps), yanluo, 6, 10, created, mikeD)
 
   val maltesers = thing(
     id = 2,
@@ -57,7 +56,7 @@ object FakeData {
   )
 
   def maltesersCard (created :Long) = card(
-    mikeB, Array(cuisine, british, chocolates), maltesers, 3, 15, new Date(created), mikeD)
+    mikeB, Array(cuisine, british, chocolates), maltesers, 3, 15, created, mikeD)
 
   def player (name :String, surname :String, userId :Int, fbId :Long) = {
     val nm = PlayerName.create(userId)
@@ -94,7 +93,7 @@ object FakeData {
   }
 
   def card (owner :PlayerName, cats :Array[Category], thing :Thing, pos :Int, things :Int,
-            recvd :Date, giver :PlayerName) = {
+            recvd :Long, giver :PlayerName) = {
     val card = new Card
     card.owner = owner
     card.categories = cats

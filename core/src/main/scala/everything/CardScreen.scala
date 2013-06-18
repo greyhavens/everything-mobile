@@ -46,7 +46,7 @@ class CardScreen (game :Everything, cache :UI.ImageCache, card :Card, counts :Op
     else if (remain == 0) s"You have completed the ${card.getSeries.name} series!"
     else {
       val total = card.getSeries.things
-      "You have ${total - remain} of $total ${card.getSeries.name}."
+      s"You have ${total - remain} of $total ${card.getSeries.name}."
     }
   }
 
@@ -77,7 +77,7 @@ class CardScreen (game :Everything, cache :UI.ImageCache, card :Card, counts :Op
   }
 
   protected def sellCard () {
-    game.gameSvc.sellCard(card.thing.thingId, card.received.getTime).onFailure(onFailure).
+    game.gameSvc.sellCard(card.thing.thingId, card.received).onFailure(onFailure).
       onSuccess(slot { res =>
         game.coins.update(res.coins)
         val catId = card.getSeries.categoryId
