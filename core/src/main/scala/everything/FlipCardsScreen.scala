@@ -106,9 +106,10 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
         // TODO: shake the card or display a spinner to indicate that we're loading
         game.gameSvc.flipCard(grid.gridId, pos, nextFlipCost.get).
           onFailure((cause :Throwable) => cause.getMessage match {
-            case "e.nsf_for_flip" =>
-              new Dialog("Oops, Out of Coins!", "Wait 'til tomorrow for more free flips?\n" +
-                "Or get coins now and keep flipping!").
+            case "e.nsf_for_flip" => new Dialog().
+                addTitle("Oops, Out of Coins!").
+                addText("Wait 'til tomorrow for more free flips?\n" +
+                  "Or get coins now and keep flipping!").
                 addButton("Wait", ()).
                 addButton("Get Coins!", new ShopScreen(game).push()).
                 display()

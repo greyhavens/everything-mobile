@@ -17,9 +17,13 @@ import com.threerings.everything.data.ThingCard
 
 abstract class EveryScreen (game :Everything) extends UIScreen {
 
-  class Dialog (title :String, text :String) {
+  class Dialog {
     val root = iface.createRoot(AxisLayout.vertical.offStretch, UI.sheet, layer)
     val buttons = UI.hgroup()
+
+    def add (elem :Element[_]) = { root.add(elem) ; this }
+    def addTitle (text :String) = add(UI.headerLabel(text))
+    def addText (text :String) = add(UI.wrapLabel(text))
 
     def addButton (lbl :String, action : =>Unit) :this.type =
       addButton(new Button(lbl), action)
@@ -31,8 +35,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       this
     }
 
-    def display () :Unit = display(null)
-    def display (extra :Group) {
+    def display () {
       root.layer.setDepth(Short.MaxValue)
       // absorb all clicks below our root layer
       root.layer.setHitTester(new Layer.HitTester {
@@ -44,9 +47,6 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       root.addStyles(Style.BACKGROUND.is(Background.composite(
         Background.solid(UI.textColor).inset(1),
         Background.croppedImage(_pageRepeat).inset(10))))
-      root.add(UI.headerLabel(title),
-               new Label(text).addStyles(Style.TEXT_WRAP.on, Style.HALIGN.left))
-      if (extra != null) root.add(extra)
       root.add(buttons)
       root.pack(width-20, 0)
       root.layer.setTranslation((width-root.size.width)/2, (height-root.size.height)/2);
@@ -73,7 +73,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     * popped. */
   protected def maybeSellCard (card :ThingCard)(onSold : =>Unit) {
     val amount = card.rarity.saleValue
-    new Dialog(s"Sell Card", s"Sell ${card.name} for E $amount").
+    new Dialog().addTitle("Sell Card").addText(s"Sell ${card.name} for E $amount").
       addButton("No", ()).addButton("Yes", sellCard(card, onSold)).display()
   }
 

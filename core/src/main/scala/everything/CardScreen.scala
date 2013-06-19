@@ -18,28 +18,32 @@ class CardScreen (game :Everything, cache :UI.ImageCache, card :Card, counts :Op
     this(game, cache, info.card, Some(info.haveCount -> info.thingsRemaining), upStatus)
 
   override def createUI (root :Root) {
-    root.add(new Label(card.thing.name),
+    val image = UI.frameImage(cache(card.thing.image), Thing.MAX_IMAGE_WIDTH/2, Thing.MAX_IMAGE_HEIGHT/2)
+    root.add(UI.stretchShim(),
+             UI.headerLabel(card.thing.name),
              UI.tipLabel(Category.getHierarchy(card.categories)),
              UI.tipLabel(s"${card.position+1} of ${card.things}"),
-             // TODO: tap image to flip card over
-             AxisLayout.stretch(imageLabel(card.thing.image)),
+             UI.imageButton(image).onClick(unitSlot {
+               game.screens.push(new CardBackScreen(game, card), game.screens.flip.duration(400))
+             }),
              new Label(s"Rarity: ${card.thing.rarity} - E${card.thing.rarity.value}"))
     counts match {
       case Some((haveCount, thingsRemaining)) =>
         root.add(new Label(status(haveCount, thingsRemaining, card)))
       case None => // skip it
     }
-    root.add(UI.hgroup(gap=15).add(
-      UI.button("Keep")(pop()),
-      UI.button("Sell") {
-        maybeSellCard(card.toThingCard) { upStatus(SlotStatus.SOLD) }
-      },
-      UI.button("Gift") {
-        new GiftCardScreen(game, cache, card, upStatus).push
-      },
-      UI.button("Share") {
-        // TODO
-      }))
+    root.add(UI.stretchShim(),
+             UI.hgroup(gap=15).add(
+               UI.button("Keep")(pop()),
+               UI.button("Sell") {
+                 maybeSellCard(card.toThingCard) { upStatus(SlotStatus.SOLD) }
+               },
+               UI.button("Gift") {
+                 new GiftCardScreen(game, cache, card, upStatus).push
+               },
+               UI.button("Share") {
+                 // TODO
+               }))
 
     // TODO: trophies!
   }
@@ -53,18 +57,5 @@ class CardScreen (game :Everything, cache :UI.ImageCache, card :Card, counts :Op
       val total = card.getSeries.things
       s"You have ${total - remain} of $total ${card.getSeries.name}."
     }
-  }
-
-  def imageLabel (hash :String) = {
-    val label = new Button {
-      override def getStyleClass = classOf[Label]
-    }
-    label.onClick(unitSlot {
-      game.screens.push(new CardBackScreen(game, card), game.screens.flip.duration(400))
-    })
-    cache(hash).addCallback(cb { image =>
-      label.icon.update(Icons.image(image))
-    })
-    label
   }
 }

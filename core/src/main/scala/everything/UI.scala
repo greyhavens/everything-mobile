@@ -17,7 +17,7 @@ import tripleplay.ui.layout.AxisLayout
 import tripleplay.util.DestroyableBag
 import tripleplay.util.TextConfig
 
-import com.threerings.everything.data.ThingCard
+import com.threerings.everything.data._
 
 object UI {
 
@@ -46,9 +46,11 @@ object UI {
 
   val sheet = SimpleStyles.newSheet()
 
-  def hgroup (gap :Int = 5) = new Group(AxisLayout.horizontal())
-  def vgroup () = new Group(AxisLayout.vertical())
-  def vsgroup () = new Group(AxisLayout.vertical().offStretch)
+  def hgroup (gap :Int = 5) = new Group(AxisLayout.horizontal().gap(gap))
+  def hgroup (elems :Element[_]*) :Group = add(hgroup(5), elems)
+  def vgroup (elems :Element[_]*) = add(new Group(AxisLayout.vertical()), elems)
+  def vsgroup (elems :Element[_]*) = add(new Group(AxisLayout.vertical().offStretch),  elems)
+  def add (group :Group, elems :Seq[Element[_]]) = (group /: elems)(_ add _)
 
   /** Creates a vertical-only scroller containing `group`. */
   def vscroll (contents :Group) = new Scroller(contents).setBehavior(Scroller.Behavior.VERTICAL)
@@ -78,6 +80,29 @@ object UI {
   }
 
   def getImage (path :String) = assets.getImageSync(s"images/$path")
+
+  def friendImage (name :PlayerName) :Image = friendImage(name.facebookId)
+  def friendImage (fbId :Long) :Image = {
+    _friends.getOrElseUpdate(fbId, assets.getRemoteImage(
+      s"https://graph.facebook.com/$fbId/picture?width=100&height=100"))
+  }
+  private val _friends = MMap[Long,Image]()
+
+  def frameImage (image :Image, width :Float, height :Float) = {
+    val frame = graphics.createImage(width, height)
+    image.addCallback(cb { img =>
+      val border = 1
+      val scale = math.min((width-2*border)/img.width, (height-2*border)/img.height)
+      val (iwidth, iheight) = (img.width*scale, img.height*scale)
+      val (fwidth, fheight) = (iwidth+2*border, iheight+2*border)
+      val (fx, fy) = ((width-fwidth)/2, (height-fheight)/2)
+      frame.canvas.
+        setFillColor(textColor).fillRect(fx, fy, fwidth, fheight).
+        translate(fx+border, fy+border).
+        scale(scale, scale).drawImage(img, 0, 0)
+    })
+    frame
+  }
 
   def cardImage (cache :ImageCache, card :ThingCard) = {
     val cardimg = graphics.createImage(cardFront.width, cardFront.height)

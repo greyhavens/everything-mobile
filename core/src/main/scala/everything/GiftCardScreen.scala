@@ -59,18 +59,19 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
       }
   }
 
-  def showGivePopup (friend :PlayerName) {
-    // val extra = new Group(AxisLayout.vertical).add(
-    new Dialog(s"Gift Card", s"Give ${card.thing.name} to ${friend.name}").
-      addButton("Cancel", ()).
-      addButton("Give", giveCard(friend, "")).
-      addButton("Give + Message", keyboard.getText(
-        Keyboard.TextType.DEFAULT, s"Message to ${friend.name}:", "", cb { msg =>
-          if (msg != null) giveCard(friend, msg)
-          else showGivePopup(friend)
-        })).
-      display()
-  }
+  def showGivePopup (friend :PlayerName) :Unit = new Dialog().
+    add(UI.hgroup(UI.icon(UI.frameImage(UI.friendImage(friend), 50, 50)),
+                  UI.vgroup(UI.headerLabel("Gift Card"),
+                            UI.wrapLabel(s"Give ${card.thing.name} to ${friend.name}?")).
+                    setConstraint(AxisLayout.stretched))).
+    addButton("Cancel", ()).
+    addButton("Give", giveCard(friend, "")).
+    addButton("Add Message", keyboard.getText(
+      Keyboard.TextType.DEFAULT, s"Message to ${friend.name}:", "", cb { msg =>
+        if (msg != null) giveCard(friend, msg)
+        else showGivePopup(friend)
+      })).
+    display()
 
   def giveCard (friend :PlayerName, msg :String) {
     game.gameSvc.giftCard(card.thing.thingId, card.received, friend.userId, msg).

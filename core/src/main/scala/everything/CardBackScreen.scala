@@ -15,9 +15,9 @@ class CardBackScreen (game :Everything, card :Card) extends EveryScreen(game) {
 
   override def createUI (root :Root) {
     root.setStylesheet(Stylesheet.builder.add(classOf[Label], Style.HALIGN.left).create)
-    root.add(new Label(card.thing.name),
-             new Label(Category.getHierarchy(card.categories)),
-             new Label(s"${card.position+1} of ${card.things}"),
+    root.add(UI.headerLabel(card.thing.name),
+             UI.tipLabel(Category.getHierarchy(card.categories)),
+             UI.tipLabel(s"${card.position+1} of ${card.things}"),
              UI.shim(5, 5),
              new Label(card.thing.descrip).addStyles(Style.TEXT_WRAP.on),
              UI.shim(5, 5),
@@ -47,9 +47,9 @@ class CardBackScreen (game :Everything, card :Card) extends EveryScreen(game) {
   }
 
   def formatFacts (facts :Array[String]) = {
-    (new Group(new TableLayout(TableLayout.COL.fixed, TableLayout.COL.stretch).alignTop.gaps(5, 5)) /: facts)((g, f) =>
-      g.add(new Label("•"), new Label(f).addStyles(Style.TEXT_WRAP.on)))
+    val lay = new TableLayout(TableLayout.COL.fixed, TableLayout.COL.stretch).alignTop.gaps(5, 5)
+    (new Group(lay) /: facts)((g, f) => g.add(new Label("•"), UI.wrapLabel(f)))
   }
 
-  override protected def popTransition = game.screens.flip.unflip.duration(400)
+  override protected def popTransition = game.screens.flip.duration(400)
 }
