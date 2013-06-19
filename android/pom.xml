@@ -81,6 +81,9 @@
           <jvmArguments>
             <jvmArgument>-Xmx1024m</jvmArgument>
           </jvmArguments>
+          <proguard>
+            <skip>false</skip>
+          </proguard>
           <dex>
             <jvmArguments>
               <jvmArgument>-Xmx1024m</jvmArgument>
@@ -97,6 +100,14 @@
             </goals>
           </execution>
         </executions>
+        <dependencies>
+          <dependency>
+            <groupId>net.sf.proguard</groupId>
+            <artifactId>proguard-base</artifactId>
+            <version>4.9</version>
+            <scope>runtime</scope>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>
