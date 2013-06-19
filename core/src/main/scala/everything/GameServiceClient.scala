@@ -33,7 +33,7 @@ class GameServiceClient (game :Everything, url :String) extends GsonService(game
     "getGiftCardInfo", new CardInfo(thingId, created), classOf[GiftCardInfo])
 
   def giftCard (thingId :Int, created :Long, friendId :Int, message :String) = invoke(
-    "getGiftCardInfo", new GiftCard(thingId, created, friendId, message))
+    "giftCard", new GiftCard(thingId, created, friendId, message))
 
   def setLike (catId :Int, like :Option[Boolean]) = invoke(
     "setLike", new SetLike(catId, like match {

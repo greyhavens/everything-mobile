@@ -56,6 +56,7 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
                       UI.wrapLabel(s"${f.friend}$hasBits"),
                       UI.button("Give")(showGivePopup(f.friend)))
         }
+        // TODO: add "no friends" if res.friends is empty
       }
   }
 

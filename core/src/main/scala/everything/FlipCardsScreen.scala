@@ -93,6 +93,7 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
       case _ => // ignore
     }
     slots.getView(ii).connectNotify { status :SlotStatus => status match {
+      // TODO: swap out old icon in puff of smoke or something
       case SlotStatus.GIFTED => view.icon.update(Icons.image(UI.statusImage("Gifted!")))
       case   SlotStatus.SOLD => view.icon.update(Icons.image(UI.statusImage("Sold!")))
       case _ => // ignore
