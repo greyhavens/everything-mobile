@@ -31,10 +31,14 @@ class CardScreen (game :Everything, cache :UI.ImageCache, card :Card, counts :Op
       case None => // skip it
     }
     root.add(new Group(AxisLayout.horizontal().gap(15)).add(
-               new Button("Sell").onClick(maybeSellCard _),
-               new Button("Gift").onClick(giftCard _),
-               new Button("Share").onClick(shareCard _),
-               new Button("Keep").onClick(pop _)))
+               new Button("Keep").onClick(pop _),
+               new Button("Sell").onClick(unitSlot {
+                 maybeSellCard(card.toThingCard) { upStatus(SlotStatus.SOLD) }
+               }),
+               new Button("Gift").onClick(unitSlot {
+                 new GiftCardScreen(game, card.toThingCard, upStatus).push
+               }),
+               new Button("Share").onClick(shareCard _)))
 
     // TODO: trophies!
   }
@@ -66,31 +70,6 @@ class CardScreen (game :Everything, cache :UI.ImageCache, card :Card, counts :Op
       }
     })
     label
-  }
-
-  protected def maybeSellCard (btn :Button) {
-    val amount = card.thing.rarity.saleValue
-    new Dialog(s"Sell Card", s"Sell ${card.thing.name} for E $amount") {
-      override def okLabel = "Yes"
-      override def cancelLabel = "No"
-    }.onOK(sellCard).display()
-  }
-
-  protected def sellCard () {
-    game.gameSvc.sellCard(card.thing.thingId, card.received).onFailure(onFailure).
-      onSuccess(slot { res =>
-        game.coins.update(res.coins)
-        val catId = card.getSeries.categoryId
-        res.newLike match {
-          case null => game.likes.remove(catId)
-          case like => game.likes.put(catId, like)
-        }
-        upStatus(SlotStatus.SOLD)
-        pop()
-      })
-  }
-
-  protected def giftCard (btn :Button) {
   }
 
   protected def shareCard (btn :Button) {

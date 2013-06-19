@@ -27,7 +27,7 @@ package object everything {
     override def onEmit = f()
   }
 
-  def unitSlot (action : =>Any) = new UnitSlot {
-    override def onEmit = action
+  def unitSlot[A] (action : =>Any) = new Slot[A] {
+    override def onEmit (a :A) = action
   }
 }

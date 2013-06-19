@@ -13,6 +13,8 @@ import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
 import tripleplay.util.DestroyableBag
 
+import com.threerings.everything.data.ThingCard
+
 abstract class EveryScreen (game :Everything) extends UIScreen {
 
   class Dialog (title :String, text :String) {
@@ -24,7 +26,9 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     def onCancel (action : =>Unit) = { cancel.connect(unitSlot(action)) ; this }
     def cancelLabel = "Cancel"
 
-    def display () {
+    def display () :Unit = display(null)
+
+    def display (extra :Group) {
       val root = iface.createRoot(AxisLayout.vertical, UI.sheet, layer)
       root.layer.setDepth(Short.MaxValue)
       // absorb all clicks below our root layer
@@ -38,8 +42,9 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
         Background.solid(UI.textColor).inset(1),
         Background.croppedImage(_pageRepeat).inset(10))))
       root.add(new Label(title).addStyles(Style.FONT.is(UI.headerFont)),
-               new Label(text).addStyles(Style.TEXT_WRAP.on, Style.HALIGN.left),
-               new Group(AxisLayout.horizontal.gap(25)).add(
+               new Label(text).addStyles(Style.TEXT_WRAP.on, Style.HALIGN.left))
+      if (extra != null) root.add(extra)
+      root.add(new Group(AxisLayout.horizontal.gap(25)).add(
                  new Button(cancelLabel).onClick(cancel.slot),
                  new Button(okLabel).onClick(ok.slot)))
       root.pack(width-20, 0)
@@ -63,6 +68,30 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     root.addStyles(Style.BACKGROUND.is(background))
     createUI(root)
     root.setSize(width, height)
+  }
+
+  /** Displays a dialog enabling the sale of `card`. On sale, `onSold` is invoked and this screen is
+    * popped. */
+  protected def maybeSellCard (card :ThingCard)(onSold : =>Unit) {
+    val amount = card.rarity.saleValue
+    new Dialog(s"Sell Card", s"Sell ${card.name} for E $amount") {
+      override def okLabel = "Yes"
+      override def cancelLabel = "No"
+    }.onOK(sellCard(card, onSold)).display()
+  }
+
+  protected def sellCard (card :ThingCard, onSold : =>Unit) {
+    game.gameSvc.sellCard(card.thingId, card.received).onFailure(onFailure).
+      onSuccess(slot { res =>
+        game.coins.update(res.coins)
+        val catId = card.categoryId
+        res.newLike match {
+          case null => game.likes.remove(catId)
+          case like => game.likes.put(catId, like)
+        }
+        onSold
+        pop()
+      })
   }
 
   protected def background :Background = Background.image(_pageRepeat).inset(10)

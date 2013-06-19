@@ -39,10 +39,11 @@ object UI {
   val titleFont = graphics.createFont("Helvetica", Font.Style.BOLD, 48)
   val menuFont = graphics.createFont("Helvetica", Font.Style.BOLD, 24)
   val headerFont = graphics.createFont("Helvetica", Font.Style.BOLD, 16);
+  val tipFont = textFont(10)
   def textFont (size :Int) = graphics.createFont("Helvetica", Font.Style.PLAIN, size)
 
   val cardCfg = new TextConfig(textColor).withFont(textFont(12)) // TODO
-  val statusCfg = new TextConfig(textColor).withFont(textFont(24)) // TODO
+  val statusCfg = new TextConfig(textColor).withFont(textFont(18)) // TODO
 
   def sheet = SimpleStyles.newSheet
 
@@ -62,7 +63,10 @@ object UI {
     label
   }
 
-  def getImage (path :String) = assets.getImage(s"images/$path")
+  def headerLabel (text :String) = new Label(text).addStyles(Style.FONT.is(headerFont))
+  def tipLabel (text :String) = new Label(text).addStyles(Style.FONT.is(tipFont))
+
+  def getImage (path :String) = assets.getImageSync(s"images/$path")
 
   def cardImage (cache :ImageCache, card :ThingCard) = {
     val cardimg = graphics.createImage(cardFront.width, cardFront.height)
