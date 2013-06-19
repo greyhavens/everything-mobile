@@ -6,7 +6,7 @@ package everything
 
 import playn.core.PlayN._
 import playn.core._
-import playn.core.util.{Callback, Clock}
+import playn.core.util.Clock
 import react.{IntValue, Signal, RMap, Value}
 import scala.collection.JavaConversions._
 import tripleplay.game.ScreenStack

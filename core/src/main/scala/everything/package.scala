@@ -2,6 +2,7 @@
 // The Everything Game - slot machine plus encyclopedia equals educational fun!
 // Copyright © 2009-2013 Three Rings Design, Inc.
 
+import playn.core.util.Callback
 import react.{AbstractSignal, AbstractValue, Slot, UnitSlot}
 
 /** Global stuffs; mostly implicits to make using React/TriplePlay more pleasant. */
@@ -13,6 +14,11 @@ package object everything {
 
   def rf[A,B] (f :A => B) = new react.Function[A,B] {
     def apply (a :A) = f(a)
+  }
+
+  def cb[T] (f :T => Unit) = new Callback[T] {
+    def onSuccess (t :T) = f(t)
+    def onFailure (cause :Throwable) {} // unused
   }
 
   implicit def slot[A] (f :Function1[A,_]) = new Slot[A] {

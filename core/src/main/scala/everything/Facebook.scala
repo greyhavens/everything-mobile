@@ -4,7 +4,6 @@
 
 package everything
 
-import playn.core.util.Callback
 import react.RFuture
 
 /** Provides an interface to the Facebook API on the device. */

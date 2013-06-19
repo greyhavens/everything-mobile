@@ -108,10 +108,10 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
           onFailure((cause :Throwable) => cause.getMessage match {
             case "e.nsf_for_flip" =>
               new Dialog("Oops, Out of Coins!", "Wait 'til tomorrow for more free flips?\n" +
-                "Or get coins now and keep flipping!") {
-                override def cancelLabel = "Wait"
-                override def okLabel = "Get Coins!"
-              }.onOK(new ShopScreen(game).push()).display()
+                "Or get coins now and keep flipping!").
+                addButton("Wait", ()).
+                addButton("Get Coins!", new ShopScreen(game).push()).
+                display()
             case _ => onFailure.apply(cause)
           }).
           onSuccess(slot { res =>

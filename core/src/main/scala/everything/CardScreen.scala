@@ -5,7 +5,6 @@
 package everything
 
 import playn.core._
-import playn.core.util.Callback
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
 
@@ -20,8 +19,8 @@ class CardScreen (game :Everything, cache :UI.ImageCache, card :Card, counts :Op
 
   override def createUI (root :Root) {
     root.add(new Label(card.thing.name),
-             new Label(Category.getHierarchy(card.categories)),
-             new Label(s"${card.position+1} of ${card.things}"),
+             UI.tipLabel(Category.getHierarchy(card.categories)),
+             UI.tipLabel(s"${card.position+1} of ${card.things}"),
              // TODO: tap image to flip card over
              AxisLayout.stretch(imageLabel(card.thing.image)),
              new Label(s"Rarity: ${card.thing.rarity} - E${card.thing.rarity.value}"))
@@ -30,15 +29,17 @@ class CardScreen (game :Everything, cache :UI.ImageCache, card :Card, counts :Op
         root.add(new Label(status(haveCount, thingsRemaining, card)))
       case None => // skip it
     }
-    root.add(new Group(AxisLayout.horizontal().gap(15)).add(
-               new Button("Keep").onClick(pop _),
-               new Button("Sell").onClick(unitSlot {
-                 maybeSellCard(card.toThingCard) { upStatus(SlotStatus.SOLD) }
-               }),
-               new Button("Gift").onClick(unitSlot {
-                 new GiftCardScreen(game, card.toThingCard, upStatus).push
-               }),
-               new Button("Share").onClick(shareCard _)))
+    root.add(UI.hgroup(gap=15).add(
+      UI.button("Keep")(pop()),
+      UI.button("Sell") {
+        maybeSellCard(card.toThingCard) { upStatus(SlotStatus.SOLD) }
+      },
+      UI.button("Gift") {
+        new GiftCardScreen(game, cache, card, upStatus).push
+      },
+      UI.button("Share") {
+        // TODO
+      }))
 
     // TODO: trophies!
   }
@@ -61,17 +62,9 @@ class CardScreen (game :Everything, cache :UI.ImageCache, card :Card, counts :Op
     label.onClick(unitSlot {
       game.screens.push(new CardBackScreen(game, card), game.screens.flip.duration(400))
     })
-    cache(hash).addCallback(new Callback[Image] {
-      def onSuccess (image :Image) {
-        label.icon.update(Icons.image(image))
-      }
-      def onFailure (cause :Throwable) {
-        cause.printStackTrace(System.err) // TODO!
-      }
+    cache(hash).addCallback(cb { image =>
+      label.icon.update(Icons.image(image))
     })
     label
-  }
-
-  protected def shareCard (btn :Button) {
   }
 }

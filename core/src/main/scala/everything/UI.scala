@@ -8,7 +8,6 @@ import scala.collection.mutable.{Map => MMap}
 
 import playn.core.PlayN._
 import playn.core._
-import playn.core.util.Callback
 
 import react.Functions
 import react.IntValue
@@ -42,29 +41,41 @@ object UI {
   val tipFont = textFont(10)
   def textFont (size :Int) = graphics.createFont("Helvetica", Font.Style.PLAIN, size)
 
-  val cardCfg = new TextConfig(textColor).withFont(textFont(12)) // TODO
+  val cardCfg = new TextConfig(textColor).withFont(textFont(10)) // TODO
   val statusCfg = new TextConfig(textColor).withFont(textFont(18)) // TODO
 
-  def sheet = SimpleStyles.newSheet
+  val sheet = SimpleStyles.newSheet()
 
-  /** Returns a shim configured with an [AxisLayout] stretch constraint. */
-  def stretchShim :Shim = AxisLayout.stretch(shim(1, 1))
+  def hgroup (gap :Int = 5) = new Group(AxisLayout.horizontal())
+  def vgroup () = new Group(AxisLayout.vertical())
+  def vsgroup () = new Group(AxisLayout.vertical().offStretch)
+
+  /** Creates a vertical-only scroller containing `group`. */
+  def vscroll (contents :Group) = new Scroller(contents).setBehavior(Scroller.Behavior.VERTICAL)
 
   /** Creates a shim with the specified dimensions. */
   def shim (width :Float, height :Float) = new Shim(width, height)
+  /** Returns a shim configured with an [AxisLayout] stretch constraint. */
+  def stretchShim () :Shim = AxisLayout.stretch(shim(1, 1))
 
+  def headerLabel (text :String) = new Label(text).addStyles(Style.FONT.is(headerFont))
+  def tipLabel (text :String) = new Label(text).addStyles(Style.FONT.is(tipFont))
+  def wrapLabel (text :String) = new Label(text).addStyles(Style.TEXT_WRAP.on, Style.HALIGN.left)
+
+  def button (label :String)(action : =>Unit) = new Button(label).onClick(unitSlot(action))
+  def imageButton (image :Image) = new Button(Icons.image(image)) {
+    override def getStyleClass = classOf[Label]
+  }
+
+  def icon (image :Image) = new Label(Icons.image(image))
   /** Creates a label that displays a currency amount. */
   def moneyIcon (coins :Int) = new Label(coins.toString, Icons.image(coinsIcon))
-
   /** Creates a label that displays a (reactive) currency amount. */
   def moneyIcon (coins :IntValue, dbag :DestroyableBag) :Label = {
     val label = moneyIcon(0)
     dbag.add(coins.map(Functions.TO_STRING).connectNotify(label.text.slot()))
     label
   }
-
-  def headerLabel (text :String) = new Label(text).addStyles(Style.FONT.is(headerFont))
-  def tipLabel (text :String) = new Label(text).addStyles(Style.FONT.is(tipFont))
 
   def getImage (path :String) = assets.getImageSync(s"images/$path")
 
@@ -73,16 +84,13 @@ object UI {
     cardimg.canvas.drawImage(cardFront, 0, 0)
     val title = cardCfg.layout(card.name)
     cardCfg.renderCX(cardimg.canvas, title, cardimg.width/2, 2)
-    cache(card.image).addCallback(new Callback[Image] {
-      def onSuccess (thing :Image) {
-        // these are hardcoded because the image is asymmetric and has built-in shadow... blah.
-        val scale = math.min(42/thing.width, 50/thing.height)
-        val (swidth, sheight) = (thing.width*scale, thing.height*scale)
-        val (sx, sy) = (math.round((64-swidth)/2), math.round((78-sheight)/2))
-        cardimg.canvas.setFillColor(textColor).fillRect(sx-1, sy-1, swidth+2, sheight+2)
-        cardimg.canvas.drawImage(thing, sx, sy, swidth, sheight)
-      }
-      def onFailure (cause :Throwable) {} // nada
+    cache(card.image).addCallback(cb { thing =>
+      // these are hardcoded because the image is asymmetric and has built-in shadow... blah.
+      val scale = math.min(42/thing.width, 50/thing.height)
+      val (swidth, sheight) = (thing.width*scale, thing.height*scale)
+      val (sx, sy) = (math.round((64-swidth)/2), math.round((78-sheight)/2))
+      cardimg.canvas.setFillColor(textColor).fillRect(sx-1, sy-1, swidth+2, sheight+2)
+      cardimg.canvas.drawImage(thing, sx, sy, swidth, sheight)
     })
     val rarity = cardCfg.layout(card.rarity.toString)
     cardCfg.renderCX(cardimg.canvas, rarity, cardimg.width/2, cardimg.height-rarity.height-2)
@@ -94,9 +102,5 @@ object UI {
     val slay = statusCfg.layout(status)
     statusCfg.renderCX(image.canvas, slay, image.width/2, (image.height - slay.height)/2)
     image
-  }
-
-  def imageButton (image :Image) = new Button(Icons.image(image)) {
-    override def getStyleClass = classOf[Label]
   }
 }
