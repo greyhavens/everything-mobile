@@ -4,15 +4,15 @@
 
 package everything
 
+import scala.collection.JavaConversions._
+
 import playn.core.Keyboard
 import playn.core.PlayN._
-
 import tripleplay.game.{Screen, ScreenStack}
 import tripleplay.ui._
 import tripleplay.ui.layout.{AxisLayout, TableLayout}
 
 import com.threerings.everything.data._
-import com.threerings.everything.rpc.JSON.GiftCardInfo
 
 class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
                       upStatus :SlotStatus => Unit) extends EveryScreen(game) {
@@ -44,7 +44,7 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
 
     game.gameSvc.getGiftCardInfo(card.thing.thingId, card.received).
       onFailure(onFailure).
-      onSuccess { res :GiftCardInfo =>
+      onSuccess(slot { res =>
         friends.removeAll()
         res.friends.sorted.foreach { f =>
           val like = f.like match {
@@ -57,7 +57,7 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
                       UI.button("Give")(showGivePopup(f.friend)))
         }
         // TODO: add "no friends" if res.friends is empty
-      }
+      })
   }
 
   def showGivePopup (friend :PlayerName) :Unit = new Dialog().

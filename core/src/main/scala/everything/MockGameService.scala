@@ -6,9 +6,10 @@ package everything
 
 import java.util.{Date, HashMap}
 import react.{IntValue, RFuture}
+import scala.collection.JavaConversions._
 
 import com.threerings.everything.data._
-import com.threerings.everything.rpc.JSON._
+import com.threerings.everything.rpc.GameAPI._
 
 /** A mocked `GameService` which allows us to test interaction locally. */
 object MockGameService extends GameService with Mockery {
@@ -45,13 +46,24 @@ object MockGameService extends GameService with Mockery {
     RFuture.success(FakeData.yanluoCard(ident.received))
   }
 
-  def getGrid (pup :Powerup, expectHave :Boolean) = {
-    RFuture.success(new GridResult(grid, status(grid.unflipped)))
-  }
+  def getGrid (pup :Powerup, expectHave :Boolean) = RFuture.success({
+    val r = new GridResult
+    r.grid = grid
+    r.status = status(grid.unflipped)
+    r
+  })
 
   def flipCard (gridId :Int, pos :Int, expectCost :Int) = {
     val card = cards(pos)
-    def cardres = new FlipCardResult(card, 1, 10, Array(), status(grid.unflipped))
+    def cardres = {
+      val r = new FlipResult
+      r.card = card
+      r.haveCount = 1
+      r.thingsRemaining = 10
+      r.trophies = List()
+      r.status = status(grid.unflipped)
+      r
+    }
     grid.slots(pos) match {
       case SlotStatus.UNFLIPPED =>
         val cost = nextFlipCost(grid.unflipped)
@@ -77,7 +89,12 @@ object MockGameService extends GameService with Mockery {
     val revenue = (if (thingId == 1) Rarity.III else Rarity.I).saleValue
     val pos = cards.indexWhere(c => c.thing.thingId == thingId && c.received == created)
     grid.slots(pos) = SlotStatus.SOLD
-    RFuture.success(new SellCardResult(coins.increment(revenue), null))
+    RFuture.success({
+      val r = new SellResult
+      r.coins = coins.increment(revenue)
+      r.newLike = null
+      r
+    })
   }
 
   def getGiftCardInfo (thingId :Int, created :Long) = {
@@ -96,7 +113,12 @@ object MockGameService extends GameService with Mockery {
     RFuture.failure(new Throwable("TODO"))
   }
 
-  def getShopInfo () = RFuture.success(new ShopInfo(coins.get, pups))
+  def getShopInfo () = RFuture.success({
+    val r = new ShopResult
+    r.coins = coins.get
+    r.powerups = pups
+    r
+  })
 
   def buyPowerup (pup :Powerup) = {
     RFuture.failure(new Throwable("TODO"))

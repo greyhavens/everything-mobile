@@ -15,7 +15,7 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
     // refresh our powerup and coin state
     game.gameSvc.getShopInfo().onSuccess(slot { res =>
       game.coins.update(res.coins)
-      game.pups.putAll(res.pups)
+      game.pups.putAll(res.powerups)
     })
 
     // and build our UI

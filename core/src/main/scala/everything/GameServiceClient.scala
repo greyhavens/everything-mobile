@@ -7,6 +7,7 @@ package everything
 import react.RFuture
 
 import com.threerings.everything.data._
+import com.threerings.everything.rpc.GameAPI._
 import com.threerings.everything.rpc.JSON._
 
 class GameServiceClient (game :Everything, url :String) extends GsonService(game, url + "game")
@@ -24,13 +25,13 @@ class GameServiceClient (game :Everything, url :String) extends GsonService(game
     "getGrid", new GetGrid(pup, expectHave), classOf[GridResult])
 
   def flipCard (gridId :Int, pos :Int, expectCost :Int) = request(
-    "flipCard", new FlipCard(gridId, pos, expectCost), classOf[FlipCardResult])
+    "flipCard", new FlipCard(gridId, pos, expectCost), classOf[FlipResult])
 
   def sellCard (thingId :Int, created :Long) = request(
-    "sellCard", new CardInfo(thingId, created), classOf[SellCardResult])
+    "sellCard", new CardInfo(thingId, created), classOf[SellResult])
 
   def getGiftCardInfo (thingId :Int, created :Long) = request(
-    "getGiftCardInfo", new CardInfo(thingId, created), classOf[GiftCardInfo])
+    "getGiftCardInfo", new CardInfo(thingId, created), classOf[GiftInfoResult])
 
   def giftCard (thingId :Int, created :Long, friendId :Int, message :String) = invoke(
     "giftCard", new GiftCard(thingId, created, friendId, message))
@@ -42,9 +43,9 @@ class GameServiceClient (game :Everything, url :String) extends GsonService(game
     }))
 
   def openGift (thingId :Int, created :Long) = request(
-    "openGift", new CardInfo(thingId, created), classOf[GiftInfo])
+    "openGift", new CardInfo(thingId, created), classOf[GiftResult])
 
-  def getShopInfo () = request("getShopInfo", classOf[ShopInfo])
+  def getShopInfo () = request("getShopInfo", classOf[ShopResult])
 
   def buyPowerup (pup :Powerup) :RFuture[Unit] = invoke(
     "buyPowerup", new BuyPowerup(pup))

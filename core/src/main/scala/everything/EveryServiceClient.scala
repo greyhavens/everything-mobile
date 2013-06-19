@@ -5,6 +5,7 @@
 package everything
 
 import com.threerings.everything.data._
+import com.threerings.everything.rpc.EveryAPI._
 import com.threerings.everything.rpc.JSON._
 
 /** The client side of an HTTP/JSON implementation of EveryService. */

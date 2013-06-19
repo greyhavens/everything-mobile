@@ -6,8 +6,10 @@ package everything
 
 import java.util.{ArrayList, HashMap}
 import react.RFuture
+import scala.collection.JavaConversions._
 
 import com.threerings.everything.data._
+import com.threerings.everything.rpc.EveryAPI._
 
 object MockEveryService extends EveryService with Mockery {
 
@@ -28,7 +30,7 @@ object MockEveryService extends EveryService with Mockery {
   }
 
   def getRecentFeed () = {
-    RFuture.success(FeedResult(Array(), Array(), Array()))
+    RFuture.success(new FeedResult)
   }
 
   def getUserFeed (userId :Int) = {
@@ -41,11 +43,12 @@ object MockEveryService extends EveryService with Mockery {
     playerStats(player("Kurt",  "Kobain",     5, 5), 54, 9, 6,  3),
     playerStats(player("Frank", "Sinatra",    6, 6), 12, 3, 2, 12)))
 
-  def getCredits () = RFuture.success(
-    CreditsResult(player("Michael", "Bayne", 1, 1),
-                  player("Josh", "Gramse", 2, 2),
-                  Array(player("Michael", "Bayne", 1, 1),
-                        player("Ray", "Greenwell", 3, 3)),
-                  Array(player("Natalie", "Bayne", 4, 4),
-                        player("Cody", "Phoenix", 5, 5))))
+  def getCredits () = RFuture.success({
+    val res = new CreditsResult
+    res.design =player("Michael", "Bayne", 1, 1)
+    res.art = player("Josh", "Gramse", 2, 2)
+    res.code = List(player("Michael", "Bayne", 1, 1), player("Ray", "Greenwell", 3, 3))
+    res.editors = List(player("Natalie", "Bayne", 4, 4), player("Cody", "Phoenix", 5, 5))
+    res
+  })
 }

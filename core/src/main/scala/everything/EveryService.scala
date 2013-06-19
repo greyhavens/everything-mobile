@@ -7,22 +7,7 @@ package everything
 import react.RFuture
 
 import com.threerings.everything.data._
-
-/** Provides info on a player's feed. */
-case class FeedResult (
-  /** Gifts awaiting this player, if any. */
-  gifts    :Array[ThingCard],
-  /** Comments on this user's series. */
-  comments :Array[CategoryComment],
-  /** This user's recent feed. */
-  items    :Array[FeedItem])
-
-/** Returns info on the game credits. */
-case class CreditsResult (
-  design  :PlayerName,
-  art     :PlayerName,
-  code    :Array[PlayerName],
-  editors :Array[PlayerName])
+import com.threerings.everything.rpc.EveryAPI._
 
 /** Interface for general things between the client and server. */
 trait EveryService {

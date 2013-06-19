@@ -9,7 +9,7 @@ import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
 
 import com.threerings.everything.data._
-import com.threerings.everything.rpc.JSON._
+import com.threerings.everything.rpc.GameAPI._
 
 class CardScreen (game :Everything, cache :UI.ImageCache, card :Card, counts :Option[(Int,Int)],
                   upStatus :SlotStatus => Unit) extends EveryScreen(game) {
