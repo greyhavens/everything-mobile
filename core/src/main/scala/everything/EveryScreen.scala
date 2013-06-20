@@ -4,8 +4,8 @@
 
 package everything
 
-import playn.core.Layer
-import playn.core.PlayN.log
+import playn.core.PlayN._
+import playn.core._
 import pythagoras.f.Point
 import react.UnitSignal
 
@@ -40,9 +40,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       root.layer.setDepth(Short.MaxValue)
       // absorb all clicks below our root layer
       root.layer.setHitTester(UI.absorber)
-      root.addStyles(Style.BACKGROUND.is(Background.composite(
-        Background.solid(UI.textColor).inset(1),
-        Background.croppedImage(_pageRepeat).inset(10))))
+      root.addStyles(Style.BACKGROUND.is(background()))
       root.add(buttons)
       root.pack(width-20, 0)
       root.layer.setTranslation((width-root.size.width)/2, (height-root.size.height)/2);
@@ -90,12 +88,20 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       })
   }
 
-  protected def background :Background = Background.image(_pageRepeat).inset(10)
+  protected def background () :Background = height match {
+    case 480 | 568 => Background.image(_bgImage).inset(10)
+    case _         => Background.composite(Background.solid(UI.textColor).inset(1),
+                                           Background.croppedImage(_bgImage).inset(9))
+  }
 
   protected val onFailure = (cause :Throwable) => {
     log.warn("Erm, failure", cause) // TODO: display UI
   }
 
   protected val _dbag = new DestroyableBag
-  protected val _pageRepeat = UI.getImage("page_repeat.png")
+  protected val _bgImage = height match {
+    case 568 => assets.getImageSync("../Default-568h.png")
+    case 480 => assets.getImageSync("../Default.png")
+    case _ => UI.getImage("page_repeat.png")
+  }
 }

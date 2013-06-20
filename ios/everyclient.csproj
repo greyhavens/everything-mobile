@@ -123,5 +123,7 @@
   <ItemGroup>
     <BundleResource Include="Resources\touch-icon-57x57.png" />
     <BundleResource Include="Resources\touch-icon-72x72.png" />
+    <BundleResource Include="Resources\Default-568h%402x.png" />
+    <BundleResource Include="Resources\Default%402x.png" />
   </ItemGroup>
 </Project>
