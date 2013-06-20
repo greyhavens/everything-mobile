@@ -52,10 +52,10 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   def pos (layer :Layer) :Point = Layer.Util.layerToParent(layer, this.layer, 0, 0)
 
   def push () :Unit = game.screens.push(this, pushTransition)
-  protected def pushTransition :ScreenStack.Transition = game.screens.slide
+  protected def pushTransition :ScreenStack.Transition = game.screens.slide.duration(300)
 
   def pop () :Unit = game.screens.remove(this, popTransition)
-  protected def popTransition :ScreenStack.Transition = game.screens.slide.right
+  protected def popTransition :ScreenStack.Transition = game.screens.slide.right.duration(300)
 
   def createUI (root :Root)
 
@@ -88,11 +88,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       })
   }
 
-  protected def background () :Background = height match {
-    case 480 | 568 => Background.image(_bgImage).inset(10)
-    case _         => Background.composite(Background.solid(UI.textColor).inset(1),
-                                           Background.croppedImage(_bgImage).inset(9))
-  }
+  protected def background () :Background = Background.image(_bgImage).inset(10)
 
   protected val onFailure = (cause :Throwable) => {
     log.warn("Erm, failure", cause) // TODO: display UI

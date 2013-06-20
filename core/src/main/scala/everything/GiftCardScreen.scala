@@ -56,7 +56,10 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
                       UI.wrapLabel(s"${f.friend}$hasBits"),
                       UI.button("Give")(showGivePopup(f.friend)))
         }
-        // TODO: add "no friends" if res.friends is empty
+        if (res.friends.isEmpty) {
+          friends.add(TableLayout.colspan(
+            new Label("All of your friends already have this card."), 3))
+        }
       })
   }
 

@@ -4,6 +4,7 @@
 
 package everything
 
+import java.util.TimeZone
 import playn.android.GameActivity
 import playn.core.PlayN
 import react.RFuture
@@ -16,22 +17,31 @@ class EverythingActivity extends GameActivity {
     // we have only @2x resources, so use those
     platform.assets.setAssetScale(2)
 
-    PlayN.run(new Everything(new Facebook {
-      def userId = "1008138021"
+    val facebook = new Facebook {
+      def userId = "1008138021" // testy
       def authToken = "testToken"
       def authenticate () = RFuture.success(userId)
-    }))
+    }
+    val device = new Device {
+      def timeZoneOffset = {
+        val tz = TimeZone.getDefault
+        // Java returns millis to add to GMT, we want minutes to subtract from GMT
+        -tz.getOffset(System.currentTimeMillis)/MillisPerMinute
+      }
+    }
+    PlayN.run(new Everything(device, facebook))
   }
 
   override def usePortraitOrientation = true
   override def logIdent = "every"
 
   override def scaleFactor = {
-    // val dm = getResources.getDisplayMetrics
-    // val (dwidth, dheight) = (dm.widthPixels, dm.heightPixels)
-    // // we may be in landscape right now, because Android is fucking retarded
-    // val (width, height) = if (dwidth > dheight) (dheight, dwidth) else (dwidth, dheight)
-    // math.min(width / 320f, height / 480f)
-    2 // TODO: switch between 1 and 2 based on screen size?
+    val dm = getResources.getDisplayMetrics
+    val (dwidth, dheight) = (dm.widthPixels, dm.heightPixels)
+    // we may be in landscape right now, because Android is fucking retarded
+    val (width, height) = if (dwidth > dheight) (dheight, dwidth) else (dwidth, dheight)
+    if (height > 800) 2 else 1
   }
+
+  private final val MillisPerMinute = 1000*60
 }
