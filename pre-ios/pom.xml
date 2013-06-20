@@ -78,6 +78,7 @@
           <obfuscate>false</obfuscate>
           <options>
             <option>-keep class everything.** { *; }</option>
+            <option>-keep class com.threerings.everything.data.** { *; }</option>
             <option>-dontoptimize</option>
             <option>-dontskipnonpubliclibraryclasses</option>
             <option>-dontwarn scala.**</option>

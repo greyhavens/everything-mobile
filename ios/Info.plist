@@ -6,10 +6,11 @@
 	<string>Everything</string>
 	<key>CFBundleIconFiles</key>
 	<array>
-		<string>touch-icon-57x57.png</string>
+		<string>touch-icon-57x57</string>
+		<string>touch-icon-72x72</string>
 	</array>
 	<key>CFBundleIdentifier</key>
-	<string>com.threerings.everything.everyclient</string>
+	<string>com.threerings.everything</string>
 	<key>CFBundleVersion</key>
 	<string>1.0</string>
 	<key>MinimumOSVersion</key>
@@ -17,6 +18,7 @@
 	<key>UIDeviceFamily</key>
 	<array>
 		<integer>1</integer>
+		<integer>2</integer>
 	</array>
 	<key>UIStatusBarHidden</key>
 	<true/>

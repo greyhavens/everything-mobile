@@ -50,6 +50,7 @@
     <MtouchDebug>True</MtouchDebug>
     <MtouchProfiling>True</MtouchProfiling>
     <MtouchLink>Full</MtouchLink>
+    <MtouchExtraArgs>-linkskip=everyclient-ios</MtouchExtraArgs>
     <MtouchI18n />
     <MtouchArch>ARMv7</MtouchArch>
   </PropertyGroup>
@@ -62,6 +63,7 @@
     <ConsolePause>False</ConsolePause>
     <CodesignKey>iPhone Developer</CodesignKey>
     <MtouchLink>Full</MtouchLink>
+    <MtouchExtraArgs>-linkskip=everyclient-ios</MtouchExtraArgs>
     <MtouchI18n />
     <MtouchArch>ARMv7</MtouchArch>
     <BuildIpa>True</BuildIpa>
@@ -78,6 +80,12 @@
     <Reference Include="IKVM.OpenJDK.Core">
       <HintPath>bin\IKVM.OpenJDK.Core.dll</HintPath>
     </Reference>
+    <Reference Include="IKVM.OpenJDK.Util">
+      <HintPath>bin\IKVM.OpenJDK.Util.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Text">
+      <HintPath>bin\IKVM.OpenJDK.Text.dll</HintPath>
+    </Reference>
     <Reference Include="Mono.Data.Sqlite" />
     <Reference Include="System.Data" />
   </ItemGroup>
@@ -89,25 +97,31 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <Content Include="assets\images\card_back@2x.png" />
-    <Content Include="assets\images\card_front@2x.png" />
-    <Content Include="assets\images\card_gift@2x.png" />
     <Content Include="assets\images\like\neg.png" />
     <Content Include="assets\images\like\neg_sel.png" />
     <Content Include="assets\images\like\pos.png" />
     <Content Include="assets\images\like\pos_sel.png" />
-    <Content Include="assets\images\money@2x.png" />
-    <Content Include="assets\images\page_repeat@2x.png" />
-    <Content Include="assets\images\pup\all_collected_series@2x.png" />
-    <Content Include="assets\images\pup\all_new_cards@2x.png" />
-    <Content Include="assets\images\pup\ensure_one_ix@2x.png" />
-    <Content Include="assets\images\pup\ensure_one_vii@2x.png" />
-    <Content Include="assets\images\pup\ensure_one_viii@2x.png" />
-    <Content Include="assets\images\pup\ensure_one_x@2x.png" />
-    <Content Include="assets\images\pup\extra_flip@2x.png" />
-    <Content Include="assets\images\pup\show_category@2x.png" />
-    <Content Include="assets\images\pup\show_series@2x.png" />
-    <Content Include="assets\images\pup\show_subcategory@2x.png" />
-    <Content Include="touch-icon-57x57.png" />
+    <Content Include="assets\images\card_back%402x.png" />
+    <Content Include="assets\images\card_front%402x.png" />
+    <Content Include="assets\images\card_gift%402x.png" />
+    <Content Include="assets\images\money%402x.png" />
+    <Content Include="assets\images\page_repeat%402x.png" />
+    <Content Include="assets\images\pup\all_collected_series%402x.png" />
+    <Content Include="assets\images\pup\all_new_cards%402x.png" />
+    <Content Include="assets\images\pup\ensure_one_ix%402x.png" />
+    <Content Include="assets\images\pup\ensure_one_vii%402x.png" />
+    <Content Include="assets\images\pup\ensure_one_viii%402x.png" />
+    <Content Include="assets\images\pup\ensure_one_x%402x.png" />
+    <Content Include="assets\images\pup\extra_flip%402x.png" />
+    <Content Include="assets\images\pup\show_category%402x.png" />
+    <Content Include="assets\images\pup\show_series%402x.png" />
+    <Content Include="assets\images\pup\show_subcategory%402x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
+  </ItemGroup>
+  <ItemGroup>
+    <BundleResource Include="Resources\touch-icon-57x57.png" />
+    <BundleResource Include="Resources\touch-icon-72x72.png" />
   </ItemGroup>
 </Project>
