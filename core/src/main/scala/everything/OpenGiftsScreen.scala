@@ -24,9 +24,10 @@ class OpenGiftsScreen (game :Everything) extends EveryScreen(game) {
         // TODO: spinner
         game.gameSvc.openGift(card.thingId, card.received).onFailure(onFailure).
           onSuccess(slot { res =>
+            game.gifts.remove(card)
             btn.icon.update(Icons.image(UI.cardImage(cache, res.card.toThingCard)))
             btn.clicked.connect(unitSlot {
-              new CardScreen(game, cache, res, UI.statusUpper(btn)).push
+              new CardScreen(game, cache, res, UI.statusUpper(btn)).setMessage(res.message).push
             })
             btn.click()
           })

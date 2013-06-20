@@ -17,8 +17,26 @@ class CardScreen (game :Everything, cache :UI.ImageCache, card :Card, counts :Op
   def this (game :Everything, cache :UI.ImageCache, info :CardResult, upStatus :SlotStatus => Unit) =
     this(game, cache, info.card, Some(info.haveCount -> info.thingsRemaining), upStatus)
 
+  def setMessage (msg :String) = {
+    _msg = msg
+    this
+  }
+
+  override def showTransitionCompleted () {
+    super.showTransitionCompleted()
+
+    // if we have a message from this giver, show it here
+    if (_msg != null && _bubble == null) {
+      _bubble = new Bubble(_msg, 210).above().tail(-75, 30).at(width-70, height-90).toLayer(this)
+      _bubble.setScale(0.1f)
+      iface.animator.tweenScale(_bubble).to(1f).in(200)
+      layer.add(_bubble)
+    }
+  }
+
   override def createUI (root :Root) {
-    val image = UI.frameImage(cache(card.thing.image), Thing.MAX_IMAGE_WIDTH/2, Thing.MAX_IMAGE_HEIGHT/2)
+    val image = UI.frameImage(
+      cache(card.thing.image), Thing.MAX_IMAGE_WIDTH/2, Thing.MAX_IMAGE_HEIGHT/2)
     root.add(UI.stretchShim(),
              UI.headerLabel(card.thing.name),
              UI.tipLabel(Category.getHierarchy(card.categories)),
@@ -27,9 +45,13 @@ class CardScreen (game :Everything, cache :UI.ImageCache, card :Card, counts :Op
                game.screens.push(new CardBackScreen(game, card), game.screens.flip.duration(400))
              }),
              new Label(s"Rarity: ${card.thing.rarity} - E${card.thing.rarity.value}"))
+    if (card.giver != null) root.add(new Label(card.giver.name match {
+      case null => "A birthday gift from Everything!"
+      case name => s"A gift from ${card.giver}"
+    }))
     counts match {
       case Some((haveCount, thingsRemaining)) =>
-        root.add(new Label(status(haveCount, thingsRemaining, card)))
+        root.add(UI.tipLabel(status(haveCount, thingsRemaining, card)))
       case None => // skip it
     }
     root.add(UI.stretchShim(),
@@ -58,4 +80,7 @@ class CardScreen (game :Everything, cache :UI.ImageCache, card :Card, counts :Op
       s"You have ${total - remain} of $total ${card.getSeries.name}."
     }
   }
+
+  private var _msg :String = _
+  private var _bubble :ImageLayer = _
 }

@@ -6,12 +6,12 @@ package everything
 
 import scala.collection.mutable.{Map => MMap}
 
-import playn.core.PlayN._
-import playn.core._
-
 import react.Functions
 import react.IntValue
 
+import playn.core.PlayN._
+import playn.core._
+import pythagoras.f.Point
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
 import tripleplay.util.DestroyableBag
@@ -38,11 +38,19 @@ object UI {
   val titleFont = graphics.createFont("Helvetica", Font.Style.BOLD, 48)
   val menuFont = graphics.createFont("Helvetica", Font.Style.BOLD, 24)
   val headerFont = graphics.createFont("Helvetica", Font.Style.BOLD, 16);
+  val subHeaderFont = graphics.createFont("Helvetica", Font.Style.BOLD, 14);
   val tipFont = textFont(10)
   def textFont (size :Int) = graphics.createFont("Helvetica", Font.Style.PLAIN, size)
 
   val cardCfg = new TextConfig(textColor).withFont(textFont(10)) // TODO
   val statusCfg = new TextConfig(textColor).withFont(textFont(18)) // TODO
+
+  val absorber = new Layer.HitTester {
+    def hitTest (layer :Layer, p :Point) = layer.hitTestDefault(p) match {
+      case  null => layer
+      case child => child
+    }
+  }
 
   val sheet = SimpleStyles.newSheet()
 
@@ -61,13 +69,17 @@ object UI {
   def stretchShim () :Shim = AxisLayout.stretch(shim(1, 1))
 
   def headerLabel (text :String) = new Label(text).addStyles(Style.FONT.is(headerFont))
+  def subHeaderLabel (text :String) = new Label(text).addStyles(Style.FONT.is(subHeaderFont))
   def tipLabel (text :String) = new Label(text).addStyles(Style.FONT.is(tipFont))
   def wrapLabel (text :String) = new Label(text).addStyles(Style.TEXT_WRAP.on, Style.HALIGN.left)
 
   def button (label :String)(action : =>Unit) = new Button(label).onClick(unitSlot(action))
-  def imageButton (image :Image) = new Button(Icons.image(image)) {
+  def labelButton (text :String) = new Button(text) {
     override def getStyleClass = classOf[Label]
   }
+  def imageButton (image :Image) = new Button(Icons.image(image)) {
+    override def getStyleClass = classOf[Label]
+  }.addStyles(Style.ICON_POS.above)
 
   def icon (image :Image) = new Label(Icons.image(image))
   /** Creates a label that displays a currency amount. */
@@ -129,10 +141,16 @@ object UI {
     image
   }
 
-  def statusUpper (card :Button) :(SlotStatus => Unit) = _ match {
-    // TODO: swap out old icon in puff of smoke or something
-    case SlotStatus.GIFTED => card.icon.update(Icons.image(statusImage("Gifted!")))
-    case   SlotStatus.SOLD => card.icon.update(Icons.image(statusImage("Sold!")))
-    case _ => // ignore
+  def statusUpper (card :Button) :(SlotStatus => Unit) = {
+    def update (msg :String) {
+      // TODO: swap out old icon in puff of smoke or something
+      card.icon.update(Icons.image(statusImage(msg)))
+      card.setEnabled(false)
+    }
+    _ match {
+      case SlotStatus.GIFTED => update("Gifted!")
+      case   SlotStatus.SOLD => update("Sold!")
+      case _ => // ignore
+    }
   }
 }

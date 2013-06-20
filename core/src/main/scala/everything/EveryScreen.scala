@@ -38,12 +38,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     def display () {
       root.layer.setDepth(Short.MaxValue)
       // absorb all clicks below our root layer
-      root.layer.setHitTester(new Layer.HitTester {
-        def hitTest (layer :Layer, p :Point) = {
-          val l = layer.hitTestDefault(p)
-          if (l == null) root.layer else l
-        }
-      })
+      root.layer.setHitTester(UI.absorber)
       root.addStyles(Style.BACKGROUND.is(Background.composite(
         Background.solid(UI.textColor).inset(1),
         Background.croppedImage(_pageRepeat).inset(10))))
@@ -53,6 +48,9 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       // TODO: animate reveal
     }
   }
+
+  /** Returns the coordinates of the specified layer in this screen's coordinate system. */
+  def pos (layer :Layer) :Point = Layer.Util.layerToParent(layer, this.layer, 0, 0)
 
   def push () :Unit = game.screens.push(this, pushTransition)
   protected def pushTransition :ScreenStack.Transition = game.screens.slide

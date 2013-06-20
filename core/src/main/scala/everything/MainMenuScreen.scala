@@ -14,6 +14,7 @@ import com.threerings.everything.data._
 class MainMenuScreen (game :Everything) extends EveryScreen(game) {
 
   // TODO: disable things until game.authed is true
+  // TODO: display some sort of "loading" spinner while we're talking to the server
 
   override def createUI (root :Root) {
     val btnStyle = Style.FONT.is(UI.menuFont)
