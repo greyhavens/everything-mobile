@@ -25,7 +25,6 @@
   <build>
     <plugins>
       <plugin>
-        <!-- TODO: use stock groupId when they make it work with 4.5+: com.pyx4me -->
         <groupId>com.github.wvengen</groupId>
         <artifactId>proguard-maven-plugin</artifactId>
         <version>2.0.6</version>
@@ -58,16 +57,6 @@
                 <groupId>com.threerings.everything</groupId>
                 <artifactId>everything-shared</artifactId>
               </inclusion>
-<!-- these are pulled in via playn-ios
-              <inclusion>
-                <groupId>com.googlecode.playn</groupId>
-                <artifactId>playn-core</artifactId>
-              </inclusion>
-              <inclusion>
-                <groupId>com.samskivert</groupId>
-                <artifactId>pythagoras</artifactId>
-              </inclusion>
--->
               <inclusion>
                 <groupId>com.threerings</groupId>
                 <artifactId>tripleplay</artifactId>
@@ -91,10 +80,15 @@
             <option>-keep class everything.** { *; }</option>
             <option>-dontoptimize</option>
             <option>-dontskipnonpubliclibraryclasses</option>
-            <!-- Scala stuffs -->
             <option>-dontwarn scala.**</option>
             <option>-dontnote scala.**</option>
             <option>-keepattributes *Annotation*</option>
+            <option>
+              -keepclassmembers enum * {
+                public static **[] values();
+                public static ** valueOf(java.lang.String);
+              }
+            </option>
           </options>
           <libs>
             <lib>${java.home}/lib/rt.jar</lib>
