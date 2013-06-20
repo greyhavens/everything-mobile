@@ -10,6 +10,7 @@ package object everything {
 
   type JBoolean  = java.lang.Boolean
   type JInteger  = java.lang.Integer
+  type JList[T]  = java.util.List[T]
   type JMap[K,V] = java.util.Map[K,V]
 
   def rf[A,B] (f :A => B) = new react.Function[A,B] {

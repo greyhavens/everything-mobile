@@ -30,7 +30,7 @@ object MockEveryService extends EveryService with Mockery {
   }
 
   def getRecentFeed () = {
-    RFuture.success(new FeedResult)
+    RFuture.success(Array())
   }
 
   def getUserFeed (userId :Int) = {

@@ -63,7 +63,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   def createUI (root :Root)
 
   override def wasAdded () {
-    val root = iface.createRoot(AxisLayout.vertical, UI.sheet, layer)
+    val root = iface.createRoot(AxisLayout.vertical.offStretch, UI.sheet, layer)
     root.addStyles(Style.BACKGROUND.is(background))
     createUI(root)
     root.setSize(width, height)

@@ -7,13 +7,13 @@ package everything
 import playn.core.PlayN._
 import playn.core._
 import playn.core.util.Clock
-import react.{IntValue, Signal, RMap, Value}
+import react.{IntValue, Signal, RList, RMap, Value}
 import scala.collection.JavaConversions._
 import tripleplay.game.ScreenStack
 
 import com.threerings.everything.data._
 
-class Everything (fb :Facebook) extends Game.Default(33) {
+class Everything (device :Device, fb :Facebook) extends Game.Default(33) {
 
   val screens = new ScreenStack
   val keyDown = Signal.create[Key]()
@@ -28,12 +28,19 @@ class Everything (fb :Facebook) extends Game.Default(33) {
   val coins = new IntValue(0)
   val likes = RMap.create[Int,Boolean]
   val pups = RMap.create[Powerup,JInteger]
+  val gifts = RList.create[ThingCard]
 
   /** Returns our current auth token, or `None`. */
   def authToken = Option(storage.getItem("authtok"))
 
   /** Updates our auth token. */
   def updateAuthToken (authTok :String) = storage.setItem("authtok", authTok)
+
+  // TODO: trigger revalidation of session if we close the app and return to it after more than ~10
+  // minutes
+
+  // TODO: trigger revaliation of session if we do an RPC call and it fails due to invalid auth
+  // token
 
   override def init ()  {
     keyboard.setListener(new Keyboard.Adapter {
@@ -45,16 +52,7 @@ class Everything (fb :Facebook) extends Game.Default(33) {
     main.push()
 
     // make sure we're authed with Facebook and then auth with the Everything server
-    fb.authenticate().flatMap(rf { fbId :String =>
-      val tzOffset = 0 // TODO
-      everySvc.validateSession(fbId, fb.authToken, tzOffset)
-    }).onFailure(onFailure).onSuccess { s :SessionData =>
-      self.update(s.name)
-      coins.update(s.coins)
-      for (id <- s.likes) likes.put(id, true)
-      for (id <- s.dislikes) likes.put(id, false)
-      pups.putAll(s.powerups)
-    }
+    validateSession()
   }
 
   override def update (delta :Int) {
@@ -65,6 +63,19 @@ class Everything (fb :Facebook) extends Game.Default(33) {
   override def paint (alpha :Float) {
     _clock.paint(alpha)
     screens.paint(_clock)
+  }
+
+  protected def validateSession () {
+    fb.authenticate().flatMap(rf { fbId :String =>
+      everySvc.validateSession(fbId, fb.authToken, device.timeZoneOffset)
+    }).onFailure(onFailure).onSuccess { s :SessionData =>
+      self.update(s.name)
+      coins.update(s.coins)
+      for (id <- s.likes) likes.put(id, true)
+      for (id <- s.dislikes) likes.put(id, false)
+      pups.putAll(s.powerups)
+      gifts.addAll(s.gifts)
+    }
   }
 
   protected val onFailure = (cause :Throwable) => {

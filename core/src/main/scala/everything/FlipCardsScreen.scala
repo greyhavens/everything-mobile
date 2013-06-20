@@ -39,18 +39,6 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
     val showNextFree = Values.and(lackFree, nextFlipCost.map(Functions.greaterThan(0)))
     val showNoFlips = Values.and(lackFree, nextFlipCost.map(Functions.lessThanEqual(0)))
 
-    val header = new Group(AxisLayout.horizontal()).add(
-      new Button("Back").onClick(unitSlot { pop() }),
-      UI.shim(15, 5),
-      new Group(new TableLayout(TableLayout.COL.alignRight,
-                                TableLayout.COL.alignRight).gaps(0, 10)).add(
-        new Label("You have:"), UI.moneyIcon(game.coins, _dbag),
-        new Label("Free flips:").bindVisible(haveFree),
-        new ValueLabel(freeFlips).bindVisible(haveFree),
-        new Label("Next flip:").bindVisible(showNextFree),
-        UI.moneyIcon(nextFlipCost, _dbag).bindVisible(showNextFree),
-        TableLayout.colspan(new Label("No more flips.").bindVisible(showNoFlips), 2)))
-
     val cards = new Group(new TableLayout(4).gaps(10, 10))
     for (ii <- 0 until 16) cards.add(cardWidget(ii))
 
@@ -66,8 +54,18 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
       uflabels.add(label)
     }
 
-    root.add(UI.shim(5, 5),
-             header,
+    root.add(UI.hgroup(
+               UI.button("Back")(pop()),
+               AxisLayout.stretch(UI.headerLabel("Flip Your Cards"))),
+             UI.shim(5, 5),
+             UI.hgroup(
+               new Label("You have:"), UI.moneyIcon(game.coins, _dbag),
+               UI.shim(25, 5),
+               new Label("Free flips:").bindVisible(haveFree),
+               new ValueLabel(freeFlips).bindVisible(haveFree),
+               new Label("Next flip:").bindVisible(showNextFree),
+               UI.moneyIcon(nextFlipCost, _dbag).bindVisible(showNextFree),
+               new Label("No more flips.").bindVisible(showNoFlips)),
              UI.stretchShim,
              cards,
              UI.shim(5, 5),
@@ -92,12 +90,7 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
         }
       case _ => // ignore
     }
-    slots.getView(ii).connectNotify { status :SlotStatus => status match {
-      // TODO: swap out old icon in puff of smoke or something
-      case SlotStatus.GIFTED => view.icon.update(Icons.image(UI.statusImage("Gifted!")))
-      case   SlotStatus.SOLD => view.icon.update(Icons.image(UI.statusImage("Sold!")))
-      case _ => // ignore
-    }}
+    slots.getView(ii).connectNotify(UI.statusUpper(view))
     view
   }
 

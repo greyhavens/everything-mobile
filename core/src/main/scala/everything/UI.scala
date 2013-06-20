@@ -128,4 +128,11 @@ object UI {
     statusCfg.renderCX(image.canvas, slay, image.width/2, (image.height - slay.height)/2)
     image
   }
+
+  def statusUpper (card :Button) :(SlotStatus => Unit) = _ match {
+    // TODO: swap out old icon in puff of smoke or something
+    case SlotStatus.GIFTED => card.icon.update(Icons.image(statusImage("Gifted!")))
+    case   SlotStatus.SOLD => card.icon.update(Icons.image(statusImage("Sold!")))
+    case _ => // ignore
+  }
 }

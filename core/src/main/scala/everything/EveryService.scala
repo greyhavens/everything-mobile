@@ -15,8 +15,8 @@ trait EveryService {
   /** Validates that this client has proper session credentials (starting one if needed). */
   def validateSession (fbId :String, fbToken :String, tzOffset :Int) :RFuture[SessionData]
 
-  /** Returns the calling user's pending gifts and data on their friends' activities. */
-  def getRecentFeed () :RFuture[FeedResult]
+  /** Returns data on the calling user's friends' activities. */
+  def getRecentFeed () :RFuture[Array[FeedItem]]
 
   /** Returns a list of recent activity for the specified user. */
   def getUserFeed (userId :Int) :RFuture[Array[FeedItem]]

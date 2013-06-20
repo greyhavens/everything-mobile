@@ -75,6 +75,7 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
     display()
 
   def giveCard (friend :PlayerName, msg :String) {
+    // TODO: display a "sending gift..." popup that blocks UI interaction
     game.gameSvc.giftCard(card.thing.thingId, card.received, friend.userId, msg).
       onFailure(onFailure).
       onSuccess(unitSlot {

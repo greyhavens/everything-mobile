@@ -15,7 +15,7 @@ class EveryServiceClient (game :Everything, url :String)
   override def validateSession (fbId :String, fbToken :String, tzOffset :Int) = request(
     "validateSession", new ValidateSession(fbId, fbToken, tzOffset), classOf[SessionData])
 
-  override def getRecentFeed () = request("getRecentFeed", classOf[FeedResult])
+  override def getRecentFeed () = request("getRecentFeed", classOf[Array[FeedItem]])
 
   override def getUserFeed (userId :Int) = request(
     "getUserFeed", new GetUserFeed(userId), classOf[Array[FeedItem]])
