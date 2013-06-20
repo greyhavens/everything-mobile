@@ -16,7 +16,7 @@
   <dependencies>
     <dependency>
       <groupId>com.threerings.everything</groupId>
-      <artifactId>everyclient-core</artifactId>
+      <artifactId>everyclient-pre-ios</artifactId>
       <version>${project.version}</version>
     </dependency>
 

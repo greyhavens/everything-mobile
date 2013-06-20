@@ -5,6 +5,7 @@
 package everything
 
 import playn.core.Layer
+import playn.core.PlayN.log
 import pythagoras.f.Point
 import react.UnitSignal
 
@@ -92,7 +93,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   protected def background :Background = Background.image(_pageRepeat).inset(10)
 
   protected val onFailure = (cause :Throwable) => {
-    cause.printStackTrace(System.err) // TODO: display UI
+    log.warn("Erm, failure", cause) // TODO: display UI
   }
 
   protected val _dbag = new DestroyableBag

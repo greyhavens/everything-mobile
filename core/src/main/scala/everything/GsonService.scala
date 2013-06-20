@@ -26,7 +26,7 @@ abstract class GsonService (game :Everything, baseURL :String) {
     val bldr = net.req(s"$baseURL/$method")
     if (args != null) {
       val pay = _gson.toJson(args)
-      println("REQ " + pay)
+      log.info("REQ " + pay)
       bldr.setPayload(pay)
     }
     game.authToken match {
@@ -39,7 +39,7 @@ abstract class GsonService (game :Everything, baseURL :String) {
           if (rsp.responseCode != 200)
             throw new Net.HttpException(rsp.responseCode, rsp.payloadString)
           noteAuthCookie(rsp)
-          println("RSP " + rsp.payloadString)
+          log.info("RSP " + rsp.payloadString)
           Try.success(rfun(rsp.payloadString))
         } catch {
           case e :Throwable => Try.failure[R](e)

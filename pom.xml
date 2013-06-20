@@ -36,7 +36,10 @@
     </profile>
     <profile>
       <id>ios</id>
-      <modules><module>ios</module></modules>
+      <modules>
+        <module>pre-ios</module>
+        <module>ios</module>
+      </modules>
     </profile>
   </profiles>
 </project>
