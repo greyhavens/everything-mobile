@@ -27,6 +27,6 @@ abstract class CardScreen (
       new GiftCardScreen(game, cache, card, upStatus).push
     },
     UI.button("Share") {
-      // TODO
+      todo()
     })
 }

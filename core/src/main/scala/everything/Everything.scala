@@ -23,11 +23,13 @@ class Everything (device :Device, fb :Facebook) extends Game.Default(33) {
   val everySvc :EveryService = if (mock) MockEveryService else new EveryServiceClient(this, svcURL)
   val gameSvc  :GameService  = if (mock) MockGameService  else new GameServiceClient(this, svcURL)
 
-  val self = Value.create[PlayerName](null)
+  val self  = Value.create[PlayerName](null)
   val coins = new IntValue(0)
   val likes = RMap.create[Int,Boolean]
-  val pups = RMap.create[Powerup,JInteger]
+  val pups  = RMap.create[Powerup,JInteger]
   val gifts = RList.create[ThingCard]
+
+  val main = new MainMenuScreen(this);
 
   /** Returns our current auth token, or `None`. */
   def authToken = Option(storage.getItem("authtok"))
@@ -45,11 +47,8 @@ class Everything (device :Device, fb :Facebook) extends Game.Default(33) {
     keyboard.setListener(new Keyboard.Adapter {
       override def onKeyDown (event :Keyboard.Event) = keyDown.emit(event.key)
     })
-
     // display our main menu
-    val main = new MainMenuScreen(this);
     main.push()
-
     // make sure we're authed with Facebook and then auth with the Everything server
     validateSession()
   }
@@ -67,7 +66,7 @@ class Everything (device :Device, fb :Facebook) extends Game.Default(33) {
   protected def validateSession () {
     fb.authenticate().flatMap(rf { fbId :String =>
       everySvc.validateSession(fbId, fb.authToken, device.timeZoneOffset)
-    }).onFailure(onFailure).onSuccess { s :SessionData =>
+    }).onFailure(main.onFailure).onSuccess { s :SessionData =>
       self.update(s.name)
       coins.update(s.coins)
       for (id <- s.likes) likes.put(id, true)
@@ -75,10 +74,6 @@ class Everything (device :Device, fb :Facebook) extends Game.Default(33) {
       pups.putAll(s.powerups)
       gifts.addAll(s.gifts)
     }
-  }
-
-  protected val onFailure = (cause :Throwable) => {
-    cause.printStackTrace(System.err) // TODO: display UI
   }
 
   private val _clock = new Clock.Source(33)

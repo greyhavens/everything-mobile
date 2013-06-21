@@ -26,9 +26,9 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
 
     def money (amount :Int) = UI.moneyIcon(amount).addStyles(Style.FONT.is(UI.wideButtonFont))
     val coins = new Group(new TableLayout(cr, cd).gaps(5, 15)).
-      add(money( 5000), UI.button("$0.99") {},
-          money(11000), UI.button("$1.99") {},
-          money(24000), UI.button("$3.99") {})
+      add(money( 5000), UI.button("$0.99") { todo() },
+          money(11000), UI.button("$1.99") { todo() },
+          money(24000), UI.button("$3.99") { todo() })
 
     // COLS: icon ; name+descrip ; cost ; buy
     val pups = new Group(new TableLayout(cd, cl, cd).gaps(5, 5)).
@@ -44,7 +44,7 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
       val descLbl = UI.wrapLabel("")
       _dbag.add(descVal.connectNotify(descLbl.text.slot))
       val buy = UI.moneyButton(pup.cost) {
-        // TODO
+        todo()
       }
       pups.add(UI.icon(UI.getImage(s"pup/${pup.name.toLowerCase}.png")),
                new Group(AxisLayout.vertical.gap(1), Style.HALIGN.left).add(

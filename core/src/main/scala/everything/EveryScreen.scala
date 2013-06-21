@@ -51,6 +51,11 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     }
   }
 
+  val onFailure = (cause :Throwable) => {
+    log.warn("Erm, failure", cause)
+    new Dialog().addTitle("Oops").addText(cause.getMessage).addButton("OK", ())
+  }
+
   /** Returns the coordinates of the specified layer in this screen's coordinate system. */
   def pos (layer :Layer) :Point = Layer.Util.layerToParent(layer, this.layer, 0, 0)
 
@@ -97,9 +102,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
 
   protected def background () :Background = Background.image(_bgImage).inset(10)
 
-  protected val onFailure = (cause :Throwable) => {
-    log.warn("Erm, failure", cause) // TODO: display UI
-  }
+  protected def todo () = new Dialog().addTitle("TODO").addButton("OK", ()).display()
 
   protected val _dbag = new DestroyableBag
   protected val _bgImage = height match {
