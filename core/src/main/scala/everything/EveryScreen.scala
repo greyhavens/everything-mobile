@@ -26,10 +26,9 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     def addTitle (text :String) = add(UI.headerLabel(text))
     def addText (text :String) = add(UI.wrapLabel(text))
 
-    def addButton (lbl :String, action : =>Unit) :this.type =
-      addButton(new Button(lbl), action)
-    def addButton (btn :Button, action : =>Unit) :this.type = {
-      buttons.add(btn.onClick(unitSlot(action)).onClick(unitSlot {
+    def addButton (lbl :String, action : =>Unit) :this.type = addButton(UI.button(lbl)(action))
+    def addButton (btn :Button) :this.type = {
+      buttons.add(btn.onClick(unitSlot {
         // TODO: animate dismiss
         iface.destroyRoot(root)
       }))

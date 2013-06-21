@@ -6,7 +6,7 @@ package everything
 
 import java.util.TimeZone
 import playn.android.GameActivity
-import playn.core.PlayN
+import playn.core.{Font, PlayN}
 import react.RFuture
 
 class EverythingActivity extends GameActivity {
@@ -16,6 +16,11 @@ class EverythingActivity extends GameActivity {
     platform.graphics.setCanvasFilterBitmaps(true)
     // we have only @2x resources, so use those
     platform.assets.setAssetScale(2)
+    // register our custom fonts
+    platform.graphics.registerFont(
+      "fonts/copper.ttf", "Copperplate Gothic Bold", Font.Style.PLAIN);
+    platform.graphics.registerFont(
+      "fonts/treasure.ttf", "Treasure Map Deadhand", Font.Style.PLAIN);
 
     val facebook = new Facebook {
       def userId = "1008138021" // testy

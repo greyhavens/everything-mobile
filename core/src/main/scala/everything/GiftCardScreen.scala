@@ -18,12 +18,11 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
                       upStatus :SlotStatus => Unit) extends EveryScreen(game) {
 
   override def createUI (root :Root) {
-    val header = UI.hgroup().add(
+    val header = UI.plate(
       UI.icon(UI.cardImage(cache, card.toThingCard)),
-      UI.vgroup().add(
-        UI.headerLabel(card.thing.name),
-        UI.tipLabel(Category.getHierarchy(card.categories)),
-        UI.tipLabel(s"Rarity: ${card.thing.rarity} - E${card.thing.rarity.value}")))
+      UI.headerLabel(card.thing.name),
+      UI.pathLabel(card.categories.map(_.name), 12),
+      UI.tipLabel(s"Rarity: ${card.thing.rarity} - E${card.thing.rarity.value}"))
     val friends = new Group(new TableLayout(TableLayout.COL.fixed, TableLayout.COL.alignLeft,
                                             TableLayout.COL.fixed).gaps(5, 5)).add(
       UI.shim(5, 5), new Label("Loading..."), UI.shim(5, 5))

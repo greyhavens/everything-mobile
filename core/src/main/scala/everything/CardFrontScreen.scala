@@ -6,6 +6,7 @@ package everything
 
 import playn.core._
 import tripleplay.ui._
+import tripleplay.ui.layout.AxisLayout
 
 import com.threerings.everything.data._
 
@@ -34,27 +35,21 @@ class CardFrontScreen (
   override def createUI (root :Root) {
     val image = UI.frameImage(
       cache(card.thing.image), Thing.MAX_IMAGE_WIDTH/2, Thing.MAX_IMAGE_HEIGHT/2)
-    root.add(UI.shim(10, 10),
-             UI.headerLabel(card.thing.name),
-             UI.tipLabel(Category.getHierarchy(card.categories)),
-             UI.tipLabel(s"${card.position+1} of ${card.things}"),
-             UI.imageButton(image) {
-               new CardBackScreen(game, cache, card, counts, upStatus).replace()
-             },
-             new Label(s"Rarity: ${card.thing.rarity} - E${card.thing.rarity.value}"))
-    if (card.giver != null) root.add(new Label(card.giver.name match {
+    val imgbtn = UI.imageButton(image) {
+      new CardBackScreen(game, cache, card, counts, upStatus).replace()
+    };
+    val bits = new Group(AxisLayout.vertical.gap(0)).add(
+      new Label(s"Rarity: ${card.thing.rarity} - E${card.thing.rarity.value}"))
+    if (card.giver != null) bits.add(new Label(card.giver.name match {
       case null => "A birthday gift from Everything!"
       case name => s"A gift from ${card.giver}"
     }))
     counts match {
       case Some((haveCount, thingsRemaining)) =>
-        root.add(UI.tipLabel(status(haveCount, thingsRemaining, card)))
+        bits.add(new Label(status(haveCount, thingsRemaining, card)))
       case None => // skip it
     }
-    root.add(UI.stretchShim(),
-             buttons())
-
-    // TODO: trophies!
+    root.add(header(), imgbtn, bits, UI.stretchShim(), buttons())
   }
 
   def status (have :Int, remain :Int, card :Card) = {

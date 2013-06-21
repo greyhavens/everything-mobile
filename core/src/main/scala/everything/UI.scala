@@ -11,7 +11,7 @@ import react.IntValue
 
 import playn.core.PlayN._
 import playn.core._
-import pythagoras.f.Point
+import pythagoras.f.{Dimension, Point}
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
 import tripleplay.util.DestroyableBag
@@ -35,16 +35,30 @@ object UI {
   val cardBack = getImage("card_back.png")
   val cardGift = getImage("card_gift.png")
 
-  val titleFont = graphics.createFont("Helvetica", Font.Style.BOLD, 48)
-  val menuFont = graphics.createFont("Helvetica", Font.Style.BOLD, 24)
-  val buttonFont = graphics.createFont("Helvetica", Font.Style.BOLD, 24)
-  val headerFont = graphics.createFont("Helvetica", Font.Style.BOLD, 16);
-  val subHeaderFont = graphics.createFont("Helvetica", Font.Style.BOLD, 14);
-  val tipFont = textFont(10)
-  def textFont (size :Int) = graphics.createFont("Helvetica", Font.Style.PLAIN, size)
+  val buttonUp = getImage("button/up.png")
+  val buttonDn = getImage("button/down.png")
+  val wideBtnUp = getImage("button/wide_up.png")
+  val wideBtnDn = getImage("button/wide_down.png")
 
-  val cardCfg = new TextConfig(textColor).withFont(textFont(10)) // TODO
-  val statusCfg = new TextConfig(textColor).withFont(textFont(18)) // TODO
+  val Machine = "Copperplate Gothic Bold"
+  val Handwriting = "Treasure Map Deadhand"
+
+  val titleFont = graphics.createFont(Machine, Font.Style.PLAIN, 38)
+  val menuFont = graphics.createFont(Machine, Font.Style.PLAIN, 24)
+  val moneyFont = graphics.createFont(Machine, Font.Style.PLAIN, 12)
+  val buttonFont = graphics.createFont(Machine, Font.Style.PLAIN, 16)
+  val wideButtonFont = graphics.createFont(Machine, Font.Style.PLAIN, 20)
+  val headerFont = graphics.createFont(Machine, Font.Style.PLAIN, 18);
+  val subHeaderFont = graphics.createFont(Machine, Font.Style.PLAIN, 12);
+  val tipFont = textFont(14)
+  def glyphFont (size :Int) = graphics.createFont("Times New Roman", Font.Style.PLAIN, size);
+  def textFont (size :Int) = graphics.createFont(Handwriting, Font.Style.PLAIN, size)
+
+  val statusCfg = new TextConfig(textColor).withFont(textFont(18))
+  val cardCfg = new TextConfig(textColor).withFont(textFont(10)).withWrapping(
+    cardFront.width-8, TextFormat.Alignment.CENTER)
+  val smallCardCfg = new TextConfig(textColor).withFont(textFont(8)).withWrapping(
+    cardFront.width-8, TextFormat.Alignment.CENTER)
 
   val absorber = new Layer.HitTester {
     def hitTest (layer :Layer, p :Point) = layer.hitTestDefault(p) match {
@@ -53,15 +67,28 @@ object UI {
     }
   }
 
-  val sheet = SimpleStyles.newSheetBuilder().
-    add(classOf[Button], Style.FONT.is(buttonFont)).
+  def sheet = SimpleStyles.newSheetBuilder().
+    add(classOf[Element[_]], Style.COLOR.is(textColor), Style.FONT.is(textFont(20))).
+    add(classOf[Button], Style.FONT.is(buttonFont),
+        Style.BACKGROUND.is(Background.image(buttonUp).inset(0, 13, 2, 13))).
+    add(classOf[Button], Style.Mode.SELECTED,
+        Style.BACKGROUND.is(Background.image(buttonDn).inset(2, 11, 0, 15))).
+    add(classOf[WideTextButton], Style.FONT.is(wideButtonFont),
+        Style.BACKGROUND.is(Background.image(wideBtnUp).inset(1, 25, 5, 25))).
+    add(classOf[WideTextButton], Style.Mode.SELECTED,
+        Style.BACKGROUND.is(Background.image(wideBtnDn).inset(3, 23, 3, 27))).
     create()
 
   def hgroup (gap :Int = 5) = new Group(AxisLayout.horizontal().gap(gap))
   def hgroup (elems :Element[_]*) :Group = add(hgroup(5), elems)
-  def vgroup (elems :Element[_]*) = add(new Group(AxisLayout.vertical()), elems)
+  def vgroup (elems :Element[_]*) = add(new Group(AxisLayout.vertical().offConstrain), elems)
+  def vgroup0 (elems :Element[_]*) = add(new Group(AxisLayout.vertical().offConstrain.gap(0)), elems)
   def vsgroup (elems :Element[_]*) = add(new Group(AxisLayout.vertical().offStretch),  elems)
-  def add (group :Group, elems :Seq[Element[_]]) = (group /: elems)(_ add _)
+  def plate (image :Element[_], elems :Element[_]*) = {
+    val right = vgroup0(elems :_*).setConstraint(AxisLayout.stretched).addStyles(Style.HALIGN.left)
+    hgroup().add(image, right)
+  }
+  protected def add (group :Group, elems :Seq[Element[_]]) = (group /: elems)(_ add _)
 
   /** Creates a vertical-only scroller containing `group`. */
   def vscroll (contents :Group) = new Scroller(contents).setBehavior(Scroller.Behavior.VERTICAL)
@@ -71,23 +98,43 @@ object UI {
   /** Returns a shim configured with an [AxisLayout] stretch constraint. */
   def stretchShim () :Shim = AxisLayout.stretch(shim(1, 1))
 
-  def headerLabel (text :String) = new Label(text).addStyles(Style.FONT.is(headerFont))
-  def subHeaderLabel (text :String) = new Label(text).addStyles(Style.FONT.is(subHeaderFont))
-  def tipLabel (text :String) = new Label(text).addStyles(Style.FONT.is(tipFont))
+  def label (text :String, font :Font) = new Label(text).addStyles(Style.FONT.is(font))
+  def headerLabel (text :String) = label(text, headerFont)
+  def subHeaderLabel (text :String) = label(text, subHeaderFont)
+  def tipLabel (text :String) = label(text, tipFont)
   def wrapLabel (text :String) = new Label(text).addStyles(Style.TEXT_WRAP.on, Style.HALIGN.left)
+  def glyphLabel (glyph :String) = label(glyph, glyphFont(14))
 
-  def button (label :String, styles :Style.Binding[_]*)(action : =>Unit) =
-    new Button(label).addStyles(styles :_*).onClick(unitSlot(action))
-  def labelButton (text :String, styles :Style.Binding[_]*)(action : => Unit) = new Button(text) {
-    override def getStyleClass = classOf[Label]
-  }.addStyles(styles.toArray :_*).addStyles(Style.UNDERLINE.on).onClick(unitSlot(action))
-  def imageButton (image :Image)(action : => Unit) = new Button(Icons.image(image)) {
-    override def getStyleClass = classOf[Label]
-  }.addStyles(Style.ICON_POS.above).onClick(unitSlot(action))
+  def pathLabel (path :Seq[String], fontSize :Int = 14) = {
+    val (font, gfont) = (textFont(fontSize), glyphFont(fontSize))
+    (UI.hgroup() /: path)((g, p) => g.childCount match {
+      case 0 => g.add(label(p, font))
+      case n => g.add(label(Category.SEP_CHAR, gfont), label(p, font))
+    })
+  }
+
+  def inertButton (label :String, styles :Style.Binding[_]*) :Button =
+    new TextButton(label).addStyles(styles :_*)
+  def button (label :String, styles :Style.Binding[_]*)(action : =>Unit) :Button =
+    inertButton(label, styles :_*).onClick(unitSlot(action))
+  def wideButton (label :String, styles :Style.Binding[_]*)(action : =>Unit) :Button =
+    new WideTextButton(label).addStyles(styles :_*).onClick(unitSlot(action))
+  def labelButton (text :String, styles :Style.Binding[_]*)(action : => Unit) :Button =
+    new LabelButton(text).addStyles(styles.toArray :_*).addStyles(Style.UNDERLINE.on).
+      onClick(unitSlot(action))
+  def imageButton (image :Image)(action : => Unit) :Button =
+    new LabelButton(Icons.image(image)).addStyles(Style.ICON_POS.above).onClick(unitSlot(action))
+  def moneyButton (amount :Int)(action : =>Unit) = {
+    val b = button(amount.toString)(action)
+    b.icon.update(Icons.image(coinsIcon))
+    b.addStyles(Style.ICON_GAP.is(0))
+    b
+  }
 
   def icon (image :Image) = new Label(Icons.image(image))
   /** Creates a label that displays a currency amount. */
-  def moneyIcon (coins :Int) = new Label(coins.toString, Icons.image(coinsIcon))
+  def moneyIcon (coins :Int) = new Label(coins.toString, Icons.image(coinsIcon)).
+    addStyles(Style.FONT.is(moneyFont))
   /** Creates a label that displays a (reactive) currency amount. */
   def moneyIcon (coins :IntValue, dbag :DestroyableBag) :Label = {
     val label = moneyIcon(0)
@@ -123,8 +170,9 @@ object UI {
   def cardImage (cache :ImageCache, card :ThingCard) = {
     val cardimg = graphics.createImage(cardFront.width, cardFront.height)
     cardimg.canvas.drawImage(cardFront, 0, 0)
-    val title = cardCfg.layout(card.name)
-    cardCfg.renderCX(cardimg.canvas, title, cardimg.width/2, 2)
+    val nameCfg = if (card.name.length > 10) smallCardCfg else cardCfg
+    val title = nameCfg.layout(card.name)
+    val rarity = cardCfg.layout(card.rarity.toString)
     cache(card.image).addCallback(cb { thing =>
       // these are hardcoded because the image is asymmetric and has built-in shadow... blah.
       val scale = math.min(42/thing.width, 50/thing.height)
@@ -133,9 +181,9 @@ object UI {
       // cardimg.canvas.setStrokeColor(textColor).strokeRect(
       //   sx-0.5f, sy-0.5f, swidth+0.5f, sheight+0.5f)
       cardimg.canvas.drawImage(thing, sx, sy, swidth, sheight)
+      nameCfg.renderCX(cardimg.canvas, title, cardimg.width/2, 2)
+      cardCfg.renderCX(cardimg.canvas, rarity, cardimg.width/2, cardimg.height-rarity.height-2)
     })
-    val rarity = cardCfg.layout(card.rarity.toString)
-    cardCfg.renderCX(cardimg.canvas, rarity, cardimg.width/2, cardimg.height-rarity.height-2)
     cardimg
   }
 
@@ -146,16 +194,28 @@ object UI {
     image
   }
 
-  def statusUpper (card :Button) :(SlotStatus => Unit) = {
-    def update (msg :String) {
-      // TODO: swap out old icon in puff of smoke or something
-      card.icon.update(Icons.image(statusImage(msg)))
-      card.setEnabled(false)
+  protected class LabelButton (text :String, icon :Icon) extends Button(text, icon) {
+    def this (text :String) = this(text, null)
+    def this (icon :Icon) = this(null, icon)
+    override def getStyleClass = classOf[Label]
+  }
+
+  protected class TextButton (text :String) extends Button(text) {
+    override protected def computeSize (hintX :Float, hintY :Float) :Dimension = {
+      val d = super.computeSize(hintX, hintY);
+      // d.width = buttonUp.width
+      d.height = 2*buttonUp.height/3
+      d
     }
-    _ match {
-      case SlotStatus.GIFTED => update("Gifted!")
-      case   SlotStatus.SOLD => update("Sold!")
-      case _ => // ignore
+  }
+
+  protected class WideTextButton (text :String) extends Button(text) {
+    override protected def computeSize (hintX :Float, hintY :Float) :Dimension = {
+      val d = super.computeSize(hintX, hintY);
+      // d.width = wideBtnUp.width
+      d.height = wideBtnUp.height
+      d
     }
+    override protected def getStyleClass = classOf[WideTextButton]
   }
 }

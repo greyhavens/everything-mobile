@@ -10,7 +10,7 @@ import tripleplay.ui.layout.TableLayout
 
 import com.threerings.everything.data._
 
-class CategoryScreen (game :Everything, who :PlayerName, title :String, ss :Seq[SeriesCard])
+class CategoryScreen (game :Everything, who :PlayerName, path :Array[String], ss :Seq[SeriesCard])
     extends EveryScreen(game) {
 
   override def createUI (root :Root) {
@@ -19,17 +19,15 @@ class CategoryScreen (game :Everything, who :PlayerName, title :String, ss :Seq[
                                          TableLayout.COL.fixed.alignLeft).gaps(5, 10),
                          Style.VALIGN.top)
     ss foreach { s =>
-      cats.add(new Label(s.glyph),
+      cats.add(UI.glyphLabel(s.glyph),
                (UI.labelButton(s.name) {
-                 new SeriesScreen(game, who, title, s).push()
+                 new SeriesScreen(game, who, path, s).push()
                }).addStyles(Style.HALIGN.left, Style.TEXT_WRAP.on),
                new Label(s"${s.owned} of ${s.things}"))
     }
     root.add(header("View Collection"),
-             UI.hgroup(UI.icon(UI.frameImage(UI.friendImage(who), 50, 50)),
-                       UI.vgroup(UI.headerLabel(who.toString),
-                                 UI.hgroup(new Label(title))).
-                         setConstraint(AxisLayout.stretched).addStyles(Style.HALIGN.left)),
+             UI.plate(UI.icon(UI.frameImage(UI.friendImage(who), 50, 50)),
+                      UI.headerLabel(who.toString), UI.pathLabel(path)),
              AxisLayout.stretch(cats))
   }
 }

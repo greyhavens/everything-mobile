@@ -13,9 +13,21 @@ import react.RFuture
 object EverythingJava {
 
   def main (args :Array[String]) {
+    val facebookUserId = "540615819" // mdb
+    // val facebookUserId = "1008138021" // testy
+
+    val config = new JavaPlatform.Config
+    config.width = 320
+    config.height = 480
+    config.scaleFactor = 2
+    config.storageFileName = s"playn${facebookUserId}"
+
+    val platform = JavaPlatform.register(config)
+    platform.graphics.registerFont("Copperplate Gothic Bold", "fonts/copper.ttf")
+    platform.graphics.registerFont("Treasure Map Deadhand", "fonts/treasure.ttf")
+
     val facebook = new Facebook {
-      // def userId = "1008138021" // testy
-      def userId = "540615819" // mdb
+      def userId = facebookUserId
       def authToken = "testToken"
       def authenticate () = RFuture.success(userId)
     }
@@ -26,12 +38,6 @@ object EverythingJava {
         -tz.getOffset(System.currentTimeMillis)/MillisPerMinute
       }
     }
-    val config = new JavaPlatform.Config
-    config.width = 320
-    config.height = 480
-    config.scaleFactor = 2
-    config.storageFileName = s"playn${facebook.userId}"
-    JavaPlatform.register(config)
     PlayN.run(new Everything(device, facebook))
   }
 

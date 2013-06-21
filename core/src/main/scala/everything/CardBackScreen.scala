@@ -17,11 +17,7 @@ class CardBackScreen (
 ) extends CardScreen(game, cache, card, upStatus) {
 
   override def createUI (root :Root) {
-    root.add(UI.shim(10, 10),
-             UI.headerLabel(card.thing.name),
-             UI.tipLabel(Category.getHierarchy(card.categories)),
-             UI.tipLabel(s"${card.position+1} of ${card.things}"),
-             UI.stretchShim(),
+    root.add(header(),
              UI.wrapLabel(card.thing.descrip),
              UI.shim(5, 5),
              UI.subHeaderLabel("Facts"),
@@ -57,7 +53,7 @@ class CardBackScreen (
 
   def formatFacts (facts :Array[String]) = {
     val lay = new TableLayout(TableLayout.COL.fixed, TableLayout.COL.stretch).alignTop.gaps(5, 5)
-    (new Group(lay) /: facts)((g, f) => g.add(new Label("•"), UI.wrapLabel(f)))
+    (new Group(lay) /: facts)((g, f) => g.add(UI.glyphLabel("•"), UI.wrapLabel(f)))
   }
 
   override protected def pushTransition = game.screens.flip.duration(300)

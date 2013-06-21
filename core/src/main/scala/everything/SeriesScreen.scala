@@ -10,7 +10,7 @@ import tripleplay.ui.layout.TableLayout
 
 import com.threerings.everything.data._
 
-class SeriesScreen (game :Everything, who :PlayerName, title :String, scard :SeriesCard)
+class SeriesScreen (game :Everything, who :PlayerName, path :Array[String], scard :SeriesCard)
     extends EveryScreen(game) {
 
   val cache = new UI.ImageCache
@@ -18,12 +18,9 @@ class SeriesScreen (game :Everything, who :PlayerName, title :String, scard :Ser
   override def createUI (root :Root) {
     val cards = new Group(new TableLayout(4).gaps(10, 10), Style.VALIGN.top)
     cards.add(TableLayout.colspan(new Label("Loading..."), 4))
-    root.add(header("View Collection"),
-             UI.hgroup(UI.icon(UI.frameImage(UI.friendImage(who), 50, 50)),
-                       UI.vgroup(UI.headerLabel(who.toString),
-                                 UI.tipLabel(title),
-                                 new Label(scard.name)).
-                         setConstraint(AxisLayout.stretched).addStyles(Style.HALIGN.left)),
+    root.add(header(path(0)),
+             UI.plate(UI.icon(UI.frameImage(UI.friendImage(who), 50, 50)),
+                      UI.headerLabel(who.toString), UI.pathLabel(path.drop(1) :+ scard.name)),
              AxisLayout.stretch(UI.vscroll(cards)))
 
     game.gameSvc.getSeries(who.userId, scard.categoryId).onFailure(onFailure).

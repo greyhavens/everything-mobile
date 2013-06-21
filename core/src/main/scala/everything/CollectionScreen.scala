@@ -25,11 +25,10 @@ class CollectionScreen (game :Everything, who :PlayerName) extends EveryScreen(g
                                          TableLayout.COL.fixed.alignLeft).gaps(0, 10)).add(
       TableLayout.colspan(new Label("Loading..."), 3))
     root.add(header("View Collection"),
-             UI.hgroup(UI.icon(UI.frameImage(UI.friendImage(who), 50, 50)),
-                       UI.vgroup(UI.headerLabel(who.toString),
-                                 UI.hgroup(new Label("Things:"), new ValueLabel(things),
-                                           new Label("Series:"), new ValueLabel(series))).
-                         setConstraint(AxisLayout.stretched).addStyles(Style.HALIGN.left)),
+             UI.plate(UI.icon(UI.frameImage(UI.friendImage(who), 50, 50)),
+                      UI.headerLabel(who.toString),
+                      UI.hgroup(new Label("Things:"), new ValueLabel(things),
+                                new Label("Series:"), new ValueLabel(series))),
              AxisLayout.stretch(UI.vscroll(UI.hgroup(UI.stretchShim, cats, UI.stretchShim))))
 
     game.gameSvc.getCollection(who.userId).onFailure(onFailure).onSuccess(popCats(cats) _)
@@ -50,8 +49,7 @@ class CollectionScreen (game :Everything, who :PlayerName) extends EveryScreen(g
           cats.add(if (idx == 0) new Label(cat) else UI.shim(5, 5)) // TOOD: lines
           cats.add(UI.icon(connector(idx, subcats.size)))
           cats.add(UI.labelButton(scat) {
-            val title = s"$cat ${Category.SEP_CHAR} $scat"
-            new CategoryScreen(game, who, title, subcats.get(scat)).push()
+            new CategoryScreen(game, who, Array(cat, scat), subcats.get(scat)).push()
           })
       }
     }
