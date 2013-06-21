@@ -24,7 +24,6 @@ class Everything (device :Device, fb :Facebook) extends Game.Default(33) {
   val gameSvc  :GameService  = if (mock) MockGameService  else new GameServiceClient(this, svcURL)
 
   val self = Value.create[PlayerName](null)
-  val authed = Value.create(false)
   val coins = new IntValue(0)
   val likes = RMap.create[Int,Boolean]
   val pups = RMap.create[Powerup,JInteger]

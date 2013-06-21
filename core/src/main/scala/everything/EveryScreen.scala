@@ -36,6 +36,10 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       this
     }
 
+    def background () :Background =
+      Background.composite(Background.solid(UI.textColor).inset(1),
+                           Background.croppedImage(UI.getImage("page_repeat.png")).inset(9))
+
     def display () {
       root.layer.setDepth(Short.MaxValue)
       // absorb all clicks below our root layer
@@ -52,6 +56,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   def pos (layer :Layer) :Point = Layer.Util.layerToParent(layer, this.layer, 0, 0)
 
   def push () :Unit = game.screens.push(this, pushTransition)
+  def replace () :Unit = game.screens.replace(this, pushTransition)
   protected def pushTransition :ScreenStack.Transition = game.screens.slide.duration(300)
 
   def pop () :Unit = game.screens.remove(this, popTransition)
@@ -66,6 +71,9 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     root.setSize(width, height)
   }
 
+  protected def header (title :String) =
+    UI.hgroup(UI.button("Back")(pop()), AxisLayout.stretch(UI.headerLabel(title)))
+
   /** Displays a dialog enabling the sale of `card`. On sale, `onSold` is invoked and this screen is
     * popped. */
   protected def maybeSellCard (card :ThingCard)(onSold : =>Unit) {
@@ -75,6 +83,8 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   }
 
   protected def sellCard (card :ThingCard, onSold : =>Unit) {
+    onSold
+    pop()
     game.gameSvc.sellCard(card.thingId, card.received).onFailure(onFailure).
       onSuccess(slot { res =>
         game.coins.update(res.coins)
@@ -83,8 +93,6 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
           case null => game.likes.remove(catId)
           case like => game.likes.put(catId, like)
         }
-        onSold
-        pop()
       })
   }
 

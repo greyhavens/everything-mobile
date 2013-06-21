@@ -9,30 +9,38 @@ import pythagoras.f.Point
 import tripleplay.ui._
 import tripleplay.ui.layout.TableLayout
 
-import com.threerings.everything.data.{Card, Category}
+import com.threerings.everything.data._
 
-class CardBackScreen (game :Everything, card :Card) extends EveryScreen(game) {
+class CardBackScreen (
+  game :Everything, cache :UI.ImageCache, card :Card, counts :Option[(Int,Int)],
+  upStatus :SlotStatus => Unit
+) extends CardScreen(game, cache, card, upStatus) {
 
   override def createUI (root :Root) {
-    // root.setStylesheet(Stylesheet.builder.add(classOf[Label], Style.HALIGN.left).create)
-    root.add(UI.headerLabel(card.thing.name),
+    root.add(UI.shim(10, 10),
+             UI.headerLabel(card.thing.name),
              UI.tipLabel(Category.getHierarchy(card.categories)),
              UI.tipLabel(s"${card.position+1} of ${card.things}"),
-             UI.shim(5, 5),
+             UI.stretchShim(),
              UI.wrapLabel(card.thing.descrip),
              UI.shim(5, 5),
              UI.subHeaderLabel("Facts"),
              formatFacts(card.thing.facts.split("\n")),
              UI.shim(5, 5),
              UI.hgroup(UI.subHeaderLabel("Source:"),
-                       UI.labelButton(nameSource(card.thing.source)).onClick(unitSlot {
+                       UI.labelButton(nameSource(card.thing.source)) {
                          PlayN.openURL(card.thing.source)
-                       }).addStyles(Style.UNDERLINE.on)),
-             UI.hgroup(UI.subHeaderLabel("Flipped on:"), new Label(""+card.received)))
+                       }),
+             UI.hgroup(UI.subHeaderLabel("Flipped on:"), new Label(""+card.received)),
+             UI.stretchShim(),
+             buttons())
 
     root.layer.setHitTester(UI.absorber)
     root.layer.addListener(new Pointer.Adapter {
-      override def onPointerStart (event :Pointer.Event) = pop()
+      override def onPointerStart (event :Pointer.Event) {
+        game.screens.replace(new CardFrontScreen(game, cache, card, counts, upStatus),
+                             pushTransition)
+      }
     })
   }
 
@@ -52,5 +60,5 @@ class CardBackScreen (game :Everything, card :Card) extends EveryScreen(game) {
     (new Group(lay) /: facts)((g, f) => g.add(new Label("•"), UI.wrapLabel(f)))
   }
 
-  override protected def popTransition = game.screens.flip.duration(400)
+  override protected def pushTransition = game.screens.flip.duration(300)
 }

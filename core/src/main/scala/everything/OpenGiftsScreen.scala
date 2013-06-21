@@ -15,28 +15,21 @@ class OpenGiftsScreen (game :Everything) extends EveryScreen(game) {
   val cache = new UI.ImageCache
 
   override def createUI (root :Root) {
-
-    val COLS = 4
-    val cards = new Group(new TableLayout(COLS).gaps(10, 10))
+    val cards = new Group(new TableLayout(4).gaps(10, 10))
     game.gifts.foreach { card =>
-      val btn = UI.imageButton(UI.cardGift)
-      btn.clicked.connect(unitSlot {
-        // TODO: spinner
-        game.gameSvc.openGift(card.thingId, card.received).onFailure(onFailure).
-          onSuccess(slot { res =>
-            game.gifts.remove(card)
-            btn.icon.update(Icons.image(UI.cardImage(cache, res.card.toThingCard)))
-            btn.clicked.connect(unitSlot {
-              new CardScreen(game, cache, res, UI.statusUpper(btn)).setMessage(res.message).push
+      cards.add(new CardButton(game, cache) {
+        override protected def isGift = true
+        override protected def onReveal () {
+          // TODO: spinner
+          game.gameSvc.openGift(card.thingId, card.received).onFailure(onFailure).
+            onSuccess(slot { res =>
+              game.gifts.remove(card)
+              reveal(res)
             })
-            btn.click()
-          })
-      }).once
-      cards.add(btn)
+        }
+      })
     }
 
-    root.add(UI.hgroup(UI.button("Back")(pop()),
-                       AxisLayout.stretch(UI.headerLabel("Open Your Gifts!"))),
-             AxisLayout.stretch(cards))
+    root.add(header("Open Your Gifts!"), AxisLayout.stretch(cards))
   }
 }

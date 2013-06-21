@@ -37,6 +37,7 @@ object UI {
 
   val titleFont = graphics.createFont("Helvetica", Font.Style.BOLD, 48)
   val menuFont = graphics.createFont("Helvetica", Font.Style.BOLD, 24)
+  val buttonFont = graphics.createFont("Helvetica", Font.Style.BOLD, 24)
   val headerFont = graphics.createFont("Helvetica", Font.Style.BOLD, 16);
   val subHeaderFont = graphics.createFont("Helvetica", Font.Style.BOLD, 14);
   val tipFont = textFont(10)
@@ -52,7 +53,9 @@ object UI {
     }
   }
 
-  val sheet = SimpleStyles.newSheet()
+  val sheet = SimpleStyles.newSheetBuilder().
+    add(classOf[Button], Style.FONT.is(buttonFont)).
+    create()
 
   def hgroup (gap :Int = 5) = new Group(AxisLayout.horizontal().gap(gap))
   def hgroup (elems :Element[_]*) :Group = add(hgroup(5), elems)
@@ -73,13 +76,14 @@ object UI {
   def tipLabel (text :String) = new Label(text).addStyles(Style.FONT.is(tipFont))
   def wrapLabel (text :String) = new Label(text).addStyles(Style.TEXT_WRAP.on, Style.HALIGN.left)
 
-  def button (label :String)(action : =>Unit) = new Button(label).onClick(unitSlot(action))
-  def labelButton (text :String) = new Button(text) {
+  def button (label :String, styles :Style.Binding[_]*)(action : =>Unit) =
+    new Button(label).addStyles(styles :_*).onClick(unitSlot(action))
+  def labelButton (text :String, styles :Style.Binding[_]*)(action : => Unit) = new Button(text) {
     override def getStyleClass = classOf[Label]
-  }
-  def imageButton (image :Image) = new Button(Icons.image(image)) {
+  }.addStyles(styles.toArray :_*).addStyles(Style.UNDERLINE.on).onClick(unitSlot(action))
+  def imageButton (image :Image)(action : => Unit) = new Button(Icons.image(image)) {
     override def getStyleClass = classOf[Label]
-  }.addStyles(Style.ICON_POS.above)
+  }.addStyles(Style.ICON_POS.above).onClick(unitSlot(action))
 
   def icon (image :Image) = new Label(Icons.image(image))
   /** Creates a label that displays a currency amount. */
@@ -109,7 +113,7 @@ object UI {
       val (fwidth, fheight) = (iwidth+2*border, iheight+2*border)
       val (fx, fy) = ((width-fwidth)/2, (height-fheight)/2)
       frame.canvas.
-        setFillColor(textColor).fillRect(fx, fy, fwidth, fheight).
+        setStrokeColor(textColor).strokeRect(fx, fy, fwidth-0.5f, fheight-0.5f).
         translate(fx+border, fy+border).
         scale(scale, scale).drawImage(img, 0, 0)
     })
@@ -126,7 +130,8 @@ object UI {
       val scale = math.min(42/thing.width, 50/thing.height)
       val (swidth, sheight) = (thing.width*scale, thing.height*scale)
       val (sx, sy) = (math.round((64-swidth)/2), math.round((78-sheight)/2))
-      cardimg.canvas.setFillColor(textColor).fillRect(sx-1, sy-1, swidth+2, sheight+2)
+      // cardimg.canvas.setStrokeColor(textColor).strokeRect(
+      //   sx-0.5f, sy-0.5f, swidth+0.5f, sheight+0.5f)
       cardimg.canvas.drawImage(thing, sx, sy, swidth, sheight)
     })
     val rarity = cardCfg.layout(card.rarity.toString)

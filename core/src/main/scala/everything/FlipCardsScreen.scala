@@ -16,16 +16,6 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
   val nextFlipCost = new IntValue(0)
   noteStatus(status)
 
-  val cards = RMap.create[Int,ThingCard]
-  grid.flipped.zipWithIndex.foreach {
-    case (card, idx) => cards.put(idx, card)
-  }
-
-  val slots = RMap.create[Int,SlotStatus]
-  grid.slots.zipWithIndex.foreach {
-    case (status, idx) => slots.put(idx, status)
-  }
-
   val unflipped = RMap.create[Rarity,Int]
   grid.unflipped.zipWithIndex.foreach {
     case (count, idx) => unflipped.put(Rarity.values.apply(idx), count)
@@ -79,53 +69,28 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
     nextFlipCost.update(status.nextFlipCost)
   }
 
-  def cardWidget (ii :Int) = {
-    val view = UI.imageButton(UI.cardBack).onClick(flipCard(ii) _)
-    slots.get(ii) match {
-      case SlotStatus.UNFLIPPED|SlotStatus.FLIPPED =>
-        cards.getView(ii).connectNotify { card :ThingCard =>
-          if (card != null) {
-            view.icon.update(Icons.image(UI.cardImage(cache, card)))
-          }
-        }
-      case _ => // ignore
+  def cardWidget (ii :Int) = new CardButton(game, cache) {
+    override protected def onReveal () {
+      // TODO: shake the card or display a spinner to indicate that we're loading
+      game.gameSvc.flipCard(grid.gridId, ii, nextFlipCost.get).
+        onFailure(onFlipFailure).
+        onSuccess(slot { res =>
+          noteStatus(res.status)
+          val r = res.card.thing.rarity
+          unflipped.put(r, unflipped.get(r)-1)
+          reveal(res)
+        })
     }
-    slots.getView(ii).connectNotify(UI.statusUpper(view))
-    view
-  }
+  }.update(grid.slots(ii), grid.flipped(ii))
 
-  def flipCard (pos :Int)(btn :Button) {
-    slots.get(pos) match {
-      case SlotStatus.UNFLIPPED =>
-        // TODO: shake the card or display a spinner to indicate that we're loading
-        game.gameSvc.flipCard(grid.gridId, pos, nextFlipCost.get).
-          onFailure((cause :Throwable) => cause.getMessage match {
-            case "e.nsf_for_flip" => new Dialog().
-                addTitle("Oops, Out of Coins!").
-                addText("Wait 'til tomorrow for more free flips?\n" +
-                  "Or get coins now and keep flipping!").
-                addButton("Wait", ()).
-                addButton("Get Coins!", new ShopScreen(game).push()).
-                display()
-            case _ => onFailure.apply(cause)
-          }).
-          onSuccess(slot { res =>
-            noteStatus(res.status)
-            // TODO: delay this until after reveal animation
-            cards.put(pos, res.card.toThingCard)
-            slots.put(pos, SlotStatus.FLIPPED)
-            val r = res.card.thing.rarity
-            unflipped.put(r, unflipped.get(r)-1)
-            new CardScreen(game, cache, res, slots.put(pos, _)).push
-          })
-      case SlotStatus.FLIPPED =>
-        val card = cards.get(pos)
-        game.gameSvc.getCard(new CardIdent(game.self.get.userId, card.thingId, card.received)).
-          onFailure(onFailure).
-          onSuccess(slot { card =>
-            new CardScreen(game, cache, card, None, slots.put(pos, _)).push
-          })
-      case _ => // nada, we have already sold or gifted it
-    }
+  protected val onFlipFailure = (cause :Throwable) => cause.getMessage match {
+    case "e.nsf_for_flip" => new Dialog().
+        addTitle("Oops, Out of Coins!").
+        addText("Wait 'til tomorrow for more free flips?\n" +
+          "Or get coins now and keep flipping!").
+        addButton("Wait", ()).
+        addButton("Get Coins!", new ShopScreen(game).push()).
+        display()
+    case _ => onFailure.apply(cause)
   }
 }

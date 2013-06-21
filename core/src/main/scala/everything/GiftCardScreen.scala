@@ -70,7 +70,7 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
                     setConstraint(AxisLayout.stretched))).
     addButton("Cancel", ()).
     addButton("Give", giveCard(friend, "")).
-    addButton("Add Message", keyboard.getText(
+    addButton("+Message", keyboard.getText(
       Keyboard.TextType.DEFAULT, s"Message to ${friend.name}:", "", cb { msg =>
         if (msg != null) giveCard(friend, msg)
         else showGivePopup(friend)
@@ -78,14 +78,12 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
     display()
 
   def giveCard (friend :PlayerName, msg :String) {
-    // TODO: display a "sending gift..." popup that blocks UI interaction
+    upStatus(SlotStatus.GIFTED)
+    clearParent()
+    pop()
     game.gameSvc.giftCard(card.thing.thingId, card.received, friend.userId, msg).
-      onFailure(onFailure).
-      onSuccess(unitSlot {
-        upStatus(SlotStatus.GIFTED)
-        clearParent()
-        pop()
-      })
+      // TODO: if gifting fails, display the error back on the main screen
+      onFailure(onFailure)
   }
 
   def clearParent () {
