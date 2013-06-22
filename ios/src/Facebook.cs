@@ -53,6 +53,12 @@ namespace everything
       return (session == null) ? false : session.HandleOpenURL(url);
     }
 
+    // from Facebook interface
+    public bool isAuthed () {
+      return accessToken() != null;
+    }
+
+    // from Facebook interface
     public RFuture authenticate () {
       RPromise result = RPromise.create();
       PlayN.log().info("Authenticating with Facebook...");

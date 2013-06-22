@@ -49,8 +49,15 @@ class Everything (device :Device, fb :Facebook) extends Game.Default(33) {
     })
     // display our main menu
     main.push()
-    // make sure we're authed with Facebook and then auth with the Everything server
-    validateSession()
+
+    // if we've authed with Facebook at least once already, then just go
+    if (fb.isAuthed) validateSession()
+    // otherwise pop up a little notice saying this is a FB game and we're going to auth
+    else new main.Dialog().addTitle("Welcome!").addText(
+      "The Everything Game is played with your Facebook friends. " +
+        "Click 'OK' to connect to The Everything Game on Facebook and start playing!").
+      addButton("OK", validateSession()).
+      display()
   }
 
   override def update (delta :Int) {

@@ -23,6 +23,7 @@ object EverythingJava {
     platform.graphics.registerFont("Treasure Map Deadhand", "fonts/treasure.ttf")
 
     val facebook = new Facebook {
+      def isAuthed = true
       // def authenticate () = RFuture.success("test:1008138021") // testy
       def authenticate () = RFuture.success("test:540615819") // mdb
     }
