@@ -64,8 +64,8 @@ class Everything (device :Device, fb :Facebook) extends Game.Default(33) {
   }
 
   protected def validateSession () {
-    fb.authenticate().flatMap(rf { fbId :String =>
-      everySvc.validateSession(fbId, fb.authToken, device.timeZoneOffset)
+    fb.authenticate().flatMap(rf { fbToken :String =>
+      everySvc.validateSession(fbToken, device.timeZoneOffset)
     }).onFailure(main.onFailure).onSuccess { s :SessionData =>
       self.update(s.name)
       coins.update(s.coins)

@@ -10,13 +10,19 @@ namespace everything
 {
   [Register ("AppDelegate")]
   public partial class AppDelegate : IOSApplicationDelegate {
-    public override bool FinishedLaunching (UIApplication app, NSDictionary options) {
+
+    override public bool FinishedLaunching (UIApplication app, NSDictionary options) {
       app.SetStatusBarHidden(true, true);
       var pconfig = new IOSPlatform.Config();
       pconfig.iPadLikePhone = true;
       if (_hack) preventStripping();
       IOSPlatform.register(app, pconfig);
-      PlayN.run(new Everything(new IOSDevice(), new IOSFacebook()));
+      PlayN.run(new Everything(new IOSDevice(), _facebook));
+      return true;
+    }
+
+    override public bool OpenUrl (UIApplication app, NSUrl url, string sourceApp, NSObject anno) {
+      _facebook.handleOpenURL(url);
       return true;
     }
 
@@ -28,25 +34,14 @@ namespace everything
       list.Add(new sun.text.resources.FormatData());
       Console.WriteLine(list);
     }
-
     private bool _hack = false;
+
+    private IOSFacebook _facebook = new IOSFacebook();
   }
 
   public class IOSDevice : Device {
     public int timeZoneOffset () {
       return 0; // TODO
-    }
-  }
-
-  public class IOSFacebook : Facebook {
-    public string userId () {
-      return "540615819"; // TODO
-    }
-    public string authToken () {
-      return "todo"; // TODO
-    }
-    public RFuture authenticate () {
-      return RFuture.success(userId());
     }
   }
 

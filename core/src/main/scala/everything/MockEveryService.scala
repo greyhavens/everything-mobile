@@ -13,7 +13,7 @@ import com.threerings.everything.rpc.EveryAPI._
 
 object MockEveryService extends EveryService with Mockery {
 
-  def validateSession (fbId :String, fbToken :String, tzOffset :Int) = {
+  def validateSession (fbToken :String, tzOffset :Int) = {
     val data = new SessionData
     data.name = player("Testy", "Testerson", 2, 2)
     data.coins = 42

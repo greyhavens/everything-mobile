@@ -13,6 +13,13 @@
   <packaging>dll</packaging>
   <name>Everything Client iOS</name>
 
+  <repositories>
+    <repository>
+      <id>ooo-public</id>
+      <url>http://ooo-maven.googlecode.com/hg/repository</url>
+    </repository>
+  </repositories>
+
   <dependencies>
     <dependency>
       <groupId>com.threerings.everything</groupId>
@@ -24,6 +31,13 @@
       <groupId>com.googlecode.playn</groupId>
       <artifactId>playn-ios</artifactId>
       <version>${playn.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.facebook.api</groupId>
+      <artifactId>Facebook</artifactId>
+      <version>3.1.1-1</version>
+      <type>dll</type>
     </dependency>
   </dependencies>
 
@@ -37,7 +51,7 @@
       <plugin>
         <groupId>com.samskivert</groupId>
         <artifactId>ikvm-maven-plugin</artifactId>
-        <version>1.1.4</version>
+        <version>1.1.5</version>
         <!-- this lets Maven know that we define 'packaging: dll' -->
         <extensions>true</extensions>
         <configuration>
@@ -58,6 +72,7 @@
             <copyDll>bin/IKVM.OpenJDK.Util.dll</copyDll>
             <copyDll>bin/IKVM.OpenJDK.Text.dll</copyDll>
           </copyDlls>
+          <copyDllDepends>true</copyDllDepends>
         </configuration>
       </plugin>
 

@@ -12,8 +12,8 @@ import com.threerings.everything.rpc.JSON._
 class EveryServiceClient (game :Everything, url :String)
     extends GsonService(game, url + "everything") with EveryService {
 
-  override def validateSession (fbId :String, fbToken :String, tzOffset :Int) = request(
-    "validateSession", new ValidateSession(fbId, fbToken, tzOffset), classOf[SessionData])
+  override def validateSession (fbToken :String, tzOffset :Int) = request(
+    "validateSession", new ValidateSession(fbToken, tzOffset), classOf[SessionData])
 
   override def getRecentFeed () = request("getRecentFeed", classOf[Array[FeedItem]])
 
