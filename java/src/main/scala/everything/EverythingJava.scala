@@ -14,10 +14,13 @@ import react.RFuture
 object EverythingJava {
 
   def main (args :Array[String]) {
+    val fbId = if (false) "1008138021" /*testy*/ else "540615819" /*mdb*/
+
     val config = new JavaPlatform.Config
     config.width = 320
     config.height = 480
     config.scaleFactor = 2
+    config.storageFileName = "playn" + fbId
 
     val platform = JavaPlatform.register(config)
     platform.graphics.registerFont("Copperplate Gothic Bold", "fonts/copper.ttf")
@@ -26,8 +29,7 @@ object EverythingJava {
 
     val facebook = new Facebook {
       def isAuthed = true
-      // def authenticate () = RFuture.success("test:1008138021") // testy
-      def authenticate () = RFuture.success("test:540615819") // mdb
+      def authenticate () = RFuture.success("test:" + fbId)
     }
     val device = new Device {
       def timeZoneOffset = {
