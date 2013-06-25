@@ -14,15 +14,15 @@ class CategoryScreen (game :Everything, who :PlayerName, path :Array[String], ss
     extends EveryScreen(game) {
 
   override def createUI (root :Root) {
-    val cats = new Group(new TableLayout(TableLayout.COL.fixed.alignRight,
-                                         TableLayout.COL.alignLeft,
+    val cats = new Group(new TableLayout(TableLayout.COL.alignLeft,
                                          TableLayout.COL.fixed.alignLeft).gaps(5, 10),
                          Style.VALIGN.top)
     ss foreach { s =>
-      cats.add(UI.glyphLabel(s.glyph),
-               (UI.labelButton(s.name) {
-                 new SeriesScreen(game, who, path, s).push()
-               }).addStyles(Style.HALIGN.left, Style.TEXT_WRAP.on),
+      val btn = UI.labelButton(s.name) {
+        new SeriesScreen(game, who, path, s).push()
+      }
+        btn.icon.update(Icons.image(UI.pieImage(s.owned / s.things.toFloat, 5)))
+      cats.add(btn.addStyles(Style.HALIGN.left, Style.TEXT_WRAP.on),
                new Label(s"${s.owned} of ${s.things}"))
     }
     root.add(header("View Collection"),

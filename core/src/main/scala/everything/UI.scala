@@ -11,7 +11,7 @@ import react.IntValue
 
 import playn.core.PlayN._
 import playn.core._
-import pythagoras.f.{Dimension, Point}
+import pythagoras.f.{Dimension, FloatMath, MathUtil, Point}
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
 import tripleplay.util.DestroyableBag
@@ -55,10 +55,10 @@ object UI {
   val factsFont = graphics.createFont("Georgia", Font.Style.PLAIN, 16)
   def textFont (size :Int) = graphics.createFont(Handwriting, Font.Style.PLAIN, size)
 
-  def glyphFont (size :Int) = graphics.createFont(platformType match {
-    case Platform.Type.ANDROID => "Roboto"
+  def glyphFont (size :Int) = graphics.createFont("Arial" /*platformType match {
+    case Platform.Type.ANDROID => "Droid Sans"
     case _                     => "Times New Roman"
-  }, Font.Style.PLAIN, size)
+  }*/, Font.Style.PLAIN, size)
 
   val statusCfg = new TextConfig(textColor).withFont(textFont(18))
   val cardCfg = new TextConfig(textColor).withFont(textFont(10)).withWrapping(
@@ -198,6 +198,75 @@ object UI {
     val image = graphics.createImage(cardFront.width, cardFront.height)
     val slay = statusCfg.layout(status)
     statusCfg.renderCX(image.canvas, slay, image.width/2, (image.height - slay.height)/2)
+    image
+  }
+
+  // from http://hansmuller-flex.blogspot.com/2011/10/more-about-approximating-circular-arcs.html
+  def pieImage (pct :Float, radius :Float) = {
+    case class Curve (x1 :Float, y1 :Float, x2 :Float, y2 :Float,
+                      x3 :Float, y3 :Float, x4 :Float, y4 :Float)
+    def smallArc (a1 :Float, a2 :Float) :Curve = {
+      // Compute all four points for an arc that subtends the same total angle but is centered on
+      // the X-axis
+      val a = (a2 - a1) / 2f
+      val x4 = radius * FloatMath.cos(a)
+      val y4 = radius * FloatMath.sin(a)
+      val x1 = x4
+      val y1 = -y4
+      val q1 = x1*x1 + y1*y1
+      val q2 = q1 + x1*x4 + y1*y4
+      val k2 = 4/3f * (FloatMath.sqrt(2 * q1 * q2) - q2) / (x1 * y4 - y1 * x4)
+      val x2 = x1 - k2 * y1
+      val y2 = y1 + k2 * x1
+      val x3 = x2
+      val y3 = -y2
+      // Find the arc points' actual locations by computing x1,y1 and x4,y4 and rotating the
+      // control points by a + a1
+      val ar = a + a1
+      val cos_ar = FloatMath.cos(ar)
+      val sin_ar = FloatMath.sin(ar)
+      return Curve(
+        x1 = radius * FloatMath.cos(a1),
+        y1 = radius * FloatMath.sin(a1),
+        x2 = x2 * cos_ar - y2 * sin_ar,
+        y2 = x2 * sin_ar + y2 * cos_ar,
+        x3 = x3 * cos_ar - y3 * sin_ar,
+        y3 = x3 * sin_ar + y3 * cos_ar,
+        x4 = radius * FloatMath.cos(a2),
+        y4 = radius * FloatMath.sin(a2)
+      )
+    }
+
+    val twoPi = 2*FloatMath.PI
+    val piOver2 = FloatMath.PI/2
+    val astart = -piOver2
+    val aend = astart + twoPi*pct
+    val image = graphics.createImage(2*radius+2, 2*radius+2)
+
+    // Compute the sequence of arc curves, up to PI/2 at a time. Total arc angle is less than 2PI.
+    val (xc, yc) = (radius+0.5f, radius+0.5f)
+    var a1 = astart
+    var remAngle = aend - astart
+    var path :Path = null
+    while (remAngle > MathUtil.EPSILON) {
+      val a2 = a1 + Math.min(remAngle, piOver2)
+      val curve = smallArc(a1, a2)
+      if (path == null) {
+        path = image.canvas.createPath()
+        path.moveTo(xc, yc)
+        path.lineTo(curve.x1 + xc, curve.y1 + yc)
+      }
+      path.bezierTo(curve.x2 + xc, curve.y2 + yc,
+                    curve.x3 + xc, curve.y3 + yc,
+                    curve.x4 + xc, curve.y4 + yc)
+      remAngle -= Math.abs(a2 - a1)
+      a1 = a2
+    }
+    path.lineTo(xc, yc)
+    path.close()
+
+    image.canvas.setFillColor(textColor).fillPath(path)
+    image.canvas.setStrokeColor(textColor).strokeCircle(xc, yc, radius)
     image
   }
 
