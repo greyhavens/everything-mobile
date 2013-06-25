@@ -41,17 +41,19 @@ object UI {
   val wideBtnDn = getImage("button/wide_down.png")
 
   val Machine = "Copperplate Gothic Bold"
-  val Handwriting = "Treasure Map Deadhand"
+  val Handwriting = "Josschrift"
 
   val titleFont = graphics.createFont(Machine, Font.Style.PLAIN, 38)
   val menuFont = graphics.createFont(Machine, Font.Style.PLAIN, 24)
   val moneyFont = graphics.createFont(Machine, Font.Style.PLAIN, 12)
   val buttonFont = graphics.createFont(Machine, Font.Style.PLAIN, 16)
   val wideButtonFont = graphics.createFont(Machine, Font.Style.PLAIN, 20)
-  val headerFont = graphics.createFont(Machine, Font.Style.PLAIN, 18);
-  val subHeaderFont = graphics.createFont(Machine, Font.Style.PLAIN, 12);
+  val headerFont = graphics.createFont(Machine, Font.Style.PLAIN, 18)
+  val subHeaderFont = graphics.createFont(Machine, Font.Style.PLAIN, 12)
+  val notesHeaderFont = graphics.createFont(Machine, Font.Style.PLAIN, 14)
   val tipFont = textFont(14)
-  def glyphFont (size :Int) = graphics.createFont("Times New Roman", Font.Style.PLAIN, size);
+  val factsFont = graphics.createFont("Georgia", Font.Style.PLAIN, 16)
+  def glyphFont (size :Int) = graphics.createFont("Times New Roman", Font.Style.PLAIN, size)
   def textFont (size :Int) = graphics.createFont(Handwriting, Font.Style.PLAIN, size)
 
   val statusCfg = new TextConfig(textColor).withFont(textFont(18))
@@ -68,7 +70,7 @@ object UI {
   }
 
   def sheet = SimpleStyles.newSheetBuilder().
-    add(classOf[Element[_]], Style.COLOR.is(textColor), Style.FONT.is(textFont(20))).
+    add(classOf[Element[_]], Style.COLOR.is(textColor), Style.FONT.is(textFont(16))).
     add(classOf[Button], Style.FONT.is(buttonFont),
         Style.BACKGROUND.is(Background.image(buttonUp).inset(0, 13, 2, 13))).
     add(classOf[Button], Style.Mode.SELECTED,
@@ -202,7 +204,7 @@ object UI {
 
   protected class TextButton (text :String) extends Button(text) {
     override protected def computeSize (hintX :Float, hintY :Float) :Dimension = {
-      val d = super.computeSize(hintX, hintY);
+      val d = super.computeSize(hintX, hintY)
       // d.width = buttonUp.width
       d.height = 2*buttonUp.height/3
       d
@@ -211,7 +213,7 @@ object UI {
 
   protected class WideTextButton (text :String) extends Button(text) {
     override protected def computeSize (hintX :Float, hintY :Float) :Dimension = {
-      val d = super.computeSize(hintX, hintY);
+      val d = super.computeSize(hintX, hintY)
       // d.width = wideBtnUp.width
       d.height = wideBtnUp.height
       d

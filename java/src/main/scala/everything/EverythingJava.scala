@@ -4,7 +4,8 @@
 
 package everything
 
-import java.util.TimeZone
+import java.text.DateFormat
+import java.util.{Date, TimeZone}
 import playn.core.PlayN
 import playn.core.util.Callback
 import playn.java.JavaPlatform
@@ -21,6 +22,7 @@ object EverythingJava {
     val platform = JavaPlatform.register(config)
     platform.graphics.registerFont("Copperplate Gothic Bold", "fonts/copper.ttf")
     platform.graphics.registerFont("Treasure Map Deadhand", "fonts/treasure.ttf")
+    platform.graphics.registerFont("Josschrift", "fonts/josschrift.ttf")
 
     val facebook = new Facebook {
       def isAuthed = true
@@ -33,6 +35,8 @@ object EverythingJava {
         // Java returns millis to add to GMT, we want minutes to subtract from GMT
         -tz.getOffset(System.currentTimeMillis)/MillisPerMinute
       }
+      def formatDate (when :Long) = _dfmt.format(new Date(when))
+      private val _dfmt = DateFormat.getDateInstance()
     }
     PlayN.run(new Everything(device, facebook))
   }

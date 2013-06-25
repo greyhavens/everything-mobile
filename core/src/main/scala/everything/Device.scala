@@ -8,4 +8,7 @@ trait Device {
 
   /** Returns the current timezone offset as "minutes before GMT". */
   def timeZoneOffset :Int
+
+  /** Formats a date for `flipped on` etc. UI. */
+  def formatDate (when :Long) :String
 }

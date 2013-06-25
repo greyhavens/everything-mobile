@@ -10,8 +10,11 @@ import tripleplay.ui.layout.TableLayout
 
 import com.threerings.everything.data._
 
-class SeriesScreen (game :Everything, who :PlayerName, path :Array[String], scard :SeriesCard)
+class SeriesScreen (game :Everything, who :PlayerName, path :Array[String], catId :Int)
     extends EveryScreen(game) {
+
+  def this (game :Everything, who :PlayerName, path :Array[String], scard :SeriesCard) =
+    this(game, who, path :+ scard.name, scard.categoryId)
 
   val cache = new UI.ImageCache
 
@@ -20,10 +23,10 @@ class SeriesScreen (game :Everything, who :PlayerName, path :Array[String], scar
     cards.add(TableLayout.colspan(new Label("Loading..."), 4))
     root.add(header(path(0)),
              UI.plate(UI.icon(UI.frameImage(UI.friendImage(who), 50, 50)),
-                      UI.headerLabel(who.toString), UI.pathLabel(path.drop(1) :+ scard.name)),
+                      UI.headerLabel(who.toString), UI.pathLabel(path.drop(1))),
              AxisLayout.stretch(UI.vscroll(cards)))
 
-    game.gameSvc.getSeries(who.userId, scard.categoryId).onFailure(onFailure).
+    game.gameSvc.getSeries(who.userId, catId).onFailure(onFailure).
       onSuccess(slot { series =>
         cards.removeAll()
         series.things.foreach(tc => {

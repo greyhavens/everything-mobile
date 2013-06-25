@@ -17,10 +17,9 @@ class EverythingActivity extends GameActivity {
     // we have only @2x resources, so use those
     platform.assets.setAssetScale(2)
     // register our custom fonts
-    platform.graphics.registerFont(
-      "fonts/copper.ttf", "Copperplate Gothic Bold", Font.Style.PLAIN);
-    platform.graphics.registerFont(
-      "fonts/treasure.ttf", "Treasure Map Deadhand", Font.Style.PLAIN);
+    platform.graphics.registerFont("fonts/copper.ttf", "Copperplate Gothic Bold", Font.Style.PLAIN)
+    platform.graphics.registerFont("fonts/treasure.ttf", "Treasure Map Deadhand", Font.Style.PLAIN)
+    platform.graphics.registerFont("fonts/josschrift.ttf", "Josschrift", Font.Style.PLAIN)
 
     val facebook = new Facebook {
       def userId = "1008138021" // testy

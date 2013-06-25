@@ -24,6 +24,7 @@
 	<array>
 		<string>assets/fonts/copper.ttf</string>
 		<string>assets/fonts/treasure.ttf</string>
+		<string>assets/fonts/josschrift.ttf</string>
 	</array>
 	<key>UIStatusBarHidden</key>
 	<true/>

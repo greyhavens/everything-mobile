@@ -17,19 +17,21 @@ class CardBackScreen (
 ) extends CardScreen(game, cache, card, upStatus) {
 
   override def createUI (root :Root) {
-    root.add(header(),
-             UI.wrapLabel(card.thing.descrip),
-             UI.shim(5, 5),
-             UI.subHeaderLabel("Facts"),
+    addHeader(root)
+    root.add(UI.stretchShim(),
+             UI.wrapLabel(card.thing.descrip).addStyles(Style.FONT.is(UI.factsFont)),
+             UI.stretchShim(),
+             new Label("Notes").addStyles(Style.FONT.is(UI.notesHeaderFont)),
              formatFacts(card.thing.facts.split("\n")),
-             UI.shim(5, 5),
+             UI.stretchShim(),
              UI.hgroup(UI.subHeaderLabel("Source:"),
                        UI.labelButton(nameSource(card.thing.source)) {
                          PlayN.openURL(card.thing.source)
                        }),
-             UI.hgroup(UI.subHeaderLabel("Flipped on:"), new Label(""+card.received)),
+             UI.hgroup(UI.subHeaderLabel("Flipped on:"),
+                       new Label(game.device.formatDate(card.received))),
              UI.stretchShim(),
-             buttons())
+             buttons(counts.isDefined))
 
     root.layer.setHitTester(UI.absorber)
     root.layer.addListener(new Pointer.Adapter {
@@ -52,9 +54,13 @@ class CardBackScreen (
   }
 
   def formatFacts (facts :Array[String]) = {
+    val ffont = Style.FONT.is(UI.factsFont)
     val lay = new TableLayout(TableLayout.COL.fixed, TableLayout.COL.stretch).alignTop.gaps(5, 5)
-    (new Group(lay) /: facts)((g, f) => g.add(UI.glyphLabel("•"), UI.wrapLabel(f)))
+    (new Group(lay) /: facts)((g, f) => g.add(UI.glyphLabel("•").addStyles(ffont),
+                                              UI.wrapLabel(f).addStyles(ffont)))
   }
+
+  override protected def background = Background.image(UI.getImage("page_repeat.png")).inset(10)
 
   override protected def pushTransition = game.screens.flip.duration(300)
 }

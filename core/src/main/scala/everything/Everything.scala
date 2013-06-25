@@ -13,7 +13,7 @@ import tripleplay.game.ScreenStack
 
 import com.threerings.everything.data._
 
-class Everything (device :Device, fb :Facebook) extends Game.Default(33) {
+class Everything (val device :Device, fb :Facebook) extends Game.Default(33) {
 
   val screens = new ScreenStack
   val keyDown = Signal.create[Key]()

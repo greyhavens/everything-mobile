@@ -13,13 +13,15 @@ abstract class CardScreen (
   game :Everything, cache :UI.ImageCache, card :Card, upStatus :SlotStatus => Unit
 ) extends EveryScreen(game) {
 
-  protected def header () = new Group(AxisLayout.vertical.gap(0)).add(
-    UI.headerLabel(card.thing.name),
+  override protected def layout () :Layout = AxisLayout.vertical().gap(0).offStretch
+
+  protected def addHeader (root :Root) = root.add(
     UI.pathLabel(card.categories.map(_.name)),
+    UI.headerLabel(card.thing.name),
     UI.tipLabel(s"${card.position+1} of ${card.things}"))
 
-  protected def buttons () = UI.hgroup(
-    UI.button("Keep")(pop()),
+  protected def buttons (keepNotBack :Boolean) = UI.hgroup(
+    UI.button(if (keepNotBack) "Keep" else "Back")(pop()),
     UI.button("Sell") {
       maybeSellCard(card.toThingCard) { upStatus(SlotStatus.SOLD) }
     },
