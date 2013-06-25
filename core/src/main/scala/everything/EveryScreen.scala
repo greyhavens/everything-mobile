@@ -73,12 +73,22 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     root.addStyles(Style.BACKGROUND.is(background))
     createUI(root)
     root.setSize(width, height)
+    // wire up the (hardware) back button handler
+    _dbag.add(game.keyDown.connect(slot { k =>
+      if (k == Key.BACK) onHardwareBack()
+    }))
   }
 
   protected def layout () :Layout = AxisLayout.vertical().offStretch
 
   protected def header (title :String) =
-    UI.hgroup(UI.button("Back")(pop()), AxisLayout.stretch(UI.headerLabel(title)))
+    UI.hgroup(back(), AxisLayout.stretch(UI.headerLabel(title)))
+
+  protected def back () :Button = back("Back")
+  protected def back (label :String) :Button = _back match {
+    case null => _back = UI.button(label)(pop()) ; _back
+    case _ => throw new AssertionError("Already have a back button!")
+  }
 
   /** Displays a dialog enabling the sale of `card`. On sale, `onSold` is invoked and this screen is
     * popped. */
@@ -104,8 +114,20 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
 
   protected def background () :Background = Background.image(_bgImage).inset(10)
 
+  /** Handles a click on the hardware back button. */
+  protected def onHardwareBack () {
+    // if we're not the top screen, then do nothing (we may be triggered even though we're not the
+    // currently showing screen)
+    if (game.screens.top == this &&
+      // don't try to go back if we're currently transitioning between screens
+      !game.screens.isTransiting &&
+      // if this screen has a back button, and it's enabled, click  it
+      _back != null && _back.isEnabled) _back.click()
+  }
+
   protected def todo () = new Dialog().addTitle("TODO").addButton("OK", ()).display()
 
+  protected var _back :Button = _
   protected val _dbag = new DestroyableBag
   protected val _bgImage = height match {
     case 568 => assets.getImageSync("../Default-568h.png")

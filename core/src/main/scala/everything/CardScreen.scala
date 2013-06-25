@@ -21,7 +21,7 @@ abstract class CardScreen (
     UI.tipLabel(s"${card.position+1} of ${card.things}"))
 
   protected def buttons (keepNotBack :Boolean) = UI.hgroup(
-    UI.button(if (keepNotBack) "Keep" else "Back")(pop()),
+    back(if (keepNotBack) "Keep" else "Back"),
     UI.button("Sell") {
       maybeSellCard(card.toThingCard) { upStatus(SlotStatus.SOLD) }
     },

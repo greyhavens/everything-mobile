@@ -4,12 +4,28 @@
 
 package everything
 
-import java.util.TimeZone
+import java.text.DateFormat
+import java.util.{Date, TimeZone}
 import playn.android.GameActivity
 import playn.core.{Font, PlayN}
 import react.RFuture
 
 class EverythingActivity extends GameActivity {
+
+  val device = new Device {
+    def timeZoneOffset = {
+      val tz = TimeZone.getDefault
+      // Java returns millis to add to GMT, we want minutes to subtract from GMT
+      -tz.getOffset(System.currentTimeMillis)/MillisPerMinute
+    }
+    def formatDate (when :Long) = _dfmt.format(new Date(when))
+    private val _dfmt = DateFormat.getDateInstance()
+  }
+  val facebook = new Facebook {
+    override def isAuthed = true
+    override def authenticate () = RFuture.success("test:1008138021") // testy
+  }
+  lazy val game = new Everything(device, facebook)
 
   override def main () {
     // default to smoothing when rendering canvas images
@@ -20,20 +36,8 @@ class EverythingActivity extends GameActivity {
     platform.graphics.registerFont("fonts/copper.ttf", "Copperplate Gothic Bold", Font.Style.PLAIN)
     platform.graphics.registerFont("fonts/treasure.ttf", "Treasure Map Deadhand", Font.Style.PLAIN)
     platform.graphics.registerFont("fonts/josschrift.ttf", "Josschrift", Font.Style.PLAIN)
-
-    val facebook = new Facebook {
-      def userId = "1008138021" // testy
-      def authToken = "testToken"
-      def authenticate () = RFuture.success(userId)
-    }
-    val device = new Device {
-      def timeZoneOffset = {
-        val tz = TimeZone.getDefault
-        // Java returns millis to add to GMT, we want minutes to subtract from GMT
-        -tz.getOffset(System.currentTimeMillis)/MillisPerMinute
-      }
-    }
-    PlayN.run(new Everything(device, facebook))
+    // start the ball rolling
+    PlayN.run(game)
   }
 
   override def usePortraitOrientation = true
@@ -44,7 +48,15 @@ class EverythingActivity extends GameActivity {
     val (dwidth, dheight) = (dm.widthPixels, dm.heightPixels)
     // we may be in landscape right now, because Android is fucking retarded
     val (width, height) = if (dwidth > dheight) (dheight, dwidth) else (dwidth, dheight)
-    if (height > 800) 2 else 1
+    math.min(width / 320f, height / 480f)
+  }
+
+  override def onBackPressed () {
+    // only allow BACK to exit the app if we're on the main menu screen (and not currently
+    // switching between screens)
+    if (!game.screens.isTransiting && game.screens.top.isInstanceOf[MainMenuScreen]) {
+      super.onBackPressed();
+    }
   }
 
   private final val MillisPerMinute = 1000*60

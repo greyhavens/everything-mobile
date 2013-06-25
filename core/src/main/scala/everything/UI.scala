@@ -53,8 +53,12 @@ object UI {
   val notesHeaderFont = graphics.createFont(Machine, Font.Style.PLAIN, 14)
   val tipFont = textFont(14)
   val factsFont = graphics.createFont("Georgia", Font.Style.PLAIN, 16)
-  def glyphFont (size :Int) = graphics.createFont("Times New Roman", Font.Style.PLAIN, size)
   def textFont (size :Int) = graphics.createFont(Handwriting, Font.Style.PLAIN, size)
+
+  def glyphFont (size :Int) = graphics.createFont(platformType match {
+    case Platform.Type.ANDROID => "Roboto"
+    case _                     => "Times New Roman"
+  }, Font.Style.PLAIN, size)
 
   val statusCfg = new TextConfig(textColor).withFont(textFont(18))
   val cardCfg = new TextConfig(textColor).withFont(textFont(10)).withWrapping(
@@ -71,6 +75,7 @@ object UI {
 
   def sheet = SimpleStyles.newSheetBuilder().
     add(classOf[Element[_]], Style.COLOR.is(textColor), Style.FONT.is(textFont(16))).
+    add(classOf[Element[_]], Style.Mode.DISABLED, Style.COLOR.is(0xFF999999)).
     add(classOf[Button], Style.FONT.is(buttonFont),
         Style.BACKGROUND.is(Background.image(buttonUp).inset(0, 13, 2, 13))).
     add(classOf[Button], Style.Mode.SELECTED,

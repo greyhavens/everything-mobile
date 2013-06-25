@@ -44,9 +44,7 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
       uflabels.add(label)
     }
 
-    root.add(UI.hgroup(
-               UI.button("Back")(pop()),
-               AxisLayout.stretch(UI.headerLabel("Flip Your Cards"))),
+    root.add(header("Flip Your Cards"),
              UI.shim(5, 5),
              UI.hgroup(
                new Label("You have:"), UI.moneyIcon(game.coins, _dbag),

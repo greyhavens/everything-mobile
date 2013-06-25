@@ -27,7 +27,7 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
                                             TableLayout.COL.fixed).gaps(5, 5)).add(
       UI.shim(5, 5), new Label("Loading..."), UI.shim(5, 5))
     val buttons = UI.hgroup(gap=25).add(
-      UI.button("Cancel")(pop()),
+      back("Cancel"),
       UI.button("Sell") {
         maybeSellCard(card.toThingCard) {
           upStatus(SlotStatus.SOLD)
