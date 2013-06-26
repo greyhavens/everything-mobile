@@ -135,6 +135,7 @@
     <Content Include="assets\images\pup\show_series@2x.png" />
     <Content Include="assets\images\pup\show_subcategory@2x.png" />
     <Content Include="assets\fonts\copper.ttf" />
+    <Content Include="assets\fonts\josschrift.ttf" />
     <Content Include="assets\fonts\treasure.ttf" />
   </ItemGroup>
   <ItemGroup>
