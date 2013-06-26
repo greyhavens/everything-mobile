@@ -38,7 +38,7 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
         bindText(game.gifts.sizeView.map(rf { size => s"Gifts: $size!" })).
         bindVisible(game.gifts.sizeView.map(rf { _ > 0 })),
       UI.wideButton("Flip Cards!") { new FlipCardsScreen(game).push() },
-      UI.wideButton("News") { /* new NewsScreen(game).push() */ },
+      UI.wideButton("News") { new NewsScreen(game).push() },
       UI.wideButton("Collection") { new CollectionScreen(game, game.self.get).push() },
       UI.wideButton("Shop") { new ShopScreen(game).push() })
     root.add(UI.stretchShim,
