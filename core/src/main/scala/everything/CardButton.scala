@@ -10,7 +10,7 @@ import tripleplay.ui._
 import com.threerings.everything.data._
 import com.threerings.everything.rpc.GameAPI
 
-class CardButton (game :Everything, cache :UI.ImageCache) extends Button {
+class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache) extends Button {
 
   protected var _card :ThingCard = _
   protected var _msg :String = null
@@ -48,7 +48,7 @@ class CardButton (game :Everything, cache :UI.ImageCache) extends Button {
     if (_cachedCard != null) viewCard(_cachedCard)
     else game.gameSvc.getCard(new CardIdent(game.self.get.userId, _card.thingId, _card.received)).
       bindComplete(enabledSlot). // disable while req is in-flight
-      // onFailure(onFailure). // TODO
+      onFailure(host.onFailure).
       onSuccess(viewCard _)
   }
 

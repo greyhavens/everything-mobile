@@ -17,7 +17,7 @@ class OpenGiftsScreen (game :Everything) extends EveryScreen(game) {
   override def createUI (root :Root) {
     val cards = new Group(new TableLayout(4).gaps(10, 10))
     game.gifts.foreach { card =>
-      cards.add(new CardButton(game, cache) {
+      cards.add(new CardButton(game, this, cache) {
         override protected def isGift = true
         override protected def onReveal () {
           // TODO: spinner

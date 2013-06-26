@@ -31,7 +31,7 @@ class SeriesScreen (game :Everything, who :PlayerName, path :Array[String], catI
         cards.removeAll()
         series.things.foreach(tc => {
           val status = if (tc == null) SlotStatus.UNFLIPPED else SlotStatus.FLIPPED
-          cards.add(new CardButton(game, cache).update(status, tc))
+          cards.add(new CardButton(game, this, cache).update(status, tc))
         })
       })
   }
