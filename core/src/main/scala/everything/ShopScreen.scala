@@ -51,6 +51,7 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
               case v    => v.intValue
             }
             game.pups.put(pup, have + pup.charges)
+            game.coins.decrementClamp(pup.cost, 0)
             val bought = UI.statusCfg.toLayer("Purchased!")
             bought.setOrigin(bought.width/2, bought.height)
             iface.animator.addAt(btn.layer, bought, btn.size.width/2, btn.size.height).then.
