@@ -40,9 +40,22 @@ namespace everything
   }
 
   public class IOSDevice : Device {
-    public int timeZoneOffset () {
-      return 0; // TODO
+    public IOSDevice () {
+      _fmt.DateStyle = NSDateFormatterStyle.Medium;
     }
+
+    public int timeZoneOffset () {
+      // iOS gives us number of seconds to add to GMT to get local timezone, we want to return
+      // number of minutes to subtract from GMT to get local timezone (thank JavaScript for this
+      // retardedness)
+      return NSTimeZone.LocalTimeZone.GetSecondsFromGMT / -60;
+    }
+
+    public string formatDate (long when) {
+      return _fmt.ToString(NSDate.FromTimeIntervalSince1970(when/1000d));
+    }
+
+    protected NSDateFormatter _fmt = new NSDateFormatter();
   }
 
   public class Application {
