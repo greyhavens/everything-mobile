@@ -4,7 +4,7 @@
 
 package everything
 
-import playn.core.{Layer, Pointer, PlayN}
+import playn.core.PlayN
 import pythagoras.f.Point
 import tripleplay.ui._
 import tripleplay.ui.layout.TableLayout
@@ -32,14 +32,12 @@ class CardBackScreen (
                        new Label(game.device.formatDate(card.received))),
              UI.stretchShim(),
              buttons(counts.isDefined))
+    super.createUI(root)
+  }
 
-    root.layer.setHitTester(UI.absorber)
-    root.layer.addListener(new Pointer.Adapter {
-      override def onPointerStart (event :Pointer.Event) {
-        game.screens.replace(new CardFrontScreen(game, cache, card, counts, upStatus),
-                             pushTransition)
-      }
-    })
+  override def onCardClick () {
+    game.screens.replace(new CardFrontScreen(game, cache, card, counts, upStatus),
+                         pushTransition)
   }
 
   def nameSource (source :String) = {

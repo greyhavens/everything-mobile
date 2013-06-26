@@ -4,6 +4,7 @@
 
 package everything
 
+import playn.core.Pointer
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
 
@@ -14,6 +15,17 @@ abstract class CardScreen (
 ) extends EveryScreen(game) {
 
   override protected def layout () :Layout = AxisLayout.vertical().gap(0).offStretch
+
+  override def createUI (root :Root) {
+    root.layer.setHitTester(UI.absorber)
+    root.layer.addListener(new Pointer.Adapter {
+      override def onPointerStart (event :Pointer.Event) {
+        onCardClick()
+      }
+    })
+  }
+
+  protected def onCardClick () :Unit
 
   protected def addHeader (root :Root) = root.add(
     UI.pathLabel(card.categories.map(_.name)),
