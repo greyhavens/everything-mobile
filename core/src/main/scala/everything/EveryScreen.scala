@@ -56,8 +56,9 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   val isVisible = Value.create(false)
 
   val onFailure = (cause :Throwable) => {
-    log.warn("Erm, failure", cause)
-    new Dialog().addTitle("Oops").addText(cause.getMessage).addButton("OK", ())
+    val msg = cause.getMessage
+    if (msg == null || !msg.startsWith("e.")) log.warn("Erm, failure", cause)
+    new Dialog().addTitle("Oops!").addText(I18n.xlate(msg)).addButton("OK", ()).display()
   }
 
   /** Returns the coordinates of the specified layer in this screen's coordinate system. */
