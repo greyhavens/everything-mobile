@@ -47,6 +47,7 @@ class CardButton (game :Everything, cache :UI.ImageCache) extends Button {
   protected def onView () {
     if (_cachedCard != null) viewCard(_cachedCard)
     else game.gameSvc.getCard(new CardIdent(game.self.get.userId, _card.thingId, _card.received)).
+      bindComplete(enabledSlot). // disable while req is in-flight
       // onFailure(onFailure). // TODO
       onSuccess(viewCard _)
   }
