@@ -131,8 +131,9 @@ object UI {
       onClick(unitSlot(action))
   def imageButton (image :Image)(action : => Unit) :Button =
     new LabelButton(Icons.image(image)).addStyles(Style.ICON_POS.above).onClick(unitSlot(action))
-  def moneyButton (amount :Int)(action : =>Unit) = {
-    val b = button(amount.toString)(action)
+  def moneyButton (amount :Int)(action :(Button => Unit)) = {
+    val b = button(amount.toString)(())
+    b.clicked.connect(action)
     b.icon.update(Icons.image(coinsIcon))
     b.addStyles(Style.ICON_GAP.is(0))
     b

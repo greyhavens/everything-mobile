@@ -34,8 +34,6 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
     val pups = new Group(new TableLayout(cd, cl, cd).gaps(5, 5)).
       setStylesheet(Stylesheet.builder.add(classOf[Label], Style.FONT.is(UI.textFont(13))).create)
 
-    // pups.add(UI.shim(5, 5), headerLabel("Powerup"), headerLabel("Cost"), UI.shim(5, 5))
-
     PupInfo foreach { case (pup, name, descrip) =>
       val descVal = game.pups.getView(pup).map(rf { (_ :JInteger) match {
         case null  => descrip
@@ -43,8 +41,27 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
       }})
       val descLbl = UI.wrapLabel("")
       _dbag.add(descVal.connectNotify(descLbl.text.slot))
-      val buy = UI.moneyButton(pup.cost) {
-        todo()
+      val buy = UI.moneyButton(pup.cost) { btn =>
+        game.gameSvc.buyPowerup(pup).
+          bindComplete(btn.enabledSlot).
+          onFailure(onFailure).
+          onSuccess(unitSlot {
+            val have = game.pups.get(pup) match {
+              case null => 0
+              case v    => v.intValue
+            }
+            game.pups.put(pup, have + pup.charges)
+            val bought = UI.statusCfg.toLayer("Purchased!")
+            bought.setOrigin(bought.width/2, bought.height)
+            iface.animator.addAt(btn.layer, bought, btn.size.width/2, btn.size.height).then.
+              tweenY(bought).to(0).in(500).then.
+              tweenAlpha(bought).to(0).in(500).then.
+              destroy(bought)
+          })
+      }
+      if (pup.isPermanent) {
+        _dbag.add(game.pups.getView(pup).map(rf { c => new JBoolean(c == null || c == 0) }).
+          connectNotify(buy.enabledSlot))
       }
       pups.add(UI.icon(UI.getImage(s"pup/${pup.name.toLowerCase}.png")),
                new Group(AxisLayout.vertical.gap(1), Style.HALIGN.left).add(
