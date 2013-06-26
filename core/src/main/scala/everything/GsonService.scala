@@ -24,22 +24,23 @@ abstract class GsonService (game :Everything, baseURL :String) {
   protected def doRequest[R] (method :String, args :AnyRef, rfun :String => R) = {
     val promise = RPromise.create[R]
     val bldr = net.req(s"$baseURL/$method")
-    if (args != null) {
-      val pay = _gson.toJson(args)
-      log.info("REQ " + pay)
-      bldr.setPayload(pay)
+    val pay = args match {
+      case null => ""
+      case args => _gson.toJson(args)
     }
+    bldr.setPayload(pay)
     game.authToken match {
       case None => // nada
       case Some(authTok) => bldr.addHeader("Cookie", s"auth=$authTok")
     }
+    log.info(s"REQ $method $pay")
     bldr.execute(new Callback[Net.Response] {
       def onSuccess (rsp :Net.Response) = {
         val result = try {
           if (rsp.responseCode != 200)
             throw new Net.HttpException(rsp.responseCode, rsp.payloadString)
           noteAuthCookie(rsp)
-          log.info("RSP " + rsp.payloadString)
+          log.info(s"RSP $method ${rsp.payloadString}")
           Try.success(rfun(rsp.payloadString))
         } catch {
           case e :Throwable => Try.failure[R](e)
