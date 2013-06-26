@@ -34,7 +34,7 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
           clearParent() // remove our parent (card) screen from the stack as well
         }
       })
-    val note = "Friends that already have this card are not shown."
+    val note = "Friends that have this card are not shown."
     root.add(header,
              new Label("Give to:"),
              AxisLayout.stretch(UI.vscroll(friends)),

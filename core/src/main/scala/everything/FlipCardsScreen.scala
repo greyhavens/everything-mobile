@@ -4,24 +4,42 @@
 
 package everything
 
+import scala.collection.JavaConversions._
+
 import react.{Functions, IntValue, RMap, Values}
 import tripleplay.ui._
 import tripleplay.ui.layout.{AxisLayout, TableLayout}
 
 import com.threerings.everything.data._
 
-class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends EveryScreen(game) {
+class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
 
   val freeFlips = new IntValue(0)
   val nextFlipCost = new IntValue(0)
-  noteStatus(status)
-
   val unflipped = RMap.create[Rarity,Int]
-  grid.unflipped.zipWithIndex.foreach {
-    case (count, idx) => unflipped.put(Rarity.values.apply(idx), count)
-  }
-
   val cache = new UI.ImageCache
+  val cards = new Group(new TableLayout(4).gaps(10, 10))
+  var grid :Grid = _
+
+  def ctor () {
+    // TODO: display a spinner over the button while we load the grid data
+    val pup :Powerup = Powerup.NOOP // TODO
+    val expectHave = false // TODO
+    val load = new Dialog().addTitle("Getting cards...")
+    load.display()
+    game.gameSvc.getGrid(pup, expectHave).onFailure(onFailure).onSuccess(slot { res =>
+      noteStatus(res.status)
+      grid = res.grid
+      res.grid.unflipped.zipWithIndex.foreach {
+        case (count, idx) => unflipped.put(Rarity.values.apply(idx), count)
+      }
+      cards.zipWithIndex foreach {
+        case (cb :CardButton, ii) => cb.update(grid.slots(ii), grid.flipped(ii))
+      }
+      load.dispose()
+    })
+  }
+  ctor()
 
   override def createUI (root :Root) {
     val haveFree = freeFlips.map(Functions.greaterThan(0))
@@ -29,7 +47,6 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
     val showNextFree = Values.and(lackFree, nextFlipCost.map(Functions.greaterThan(0)))
     val showNoFlips = Values.and(lackFree, nextFlipCost.map(Functions.lessThanEqual(0)))
 
-    val cards = new Group(new TableLayout(4).gaps(10, 10))
     for (ii <- 0 until 16) cards.add(cardWidget(ii))
 
     val uflabels = new Group(AxisLayout.horizontal).
@@ -79,7 +96,7 @@ class FlipCardsScreen (game :Everything, status :GameStatus, grid :Grid) extends
           reveal(res)
         })
     }
-  }.update(grid.slots(ii), grid.flipped(ii))
+  }
 
   protected val onFlipFailure = (cause :Throwable) => cause.getMessage match {
     case "e.nsf_for_flip" => new Dialog().

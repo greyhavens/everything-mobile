@@ -7,7 +7,7 @@ package everything
 import playn.core.PlayN._
 import playn.core._
 import pythagoras.f.Point
-import react.UnitSignal
+import react.{Value, UnitSignal}
 
 import tripleplay.game.{ScreenStack, UIScreen}
 import tripleplay.ui._
@@ -28,10 +28,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
 
     def addButton (lbl :String, action : =>Unit) :this.type = addButton(UI.button(lbl)(action))
     def addButton (btn :Button) :this.type = {
-      buttons.add(btn.onClick(unitSlot {
-        // TODO: animate dismiss
-        iface.destroyRoot(root)
-      }))
+      buttons.add(btn.onClick(unitSlot { dispose() }))
       this
     }
 
@@ -49,7 +46,14 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       root.layer.setTranslation((width-root.size.width)/2, (height-root.size.height)/2);
       // TODO: animate reveal
     }
+
+    def dispose () {
+      // TODO: animate dismiss
+      iface.destroyRoot(root)
+    }
   }
+
+  val isVisible = Value.create(false)
 
   val onFailure = (cause :Throwable) => {
     log.warn("Erm, failure", cause)
@@ -79,6 +83,16 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     }))
   }
 
+  override def wasShown () {
+    super.wasShown()
+    isVisible.update(true)
+  }
+
+  override def wasHidden () {
+    super.wasHidden()
+    isVisible.update(false)
+  }
+
   protected def layout () :Layout = AxisLayout.vertical().offStretch
 
   protected def header (title :String) =
@@ -88,6 +102,12 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   protected def back (label :String) :Button = _back match {
     case null => _back = UI.button(label)(pop()) ; _back
     case _ => throw new AssertionError("Already have a back button!")
+  }
+
+  protected def showLoading (text :String, value :Value[_]) {
+    val lid = new Dialog().addTitle(text)
+    lid.display()
+    value.connect(unitSlot { lid.dispose() }).once()
   }
 
   /** Displays a dialog enabling the sale of `card`. On sale, `onSold` is invoked and this screen is

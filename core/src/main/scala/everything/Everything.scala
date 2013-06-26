@@ -13,7 +13,7 @@ import tripleplay.game.ScreenStack
 
 import com.threerings.everything.data._
 
-class Everything (val device :Device, fb :Facebook) extends Game.Default(33) {
+class Everything (val device :Device, val fb :Facebook) extends Game.Default(33) {
 
   val screens = new ScreenStack
   val keyDown = Signal.create[Key]()
@@ -43,34 +43,8 @@ class Everything (val device :Device, fb :Facebook) extends Game.Default(33) {
   // TODO: trigger revaliation of session if we do an RPC call and it fails due to invalid auth
   // token
 
-  override def init ()  {
-    keyboard.setListener(new Keyboard.Adapter {
-      override def onKeyDown (event :Keyboard.Event) = keyDown.emit(event.key)
-    })
-    // display our main menu
-    main.push()
-
-    // if we've authed with Facebook at least once already, then just go
-    if (fb.isAuthed) validateSession()
-    // otherwise pop up a little notice saying this is a FB game and we're going to auth
-    else new main.Dialog().addTitle("Welcome!").addText(
-      "The Everything Game is played with your Facebook friends. " +
-        "Click 'OK' to connect to The Everything Game on Facebook and start playing!").
-      addButton("OK", validateSession()).
-      display()
-  }
-
-  override def update (delta :Int) {
-    _clock.update(delta)
-    screens.update(delta)
-  }
-
-  override def paint (alpha :Float) {
-    _clock.paint(alpha)
-    screens.paint(_clock)
-  }
-
-  protected def validateSession () {
+  /** Validates our session with the server. */
+  def validateSession () {
     fb.authenticate().flatMap(rf { fbToken :String =>
       everySvc.validateSession(fbToken, device.timeZoneOffset)
     }).onFailure(main.onFailure).onSuccess { s :SessionData =>
@@ -81,6 +55,24 @@ class Everything (val device :Device, fb :Facebook) extends Game.Default(33) {
       pups.putAll(s.powerups)
       gifts.addAll(s.gifts)
     }
+  }
+
+  override def init ()  {
+    keyboard.setListener(new Keyboard.Adapter {
+      override def onKeyDown (event :Keyboard.Event) = keyDown.emit(event.key)
+    })
+    // display our main menu
+    main.push()
+  }
+
+  override def update (delta :Int) {
+    _clock.update(delta)
+    screens.update(delta)
+  }
+
+  override def paint (alpha :Float) {
+    _clock.paint(alpha)
+    screens.paint(_clock)
   }
 
   private val _clock = new Clock.Source(33)
