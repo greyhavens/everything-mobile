@@ -26,6 +26,7 @@ object MockEveryService extends EveryService with Mockery {
     data.everythingURL = "http://apps.facebook.com/everythingcandidate"
     data.backendURL = "https://everything-candidate.herokuapp.com/"
     data.facebookAppId = "107211406428"
+    data.gifts = List()
     RFuture.success(data)
   }
 

@@ -20,7 +20,7 @@ class OpenGiftsScreen (game :Everything) extends EveryScreen(game) {
       cards.add(new CardButton(game, this, cache) {
         override protected def isGift = true
         override protected def onReveal () {
-          // TODO: spinner
+          shaking.update(true)
           game.gameSvc.openGift(card.thingId, card.received).onFailure(onFailure).
             onSuccess(slot { res =>
               game.gifts.remove(card)

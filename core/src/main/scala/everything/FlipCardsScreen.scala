@@ -87,7 +87,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
 
   def cardWidget (ii :Int) = new CardButton(game, this, cache) {
     override protected def onReveal () {
-      // TODO: shake the card or display a spinner to indicate that we're loading
+      shaking.update(true)
       game.gameSvc.flipCard(grid.gridId, ii, nextFlipCost.get).
         bindComplete(enabledSlot). // disable while req is in-flight
         onFailure(onFlipFailure).

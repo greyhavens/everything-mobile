@@ -29,6 +29,9 @@ object UI {
     private val _images = MMap[String,Image]()
   }
 
+  val cardSize = new Dimension(132/2, 158/2)
+  val cardCtr = new Point(cardSize.width/2, cardSize.height/2)
+
   val textColor = 0xFF442D17
   lazy val coinsIcon = getImage("money.png")
   lazy val cardFront = getImage("card_front.png")
@@ -141,7 +144,7 @@ object UI {
   def icon (image :Image) = new Label(Icons.image(image))
   /** Creates a label that displays a currency amount. */
   def moneyIcon (coins :Int) = new Label(coins.toString, Icons.image(coinsIcon)).
-    addStyles(Style.FONT.is(moneyFont))
+    addStyles(Style.FONT.is(moneyFont), Style.ICON_GAP.is(0))
   /** Creates a label that displays a (reactive) currency amount. */
   def moneyIcon (coins :IntValue, dbag :DestroyableBag) :Label = {
     val label = moneyIcon(0)

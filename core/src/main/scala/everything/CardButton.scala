@@ -4,21 +4,48 @@
 
 package everything
 
-import react.RFuture
+import playn.core.PlayN._
+import playn.core._
+import pythagoras.f.FloatMath
+import react.{RFuture, Value}
+import tripleplay.anim.Animation
+import tripleplay.shaders.RotateYShader
 import tripleplay.ui._
 
 import com.threerings.everything.data._
 import com.threerings.everything.rpc.GameAPI
 
-class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache) extends Button {
+class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
+    extends SizableWidget(UI.cardSize) {
+  import Element.Flag
+
+  /** The layer that contains our card image. */
+  val ilayer = graphics.createImageLayer()
+  ilayer.setOrigin(UI.cardCtr.x, UI.cardCtr.y)
+  layer.addAt(ilayer, UI.cardCtr.x, UI.cardCtr.y)
+
+  /** Whether or not this card is currently jiggling. We jiggle the card while waiting for data after
+    * the user has requested to flip it. */
+  val shaking = Value.create(false)
+  shaking.connect(slot { isShaking =>
+    if (isShaking && _shaker == null) {
+      _shaker = host.iface.animator.
+        shake(ilayer).bounds(-1, 1, -1, 1).cycleTime(50).in(60000).handle
+    } else if (!isShaking && _shaker != null) {
+      ilayer.setTranslation(UI.cardCtr.x, UI.cardCtr.y)
+      _shaker.cancel()
+      _shaker = null
+    }
+  })
+
+  enableInteraction()
+  update(SlotStatus.UNFLIPPED, null)
 
   protected var _card :ThingCard = _
   protected var _msg :String = null
   protected var _counts :Option[(Int,Int)] = None
   protected var _cachedCard :Card = _
-
-  addStyles(Style.ICON_POS.above)
-  update(SlotStatus.UNFLIPPED, null)
+  protected var _shaker :Animation.Handle = _
 
   def update (status :SlotStatus, card :ThingCard) = {
     _card = card
@@ -26,16 +53,10 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache) ext
     this
   }
 
-  override def getStyleClass = classOf[Label]
-
-  override def click () {
-    super.click()
-    if (isRevealed(_card)) onView()
-    else onReveal()
-  }
-
+  /** Whether or not this card has been revealed. */
   protected def isRevealed (card :ThingCard) = card != null && card.image != null
 
+  /** Whether or not to use the gift card background. */
   protected def isGift = false
 
   /** Called if an unflipped card is clicked. */
@@ -58,10 +79,50 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache) ext
   }
 
   protected def reveal (res :GameAPI.CardResult) {
-    // TODO: animate the flip, etc.
-    update(SlotStatus.FLIPPED, res.card.toThingCard)
-    _counts = Some((res.haveCount, res.thingsRemaining))
-    viewCard(res.card)
+    // wait until our thing image is ready, then start the flip
+    cache(res.card.thing.image).addCallback(cb { thing =>
+      shaking.update(false) // we can stop shaking now
+
+      // add another layer over our current one which will display the back of the card
+      val blayer = graphics.createImageLayer(ilayer.image)
+      layer.add(blayer.setDepth(1)) // render above our current layer
+
+      // create the rotating shaders; this is a bit hacky because the rotating shaders work in
+      // fractions of full screen coordinates, so we have to figure out where (in screen coordinates)
+      // the center of our card is... meh
+      val pos = Layer.Util.layerToScreen(layer, UI.cardCtr.x, UI.cardCtr.y)
+      pos.x /= host.width
+      pos.y = 0.5f // pos.y /= host.height
+      val topShader = new RotateYShader(graphics.ctx, pos.x, pos.y, 1)
+      blayer.setShader(topShader)
+      val botShader = new RotateYShader(graphics.ctx, pos.x, pos.y, 1)
+      ilayer.setShader(botShader)
+
+      // run up our flipping animation
+      host.iface.animator.tween(new Animation.Value() {
+        def initial = 0
+        def set (pct :Float) = {
+          topShader.angle = FloatMath.PI * pct;
+          botShader.angle = FloatMath.PI * (pct - 1);
+          if (pct >= 0.5f && !_flipped) {
+            blayer.setDepth(-1);
+            _flipped = true
+          }
+        }
+        var _flipped = false
+      }).to(1).in(300).`then`.action(new Runnable() {
+        def run () {
+          blayer.setShader(null)
+          ilayer.setShader(null)
+          blayer.destroy()
+          viewCard(res.card)
+        }
+      })
+
+      // update our main image to be the new card (this will be flipped in)
+      update(SlotStatus.FLIPPED, res.card.toThingCard)
+      _counts = Some((res.haveCount, res.thingsRemaining))
+    })
   }
 
   protected def viewCard (card :Card) {
@@ -77,12 +138,35 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache) ext
       UI.statusImage(msg)
     }
     import SlotStatus._
-    icon.update(Icons.image(status match {
+    ilayer.setImage(status match {
       case        GIFTED|
           RECRUIT_GIFTED => dispensed("Gifted!")
       case          SOLD => dispensed("Sold!")
       case     UNFLIPPED => if (isGift) UI.cardGift else UI.cardBack
       case       FLIPPED => UI.cardImage(cache, _card)
-    }))
+    })
+  }
+
+  override protected def getStyleClass = classOf[CardButton]
+
+  override protected def onPointerStart (event :Pointer.Event, x :Float, y :Float) {
+    super.onPointerStart(event, x, y)
+    if (isEnabled) set(Flag.SELECTED, true)
+  }
+  override protected def onPointerDrag (event :Pointer.Event, x :Float, y :Float) {
+    super.onPointerDrag(event, x, y)
+    if (isEnabled()) set(Flag.SELECTED, contains(x, y))
+  }
+  override protected def onPointerEnd (event :Pointer.Event, x :Float, y :Float) {
+    super.onPointerEnd(event, x, y)
+    if (isSelected) {
+      set(Flag.SELECTED, false)
+      if (isRevealed(_card)) onView()
+      else onReveal()
+    }
+  }
+  override protected def onPointerCancel (event :Pointer.Event) {
+    super.onPointerCancel(event)
+    set(Flag.SELECTED, false)
   }
 }
