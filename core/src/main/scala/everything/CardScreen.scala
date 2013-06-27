@@ -33,14 +33,19 @@ abstract class CardScreen (
     UI.tipLabel(s"${card.position+1} of ${card.things}"))
 
   protected def buttons (keepNotBack :Boolean) = UI.hgroup(
+    UI.stretchShim(),
     back(if (keepNotBack) "Keep" else "Back"),
+    UI.stretchShim(),
     UI.button("Sell") {
       maybeSellCard(card.toThingCard) { upStatus(SlotStatus.SOLD) }
     },
+    UI.stretchShim(),
     UI.button("Gift") {
       new GiftCardScreen(game, cache, card, upStatus).push
     },
+    UI.stretchShim(),
     UI.button("Share") {
       todo()
-    })
+    },
+    UI.stretchShim())
 }

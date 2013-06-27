@@ -26,8 +26,8 @@ object Bubbles {
   val RAD = 20f
   val HRAD = RAD/2
   val TVGAP = 15
-  val NAME_FORMAT = new TextFormat().withFont(UI.textFont(16))
-  val DEETS_FORMAT = new TextFormat().withFont(UI.textFont(12))
+  val NAME_FORMAT = new TextFormat().withFont(UI.writingFont(16))
+  val DEETS_FORMAT = new TextFormat().withFont(UI.writingFont(12))
 
   sealed trait VPos
   object VPos {

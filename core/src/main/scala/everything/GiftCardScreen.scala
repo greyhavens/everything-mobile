@@ -23,10 +23,11 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
       UI.headerLabel(card.thing.name),
       UI.pathLabel(card.categories.map(_.name), 12),
       UI.tipLabel(s"Rarity: ${card.thing.rarity} - E${card.thing.rarity.value}"))
-    val friends = new Group(new TableLayout(TableLayout.COL.fixed, TableLayout.COL.alignLeft,
-                                            TableLayout.COL.fixed).gaps(5, 5)).add(
-      UI.shim(5, 5), new Label("Loading..."), UI.shim(5, 5))
-    val buttons = UI.hgroup(gap=25).add(
+    val friends = new Group(new TableLayout(
+      TableLayout.COL.fixed, TableLayout.COL.alignLeft,
+      TableLayout.COL.fixed, TableLayout.COL.fixed).gaps(5, 5)).add(
+      UI.shim(5, 5), new Label("Loading..."), UI.shim(5, 5), UI.shim(5, 5))
+    val buttons = UI.bgroup(
       back("Cancel"),
       UI.button("Sell") {
         maybeSellCard(card.toThingCard) {
@@ -53,11 +54,12 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
           val hasBits = if (f.hasThings == 0) "" else s" (has ${f.hasThings}/${res.things})"
           friends.add(like,
                       UI.wrapLabel(s"${f.friend}$hasBits"),
-                      UI.button("Give")(showGivePopup(f.friend)))
+                      UI.button("Give")(showGivePopup(f.friend)),
+                      UI.shim(5, 5))
         }
         if (res.friends.isEmpty) {
           friends.add(TableLayout.colspan(
-            new Label("All of your friends already have this card."), 3))
+            new Label("All of your friends already have this card."), 4))
         }
       })
   }

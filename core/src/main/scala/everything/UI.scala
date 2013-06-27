@@ -11,7 +11,7 @@ import react.IntValue
 
 import playn.core.PlayN._
 import playn.core._
-import pythagoras.f.{Dimension, FloatMath, MathUtil, Point}
+import pythagoras.f.{Dimension, IDimension, FloatMath, MathUtil, Point}
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
 import tripleplay.util.DestroyableBag
@@ -30,40 +30,32 @@ object UI {
   }
 
   val textColor = 0xFF442D17
-  val coinsIcon = getImage("money.png")
-  val cardFront = getImage("card_front.png")
-  val cardBack = getImage("card_back.png")
-  val cardGift = getImage("card_gift.png")
+  lazy val coinsIcon = getImage("money.png")
+  lazy val cardFront = getImage("card_front.png")
+  lazy val cardBack = getImage("card_back.png")
+  lazy val cardGift = getImage("card_gift.png")
 
-  val buttonUp = getImage("button/up.png")
-  val buttonDn = getImage("button/down.png")
-  val wideBtnUp = getImage("button/wide_up.png")
-  val wideBtnDn = getImage("button/wide_down.png")
-
-  val Machine = "Copperplate Gothic Bold"
-  val Handwriting = "Josschrift"
-
-  val titleFont = graphics.createFont(Machine, Font.Style.PLAIN, 38)
-  val menuFont = graphics.createFont(Machine, Font.Style.PLAIN, 24)
-  val moneyFont = graphics.createFont(Machine, Font.Style.PLAIN, 12)
-  val buttonFont = graphics.createFont(Machine, Font.Style.PLAIN, 16)
-  val wideButtonFont = graphics.createFont(Machine, Font.Style.PLAIN, 20)
-  val headerFont = graphics.createFont(Machine, Font.Style.PLAIN, 18)
-  val subHeaderFont = graphics.createFont(Machine, Font.Style.PLAIN, 12)
-  val notesHeaderFont = graphics.createFont(Machine, Font.Style.PLAIN, 14)
-  val tipFont = textFont(14)
+  val titleFont = machineFont(38)
+  val menuFont = machineFont(24)
+  val textFont = writingFont(16)
+  val moneyFont = machineFont(12)
+  val buttonFont = writingFont(20)
+  val wideButtonFont = writingFont(24)
+  val headerFont = machineFont(18)
+  val subHeaderFont = machineFont(12)
+  val notesHeaderFont = machineFont(14)
+  val tipFont = writingFont(14)
   val factsFont = graphics.createFont("Georgia", Font.Style.PLAIN, 16)
-  def textFont (size :Int) = graphics.createFont(Handwriting, Font.Style.PLAIN, size)
 
-  def glyphFont (size :Int) = graphics.createFont("Arial" /*platformType match {
-    case Platform.Type.ANDROID => "Droid Sans"
-    case _                     => "Times New Roman"
-  }*/, Font.Style.PLAIN, size)
+  def machineFont (size :Float) = graphics.createFont(
+    "Copperplate Gothic Bold", Font.Style.PLAIN, size)
+  def writingFont (size :Float) = graphics.createFont("Josschrift", Font.Style.PLAIN, size)
+  def glyphFont (size :Int) = graphics.createFont("Copperplate", Font.Style.BOLD, size)
 
-  val statusCfg = new TextConfig(textColor).withFont(textFont(18))
-  val cardCfg = new TextConfig(textColor).withFont(textFont(10)).withWrapping(
+  val statusCfg = new TextConfig(textColor).withFont(writingFont(18))
+  val cardCfg = new TextConfig(textColor).withFont(writingFont(10)).withWrapping(
     cardFront.width-8, TextFormat.Alignment.CENTER)
-  val smallCardCfg = new TextConfig(textColor).withFont(textFont(8)).withWrapping(
+  val smallCardCfg = new TextConfig(textColor).withFont(writingFont(8)).withWrapping(
     cardFront.width-8, TextFormat.Alignment.CENTER)
 
   val absorber = new Layer.HitTester {
@@ -74,16 +66,18 @@ object UI {
   }
 
   def sheet = SimpleStyles.newSheetBuilder().
-    add(classOf[Element[_]], Style.COLOR.is(textColor), Style.FONT.is(textFont(16))).
+    add(classOf[Element[_]], Style.COLOR.is(textColor), Style.FONT.is(textFont)).
     add(classOf[Element[_]], Style.Mode.DISABLED, Style.COLOR.is(0xFF999999)).
-    add(classOf[Button], Style.FONT.is(buttonFont),
-        Style.BACKGROUND.is(Background.image(buttonUp).inset(0, 13, 2, 13))).
+    add(classOf[Button], Style.BACKGROUND.is(Background.blank().inset(0, 1, 1, 0)),
+        Style.FONT.is(buttonFont), Style.TEXT_EFFECT.shadow, Style.SHADOW.is(0x55000000),
+        Style.SHADOW_X.is(1f), Style.SHADOW_Y.is(1f)).
     add(classOf[Button], Style.Mode.SELECTED,
-        Style.BACKGROUND.is(Background.image(buttonDn).inset(2, 11, 0, 15))).
-    add(classOf[WideTextButton], Style.FONT.is(wideButtonFont),
-        Style.BACKGROUND.is(Background.image(wideBtnUp).inset(1, 25, 5, 25))).
-    add(classOf[WideTextButton], Style.Mode.SELECTED,
-        Style.BACKGROUND.is(Background.image(wideBtnDn).inset(3, 23, 3, 27))).
+        Style.SHADOW.is(0x00000000), Style.BACKGROUND.is(Background.blank().inset(1, 0, 0, 1))).
+    add(classOf[Button], Style.Mode.DISABLED, Style.TEXT_EFFECT.none).
+    add(classOf[LabelButton], Style.BACKGROUND.is(Background.blank().inset(0, 0.5f, 0.5f, 0)),
+        Style.FONT.is(textFont), Style.SHADOW_X.is(0.5f), Style.SHADOW_Y.is(0.5f)).
+    add(classOf[LabelButton], Style.Mode.SELECTED,
+        Style.BACKGROUND.is(Background.blank().inset(0.5f, 0, 0, 0.5f))).
     create()
 
   def hgroup (gap :Int = 5) = new Group(AxisLayout.horizontal().gap(gap))
@@ -94,6 +88,11 @@ object UI {
   def plate (image :Element[_], elems :Element[_]*) = {
     val right = vgroup0(elems :_*).setConstraint(AxisLayout.stretched).addStyles(Style.HALIGN.left)
     hgroup().add(image, right)
+  }
+  def bgroup (elems :Element[_]*) = {
+    val group = new Group(AxisLayout.horizontal().gap(0)).add(stretchShim())
+    (group /: elems)(_ add(_, stretchShim()))
+    group
   }
   protected def add (group :Group, elems :Seq[Element[_]]) = (group /: elems)(_ add _)
 
@@ -113,7 +112,7 @@ object UI {
   def glyphLabel (glyph :String) = label(glyph, glyphFont(14))
 
   def pathLabel (path :Seq[String], fontSize :Int = 14) = {
-    val (font, gfont) = (textFont(fontSize), glyphFont(fontSize))
+    val (font, gfont) = (writingFont(fontSize), glyphFont(fontSize))
     (UI.hgroup() /: path)((g, p) => g.childCount match {
       case 0 => g.add(label(p, font))
       case n => g.add(label(Category.SEP_CHAR, gfont), label(p, font))
@@ -121,16 +120,16 @@ object UI {
   }
 
   def inertButton (label :String, styles :Style.Binding[_]*) :Button =
-    new TextButton(label).addStyles(styles :_*)
+    new Button(label).addStyles(styles :_*).addStyles(Style.UNDERLINE.on)
   def button (label :String, styles :Style.Binding[_]*)(action : =>Unit) :Button =
     inertButton(label, styles :_*).onClick(unitSlot(action))
   def wideButton (label :String, styles :Style.Binding[_]*)(action : =>Unit) :Button =
-    new WideTextButton(label).addStyles(styles :_*).onClick(unitSlot(action))
-  def labelButton (text :String, styles :Style.Binding[_]*)(action : => Unit) :Button =
-    new LabelButton(text).addStyles(styles.toArray :_*).addStyles(Style.UNDERLINE.on).
+    new Button(label).addStyles(styles :_*).addStyles(Style.FONT.is(wideButtonFont)).
       onClick(unitSlot(action))
+  def labelButton (text :String, styles :Style.Binding[_]*)(action : => Unit) :Button =
+    new LabelButton(text).addStyles(styles :_*).onClick(unitSlot(action))
   def imageButton (image :Image)(action : => Unit) :Button =
-    new LabelButton(Icons.image(image)).addStyles(Style.ICON_POS.above).onClick(unitSlot(action))
+    new Button(Icons.image(image)).addStyles(Style.ICON_POS.above).onClick(unitSlot(action))
   def moneyButton (amount :Int)(action :(Button => Unit)) = {
     val b = button(amount.toString)(())
     b.clicked.connect(action)
@@ -148,6 +147,13 @@ object UI {
     val label = moneyIcon(0)
     dbag.add(coins.map(Functions.TO_STRING).connectNotify(label.text.slot()))
     label
+  }
+
+  lazy val backImage = {
+    val lay = graphics.layoutText("\u27A8", new TextFormat().withFont(glyphFont(28)))
+    val img = graphics.createImage(lay.width, lay.height)
+    img.canvas.scale(-1, 1).setFillColor(textColor).fillText(lay, -lay.width, 0)
+    img
   }
 
   def getImage (path :String) = assets.getImageSync(s"images/$path")
@@ -274,25 +280,6 @@ object UI {
   protected class LabelButton (text :String, icon :Icon) extends Button(text, icon) {
     def this (text :String) = this(text, null)
     def this (icon :Icon) = this(null, icon)
-    override def getStyleClass = classOf[Label]
-  }
-
-  protected class TextButton (text :String) extends Button(text) {
-    override protected def computeSize (hintX :Float, hintY :Float) :Dimension = {
-      val d = super.computeSize(hintX, hintY)
-      // d.width = buttonUp.width
-      d.height = 2*buttonUp.height/3
-      d
-    }
-  }
-
-  protected class WideTextButton (text :String) extends Button(text) {
-    override protected def computeSize (hintX :Float, hintY :Float) :Dimension = {
-      val d = super.computeSize(hintX, hintY)
-      // d.width = wideBtnUp.width
-      d.height = wideBtnUp.height
-      d
-    }
-    override protected def getStyleClass = classOf[WideTextButton]
+    override def getStyleClass = classOf[LabelButton]
   }
 }

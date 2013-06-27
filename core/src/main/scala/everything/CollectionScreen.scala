@@ -24,11 +24,13 @@ class CollectionScreen (game :Everything, who :PlayerName) extends EveryScreen(g
                                          TableLayout.COL.fixed,
                                          TableLayout.COL.fixed.alignLeft).gaps(0, 10)).add(
       TableLayout.colspan(new Label("Loading..."), 3))
-    root.add(header("View Collection"),
-             UI.plate(UI.icon(UI.frameImage(UI.friendImage(who), 50, 50)),
+    root.add(UI.plate(UI.icon(UI.frameImage(UI.friendImage(who), 36, 36)),
                       UI.headerLabel(who.toString),
-                      UI.hgroup(new Label("Things:"), new ValueLabel(things),
-                                new Label("Series:"), new ValueLabel(series))),
+                      UI.hgroup(UI.tipLabel("Things:"),
+                                new ValueLabel(things).addStyles(Style.FONT.is(UI.tipFont)),
+                                UI.tipLabel("Series:"),
+                                new ValueLabel(series).addStyles(Style.FONT.is(UI.tipFont)))).
+               add(0, back()).add(1, UI.shim(15, 5)),
              AxisLayout.stretch(UI.vscroll(UI.hgroup(UI.stretchShim, cats, UI.stretchShim))))
 
     game.gameSvc.getCollection(who.userId).onFailure(onFailure).onSuccess(popCats(cats) _)

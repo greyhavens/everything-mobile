@@ -21,7 +21,7 @@ class CategoryScreen (game :Everything, who :PlayerName, path :Array[String], ss
       val btn = UI.labelButton(s.name) {
         new SeriesScreen(game, who, path, s).push()
       }
-        btn.icon.update(Icons.image(UI.pieImage(s.owned / s.things.toFloat, 5)))
+      btn.icon.update(Icons.image(UI.pieImage(s.owned / s.things.toFloat, 5)))
       cats.add(btn.addStyles(Style.HALIGN.left, Style.TEXT_WRAP.on),
                new Label(s"${s.owned} of ${s.things}"))
     }

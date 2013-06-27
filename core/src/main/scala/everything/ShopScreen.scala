@@ -32,7 +32,7 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
 
     // COLS: icon ; name+descrip ; cost ; buy
     val pups = new Group(new TableLayout(cd, cl, cd).gaps(5, 5)).
-      setStylesheet(Stylesheet.builder.add(classOf[Label], Style.FONT.is(UI.textFont(13))).create)
+      setStylesheet(Stylesheet.builder.add(classOf[Label], Style.FONT.is(UI.writingFont(13))).create)
 
     PupInfo foreach { case (pup, name, descrip) =>
       val descVal = game.pups.getView(pup).map(rf { (_ :JInteger) match {
@@ -72,9 +72,9 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
                else buy)
     }
 
-    root.add(header("Shop").add(UI.subHeaderLabel("Have:"), UI.moneyIcon(game.coins, _dbag)),
+    root.add(header("Get Coins").add(UI.moneyIcon(game.coins, _dbag), UI.shim(5, 5)),
              AxisLayout.stretch(UI.vscroll(UI.vgroup(
-               UI.headerLabel("Get Coins"), coins, UI.shim(5, 10),
+               coins, UI.shim(5, 10),
                UI.headerLabel("Get Powerups"), pups))))
   }
 

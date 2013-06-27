@@ -28,7 +28,8 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
 
     def addButton (lbl :String, action : =>Unit) :this.type = addButton(UI.button(lbl)(action))
     def addButton (btn :Button) :this.type = {
-      buttons.add(btn.onClick(unitSlot { dispose() }))
+      if (buttons.childCount == 0) buttons.add(UI.stretchShim())
+      buttons.add(btn.onClick(unitSlot { dispose() }), UI.stretchShim())
       this
     }
 
@@ -99,9 +100,10 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   protected def header (title :String) =
     UI.hgroup(back(), AxisLayout.stretch(UI.headerLabel(title)))
 
-  protected def back () :Button = back("Back")
-  protected def back (label :String) :Button = _back match {
-    case null => _back = UI.button(label)(pop()) ; _back
+  protected def back () :Button = noteBack(UI.imageButton(UI.backImage)(pop()))
+  protected def back (label :String) :Button = noteBack(UI.button(label)(pop()))
+  protected def noteBack (back :Button) = _back match {
+    case null => _back = back ; back
     case _ => throw new AssertionError("Already have a back button!")
   }
 
@@ -133,7 +135,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       })
   }
 
-  protected def background () :Background = Background.image(_bgImage).inset(10)
+  protected def background () :Background = Background.image(_bgImage).inset(5)
 
   /** Handles a click on the hardware back button. */
   protected def onHardwareBack () {
