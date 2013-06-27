@@ -117,7 +117,8 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     * popped. */
   protected def maybeSellCard (card :ThingCard)(onSold : =>Unit) {
     val amount = card.rarity.saleValue
-    new Dialog().addTitle("Sell Card").addText(s"Sell ${card.name} for E $amount").
+    new Dialog().addTitle("Sell Card").
+      add(UI.hgroup(new Label(s"Sell ${card.name} for"), UI.moneyIcon(amount), new Label("?"))).
       addButton("No", ()).addButton("Yes", sellCard(card, onSold)).display()
   }
 
