@@ -29,6 +29,13 @@
     </dependency>
 
     <dependency>
+      <groupId>com.facebook</groupId>
+      <artifactId>android-facebook</artifactId>
+      <version>3.0</version>
+      <type>apklib</type>
+    </dependency>
+
+    <dependency>
       <groupId>com.googlecode.playn</groupId>
       <artifactId>playn-android</artifactId>
       <version>${playn.version}</version>

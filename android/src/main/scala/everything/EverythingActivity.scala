@@ -4,6 +4,8 @@
 
 package everything
 
+import android.content.Intent
+import android.os.Bundle
 import java.text.DateFormat
 import java.util.{Date, TimeZone}
 import playn.android.GameActivity
@@ -21,11 +23,18 @@ class EverythingActivity extends GameActivity {
     def formatDate (when :Long) = _dfmt.format(new Date(when))
     private val _dfmt = DateFormat.getDateInstance()
   }
-  val facebook = new Facebook {
-    override def isAuthed = true
-    override def authenticate () = RFuture.success("test:1008138021") // testy
-  }
+  val facebook = new DroidBook(this)
   lazy val game = new Everything(device, facebook)
+
+  override def onCreate (savedInstanceState :Bundle) {
+    super.onCreate(savedInstanceState)
+    facebook.onCreate()
+  }
+
+  override def onActivityResult (requestCode :Int, resultCode :Int, data :Intent) {
+    super.onActivityResult(requestCode, resultCode, data)
+    facebook.onActivityResult(requestCode, resultCode, data)
+  }
 
   override def main () {
     // default to smoothing when rendering canvas images
@@ -40,6 +49,7 @@ class EverythingActivity extends GameActivity {
     PlayN.run(game)
   }
 
+  override def platform = super.platform // make visible to friends
   override def usePortraitOrientation = true
   override def logIdent = "every"
 
