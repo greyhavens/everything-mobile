@@ -17,7 +17,6 @@ import com.threerings.everything.rpc.GameAPI
 
 class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
     extends SizableWidget(UI.cardSize) {
-  import Element.Flag
 
   /** The layer that contains our card image. */
   val ilayer = graphics.createImageLayer()
@@ -149,24 +148,8 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
 
   override protected def getStyleClass = classOf[CardButton]
 
-  override protected def onPointerStart (event :Pointer.Event, x :Float, y :Float) {
-    super.onPointerStart(event, x, y)
-    if (isEnabled) set(Flag.SELECTED, true)
-  }
-  override protected def onPointerDrag (event :Pointer.Event, x :Float, y :Float) {
-    super.onPointerDrag(event, x, y)
-    if (isEnabled()) set(Flag.SELECTED, contains(x, y))
-  }
-  override protected def onPointerEnd (event :Pointer.Event, x :Float, y :Float) {
-    super.onPointerEnd(event, x, y)
-    if (isSelected) {
-      set(Flag.SELECTED, false)
-      if (isRevealed(_card)) onView()
-      else onReveal()
-    }
-  }
-  override protected def onPointerCancel (event :Pointer.Event) {
-    super.onPointerCancel(event)
-    set(Flag.SELECTED, false)
+  override protected def onClick (event :Pointer.Event) {
+    if (isRevealed(_card)) onView()
+    else onReveal()
   }
 }

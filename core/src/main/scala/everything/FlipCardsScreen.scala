@@ -62,16 +62,18 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
       uflabels.add(label)
     }
 
-    root.add(header("Flip Your Cards"),
+    root.add(header("Flip Your Cards").add(UI.moneyIcon(game.coins, _dbag), UI.shim(5, 5)),
              UI.shim(5, 5),
              UI.hgroup(
-               new Label("You have:"), UI.moneyIcon(game.coins, _dbag),
-               UI.shim(25, 5),
                new Label("Free flips:").bindVisible(haveFree),
                new ValueLabel(freeFlips).bindVisible(haveFree),
                new Label("Next flip:").bindVisible(showNextFree),
                UI.moneyIcon(nextFlipCost, _dbag).bindVisible(showNextFree),
-               new Label("No more flips.").bindVisible(showNoFlips)),
+               new Label("No more flips.").bindVisible(showNoFlips),
+               UI.shim(25, 5),
+               UI.imageButton(UI.getImage("pupbtn_up.png"), UI.getImage("pupbtn_down.png")) {
+                 todo()
+               }),
              UI.stretchShim,
              cards,
              UI.shim(5, 5),

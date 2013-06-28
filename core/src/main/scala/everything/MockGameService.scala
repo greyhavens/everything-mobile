@@ -14,7 +14,7 @@ import com.threerings.everything.rpc.GameAPI._
 /** A mocked `GameService` which allows us to test interaction locally. */
 object MockGameService extends GameService with Mockery {
 
-  val coins = new IntValue(42)
+  val coins = new IntValue(4239)
   val freeFlips = new IntValue(2)
   val pups = new HashMap[Powerup,JInteger]
 

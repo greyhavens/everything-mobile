@@ -131,8 +131,8 @@ object UI {
       onClick(unitSlot(action))
   def labelButton (text :String, styles :Style.Binding[_]*)(action : => Unit) :Button =
     new LabelButton(text).addStyles(styles :_*).onClick(unitSlot(action))
-  def imageButton (image :Image)(action : => Unit) :Button =
-    new Button(Icons.image(image)).addStyles(Style.ICON_POS.above).onClick(unitSlot(action))
+  def imageButton (up :Image, down :Image)(action : => Unit) :ImageButton =
+    new ImageButton(up, down).onClick(unitSlot(action))
   def moneyButton (amount :Int)(action :(Button => Unit)) = {
     val b = button(amount.toString)(())
     b.clicked.connect(action)

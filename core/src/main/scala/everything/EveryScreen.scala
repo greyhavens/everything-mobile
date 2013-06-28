@@ -100,8 +100,8 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   protected def header (title :String) =
     UI.hgroup(back(), AxisLayout.stretch(UI.headerLabel(title)))
 
-  protected def back () :Button = noteBack(UI.imageButton(UI.backImage)(pop()))
-  protected def back (label :String) :Button = noteBack(UI.button(label)(pop()))
+  protected def back () = noteBack(new Button(Icons.image(UI.backImage)).onClick(unitSlot(pop())))
+  protected def back (label :String) = noteBack(UI.button(label)(pop()))
   protected def noteBack (back :Button) = _back match {
     case null => _back = back ; back
     case _ => throw new AssertionError("Already have a back button!")
