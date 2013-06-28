@@ -37,21 +37,15 @@ abstract class CardScreen (
     UI.stretchShim(),
     back(if (keepNotBack) "Keep" else "Back"),
     UI.stretchShim(),
-    UI.button("Sell") {
-      maybeSellCard(card.toThingCard) { upStatus(SlotStatus.SOLD) }
-    },
+    UI.button("Sell") { maybeSellCard(card.toThingCard) { upStatus(SlotStatus.SOLD) }},
     UI.stretchShim(),
-    UI.button("Gift") {
-      new GiftCardScreen(game, cache, card, upStatus).push
-    },
+    UI.button("Gift") { new GiftCardScreen(game, cache, card, upStatus).push },
     UI.stretchShim(),
-    UI.button("Share") {
-      showShareDialog()
-    },
+    UI.button("Share") { showShareDialog() },
     UI.stretchShim())
 
   protected def showShareDialog () {
-    val (me, thing) = (game.self.get.name, card.thing.name)
+    val (me, thing, everyURL) = (game.self.get.name, card.thing.name, game.sess.get.everythingURL)
     val (msg, ref, tgtId) =
       if (counts.map(_._2 == 0).getOrElse(false)) //  series completed
         (s"$me got the $thing card and completed the ${card.getSeries} series!", "got_comp", null)
@@ -61,8 +55,14 @@ abstract class CardScreen (
         (s"$me got the $thing card as a birthday present!", "got_bgift", null)
       else
         (s"$me got the $thing from ${card.giver}.", "got_gift", card.giver.facebookId.toString)
-    val imageURL = s"${game.sess.get.backendURL}cardimg?thing=${card.thing.thingId}"
-    game.fb.showCardDialog(ref, msg, thing, card.thing.descrip, imageURL,
-                           game.sess.get.everythingURL, tgtId) // TODO: onSuccess, etc.?
+    val toArgs = if (tgtId != null) Array("to", tgtId) else Array[String]()
+    game.fb.showDialog("feed", toArgs ++ Array(
+      "name", thing,
+      "caption", msg,
+      "description", card.thing.descrip,
+      "link", everyURL,
+      "picture", s"${game.sess.get.backendURL}cardimg?thing=${card.thing.thingId}",
+      "actions", s"[ { 'name': 'Collect Everything!', 'link': '${everyURL}' } ]",
+      "ref", ref)) // TODO: onSuccess, etc.?
   }
 }

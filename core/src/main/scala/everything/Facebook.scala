@@ -13,12 +13,10 @@ trait Facebook {
   def isAuthed :Boolean
 
   /** Authenticates with Facebook, adding the app if necessary.
-    * @return a future which will provide the Facebook auth token. */
+    * @return (via future) the user's Facebook auth token. */
   def authenticate () :RFuture[String]
 
-  /** Shows a share card dialog.
-    * @return the story id on success, null if the dialog was canceled. */
-  def showCardDialog (actionRef :String, cardAction :String, cardName :String,
-                      cardDescrip :String, imageURL :String, everyURL :String,
-                      targetId :String) :RFuture[String]
+  /** Shows a Facebook feed dialog.
+    * @return (via future) the story id on success, null if the dialog was canceled. */
+  def showDialog (action :String, params :Array[String]) :RFuture[String]
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using MonoTouch.UIKit;
 using MonoTouch.Foundation;
 using MonoTouch.FacebookConnect;
-using OFacebook = MonoTouch.FacebookConnect.Facebook;
+using OldFacebook = MonoTouch.FacebookConnect.Facebook;
 
 using playn.core;
 using playn.core.util;
@@ -17,40 +17,14 @@ namespace everything
       FBSession.OpenActiveSession(false);
     }
 
-    public void post (UIViewController rctrl, string name, string caption, string descrip,
-                      string link, UIImage photo, string photoURL) {
-      withSession(delegate (Exception authErr) {
-        if (authErr != null) PlayN.log().warn("Failed to obtain session for post", authErr);
-        else {
-          bool shared = false;
-          // try {
-          //   shared = FBNativeDialogs.PresentShareDialogModallyFrom(
-          //     rctrl, name, photo, new NSUrl(link),
-          //     delegate (FBNativeDialogResult result, NSError error) {
-          //       DLog.log.info("Native shared", "result", result, "error", error);
-          //     });
-          // } catch (Exception e) {
-          //   DLog.log.warning("Native share choked", e);
-          // }
-          if (!shared) showDialog("feed", "name", name, "caption", caption, "description", descrip,
-                                  "link", link, "picture", photoURL);
-        }
-      });
-    }
-
-    public void showDialog (string action, params string[] paramz) {
-      NSMutableDictionary dict = new NSMutableDictionary();
-      for (int ii = 0; ii < paramz.Length; ii += 2) {
-        if (paramz[ii] != null) {
-          dict.Add(new NSString(paramz[ii]), new NSString(paramz[ii+1]));
-        }
-      }
-      oldFB().Dialog(action, dict, _noopDialogDel);
-    }
-
     public bool handleOpenURL (NSUrl url) {
       var session = FBSession.ActiveSession;
       return (session == null) ? false : session.HandleOpenURL(url);
+    }
+
+    public string accessToken () {
+      var session = FBSession.ActiveSession;
+      return (session == null) ? null : session.AccessToken;
     }
 
     // from Facebook interface
@@ -60,31 +34,8 @@ namespace everything
 
     // from Facebook interface
     public RFuture authenticate () {
-      RPromise result = RPromise.create();
       PlayN.log().info("Authenticating with Facebook...");
-      withSession(delegate (Exception authErr) {
-        IOSUtil.invokeLater(delegate {
-          if (authErr != null) result.fail(authErr);
-          else result.succeed(accessToken());
-        });
-      });
-      return result;
-    }
-
-    // from Facebook interface
-    public RFuture showCardDialog (string actionRef, string cardAction, string cardName,
-                                   string cardDescrip, string imageURL, string everyURL,
-                                   string targetId) {
-      NSMutableDictionary dict = new NSMutableDictionary();
-      addTo(dict, "name", cardName);
-      addTo(dict, "caption", cardAction);
-      addTo(dict, "description", cardDescrip);
-      addTo(dict, "link", everyURL);
-      addTo(dict, "picture", imageURL);
-      addTo(dict, "ref", actionRef);
-      addTo(dict, "actions", "[ { 'name': 'Collect Everything!', 'link': '" + everyURL + "' } ]");
-      oldFB().Dialog("feed", dict, _noopDialogDel);
-      return RFuture.success(""); // TODO
+      return withSession(delegate (Callback cb) { cb.onSuccess(accessToken()); });
     }
 
     public void deauthorize () {
@@ -97,50 +48,42 @@ namespace everything
       if (session != null) session.CloseAndClearTokenInformation();
     }
 
-    public string accessToken () {
-      var session = FBSession.ActiveSession;
-      return (session == null) ? null : session.AccessToken;
-    }
-
-    // override public void getFriends (Callback callback) {
-    //   DLog.log.info("Fetching Facebook friends...");
-    //   withSession(delegate (Exception authErr) {
-    //     if (authErr != null) callback.onFailure(authErr);
-    //     else FBRequest.GetRequestForMyFriends.Start(delegate (FBRequestConnection connection,
-    //                                                           NSObject result, NSError nserr) {
-    //       try {
-    //         if (nserr != null) throw new Exception(nserr.ToString());
-    //         if (result == null) throw new Exception("No result for /me/friends request");
-    //         FBGraphObject obj = (FBGraphObject)result;
-    //         var data = NSArray.FromArray<NSObject>((NSArray)obj.ObjectForKey(new NSString("data")));
-    //         var friends = new ArrayList();
-    //         for (int ii = 0; ii < data.Length; ii++) {
-    //           if (data[ii] is FBGraphObject) friends.add(toPerson((FBGraphObject)data[ii]));
-    //           else DLog.log.warning("Unknown friend type " + data[ii]);
-    //         }
-    //         IOSUtil.invokeLater(delegate { callback.onSuccess(friends); });
-    //       } catch (Exception e) {
-    //         IOSUtil.invokeLater(delegate { callback.onFailure(e); });
-    //       }
-    //     });
-    //   });
-    // }
-
-    public void sendInvite (string message) {
-      withSession(delegate (Exception authErr) {
-        if (authErr != null) PlayN.log().warn("Failed to obtain session for invite", authErr);
-        else showDialog("apprequests", "message", message);
+    // from Facebook interface
+    public RFuture showDialog (string action, string[] paramz) {
+      return withSession(delegate (Callback cb) {
+        dialog(action, paramz);
+        cb.onSuccess(""); // TODO
       });
     }
 
-    protected static void addTo (NSMutableDictionary dict, String key, String value) {
-      dict.Add(new NSString(key), new NSString(value));
+    public RFuture nativeDialog (UIViewController rctrl, string name, string caption,
+                                  string descrip, string link, UIImage photo) {
+      return withSession(delegate (Callback cb) {
+        try {
+          FBNativeDialogs.PresentShareDialogModallyFrom(
+            rctrl, name, photo, new NSUrl(link),
+            delegate (FBNativeDialogResult result, NSError error) {
+              PlayN.log().info("Native shared [result=" + result + ", error=" + error + "]");
+            });
+          cb.onSuccess("");
+        } catch (Exception e) {
+          cb.onFailure(e);
+        }
+      });
     }
 
-    protected delegate void SessionAction (Exception authErr);
+    public RFuture sendInvite (string message) {
+      return withSession(delegate (Callback cb) {
+        dialog("apprequests", "message", message);
+        cb.onSuccess(""); // TODO
+      });
+    }
 
-    protected void withSession (SessionAction action) {
-      if (accessToken() != null) action(null);
+    protected delegate void SessionAction (Callback cb);
+
+    protected RFuture withSession (SessionAction action) {
+      var result = new DeferredPromise();
+      if (accessToken() != null) action(result);
       else {
         FBSession.OpenActiveSession(new string[] { "email" }, true,
           delegate (FBSession session, FBSessionState state, NSError nserr) {
@@ -157,23 +100,34 @@ namespace everything
             }
 
             // report success or failure
-            if (errmsg == null) action(null);
-            else action(new Exception(errmsg));
+            if (errmsg == null) action(result);
+            else result.onFailure(new Exception(errmsg));
           });
       }
+      return result;
     }
 
-    protected OFacebook oldFB () {
+    protected void dialog (string action, params string[] paramz) {
+      NSMutableDictionary dict = new NSMutableDictionary();
+      for (int ii = 0; ii < paramz.Length; ii += 2) {
+        if (paramz[ii] != null) {
+          dict.Add(new NSString(paramz[ii]), new NSString(paramz[ii+1]));
+        }
+      }
+      oldFB().Dialog(action, dict, _noopDialogDel);
+    }
+
+    protected OldFacebook oldFB () {
       if (_oldFB == null) {
         var session = FBSession.ActiveSession;
-        _oldFB = new OFacebook(session.AppID, _noopSessDel);
+        _oldFB = new OldFacebook(session.AppID, _noopSessDel);
         _oldFB.AccessToken = session.AccessToken;
         _oldFB.ExpirationDate = session.ExpirationDate;
       }
       return _oldFB;
     }
 
-    protected OFacebook _oldFB;
+    protected OldFacebook _oldFB;
     // we need to keep a reference to these to prevent them from being collected
     protected FBSessionDelegate _noopSessDel = new NoopSessionDelegate();
     protected FBDialogDelegate _noopDialogDel = new NoopDialogDelegate();

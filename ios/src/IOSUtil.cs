@@ -14,6 +14,16 @@ namespace everything
       PlayN.invokeLater(Delegates.toRunnable(action));
     }
 
+    /** Delivers success to `result` on the client's main thread. */
+    public static void succeedLater (RPromise result, Object value) {
+      invokeLater(delegate { result.succeed(value); }
+    }
+
+    /** Delivers failure to `result` on the client's main thread. */
+    public static void failLater (RPromise result, Exception error) {
+      invokeLater(delegate { result.fail(error); }
+    }
+
   //   /** Returns the supplied bytes as a hex-encoded string. */
   //   public static string hexlate (byte[] data) {
   //     StringBuilder buf = new StringBuilder();

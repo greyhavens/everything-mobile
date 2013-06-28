@@ -30,9 +30,7 @@ object EverythingJava {
     val facebook = new Facebook {
       def isAuthed = true
       def authenticate () = RFuture.success("test:" + fbId)
-      def showCardDialog (actionRef :String, cardAction :String, cardName :String,
-                          cardDescrip :String, imageURL :String, everyURL :String,
-                          targetId :String) = RFuture.success[String](null)
+      def showDialog (action :String, params :Array[String]) = RFuture.success[String](null)
     }
     val device = new Device {
       def timeZoneOffset = {

@@ -8,11 +8,13 @@ import android.app.Activity
 import android.content.Intent;
 import android.os.Bundle
 
-import com.facebook.{Request, Response, Session, SessionState}
+import com.facebook.android.{DialogError, FacebookError, Facebook => OldFacebook}
 import com.facebook.model.GraphUser
+import com.facebook.{Request, Response, Session, SessionState}
 
 import playn.core.PlayN._
-import react.RPromise
+import playn.core.util.Callback
+import react.RFuture
 
 class DroidBook (activity :EverythingActivity) extends Facebook {
 
@@ -25,25 +27,16 @@ class DroidBook (activity :EverythingActivity) extends Facebook {
     if (sess != null) sess.onActivityResult(activity, requestCode, resultCode, data)
   }
 
-  def post (name :String, caption :String, descrip :String, link :String, photoURL :String) {
-    showDialog("feed", "name", name, "caption", caption, "description", descrip,
-               "link", link, "picture", photoURL)
-  }
-
   def accessToken :String = Session.getActiveSession match {
     case null => null
     case sess => sess.getAccessToken
   }
 
+  // from Facebook
   override def isAuthed = (Session.getActiveSession != null)
 
-  override def authenticate () = {
-    val result = RPromise.create[String]()
-    withSession(new FBAction[String](result) {
-      def invoke (sess :Session) = succeed(accessToken)
-    })
-    result
-  }
+  // from Facebook
+  override def authenticate () = withSession { (_, cb) => cb.onSuccess(accessToken) }
 
   def deauthorize () {
     val sess = Session.getActiveSession
@@ -52,77 +45,62 @@ class DroidBook (activity :EverythingActivity) extends Facebook {
     }
   }
 
-  protected def showDialog (action :String, params :String*) {
-    // withSession(new FBAction<Void>(CB.NOOP) {
-    //   @SuppressWarnings("deprecated") // all of this crap is deprecated, yay!
-    //   public void invoke (Session sess) {
-    //     final Facebook fb = new Facebook(sess.getApplicationId())
-    //     fb.setAccessToken(sess.getAccessToken())
-    //     fb.setAccessExpires(sess.getExpirationDate().getTime())
-    //     activity.runOnUiThread(new Runnable() { public void run () {
-    //       Bundle bundle = new Bundle()
-    //       for (int ii = 0 ii < params.length ii += 2) {
-    //         if (params[ii+1] != null) bundle.putString(params[ii], params[ii+1])
-    //       }
-    //       fb.dialog(activity, action, bundle, new Facebook.DialogListener() {
-    //         public void onComplete (Bundle values) {}
-    //         public void onFacebookError (FacebookError e) {}
-    //         public void onError (DialogError e) {}
-    //         public void onCancel () {}
-    //       })
-    //     }})
-    //   }
-    // })
+  // from Facebook
+  override def showDialog (action :String, params :Array[String]) = withSession { (sess, cb) =>
+    val fb = new OldFacebook(sess.getApplicationId)
+    fb.setAccessToken(sess.getAccessToken)
+    fb.setAccessExpires(sess.getExpirationDate.getTime)
+    activity.runOnUiThread(new Runnable() { def run () {
+      val bundle = new Bundle()
+      for (Array(key, value) <- params.grouped(2)) {
+        if (value != null) bundle.putString(key, value)
+      }
+      fb.dialog(activity, action, bundle, new OldFacebook.DialogListener() {
+        def onComplete (values :Bundle) { cb.onSuccess(values.getString("post_id")) }
+        def onFacebookError (e :FacebookError) { cb.onFailure(e) }
+        def onError (e :DialogError) { cb.onFailure(e) }
+        def onCancel () { cb.onSuccess(null) }
+      })
+    }})
   }
 
-  abstract class FBAction[T] (result :RPromise[T]) {
-
-    def invoke (sess :Session) :Unit
-
-    def succeed (value :T) {
-      activity.platform.invokeLater(new Runnable() { def run () {
-        result.succeed(value)
-      }})
-    }
-
-    def fail (err :Throwable) {
-      activity.platform.invokeLater(new Runnable() { def run () {
-        result.fail(err)
-      }})
-    }
-
-    protected def invoke (req :Request) {
-      activity.platform.invokeAsync(new Runnable { def run () {
-        req.executeAndWait()
-      }})
-    }
+  class FBOp[T] (action :(Session, Callback[T]) => Unit) extends DeferredPromise[T] {
+    def apply (sess :Session) = action(sess, this)
   }
 
-  protected def withSession (action :FBAction[_]) {
+  protected def withSession[T] (action :(Session, Callback[T]) => Unit) :RFuture[T] = {
+    val op = new FBOp[T](action)
     val sess = Session.getActiveSession
-    if (sess != null && sess.isOpened) action.invoke(sess)
+    if (sess != null && sess.isOpened) op(sess)
     else {
-      if (_pendingAction != null) {
-        log.warn(s"Canceling existing pending FB action [action=${_pendingAction}]")
-        _pendingAction.fail(new Exception("Usurped"))
+      if (_pendingOp != null) {
+        log.warn(s"Canceling existing pending FB op [op=${_pendingOp}]")
+        _pendingOp.onFailure(new Exception("Usurped"))
       }
 
-      _pendingAction = action
+      _pendingOp = op
       Session.openActiveSession(activity, true, new Session.StatusCallback() {
         def call (sess :Session, state :SessionState, err :Exception) {
-          if (_pendingAction != null) {
+          if (_pendingOp != null) {
             if (state.isOpened) {
-              _pendingAction.invoke(sess)
-              _pendingAction = null
+              _pendingOp(sess)
+              _pendingOp = null
             } else if (err != null) {
-              _pendingAction.fail(err)
-              _pendingAction = null
+              _pendingOp.onFailure(err)
+              _pendingOp = null
             } // otherwise this is some pointless state change like OPENING
           }
         }
       })
     }
+    op
   }
 
-  protected var _pendingAction :FBAction[_] = _
+  // protected def invoke (req :Request) {
+  //   activity.platform.invokeAsync(new Runnable { def run () {
+  //     req.executeAndWait()
+  //   }})
+  // }
+
+  protected var _pendingOp :FBOp[_] = _
 }

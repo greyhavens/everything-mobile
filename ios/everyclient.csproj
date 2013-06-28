@@ -98,7 +98,6 @@
   <ItemGroup>
     <Compile Include="src\Main.cs" />
     <Compile Include="src\Facebook.cs" />
-    <Compile Include="src\IOSUtil.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
