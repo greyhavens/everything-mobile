@@ -96,6 +96,7 @@ object UI {
     (group /: elems)(_ add(_, stretchShim()))
     group
   }
+  def stretchBox () = AxisLayout.stretch(new Box())
   protected def add (group :Group, elems :Seq[Element[_]]) = (group /: elems)(_ add _)
 
   /** Creates a vertical-only scroller containing `group`. */
