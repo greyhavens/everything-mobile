@@ -11,17 +11,25 @@ import com.threerings.everything.data._
 
 class NewsScreen (game :Everything) extends EveryScreen(game) {
 
-  override def createUI (root :Root) {
-    val news = UI.vsgroup()
-    news.add(new Label("Laoding..."))
-    root.add(header("News"), AxisLayout.stretch(UI.vscroll(news)))
-    game.everySvc.getRecentFeed().onFailure(onFailure).onSuccess(slot { items =>
-      news.removeAll()
+  // start our feed request ASAP
+  val feed = game.everySvc.getRecentFeed()
+
+  override def createUI () {
+    root.add(header("News"), AxisLayout.stretch(new Label("Loading...")))
+  }
+
+  // defer the grindy grindy creation of a giant list until our show transition is completed
+  override def showTransitionCompleted () {
+    super.showTransitionCompleted()
+    feed.onFailure(onFailure).onSuccess(slot { items =>
+      val news = UI.vsgroup()
       for (ii <- 0 until items.length) {
         // formatting an item might suck in later items in the array, in which case they'll be
         // nulled out and we skip them
         if (items(ii) != null) news.add(itemWidget(items, ii))
       }
+      root.removeAt(1)
+      root.add(AxisLayout.stretch(UI.vscroll(news)))
     })
   }
 

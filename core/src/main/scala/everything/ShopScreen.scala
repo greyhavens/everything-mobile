@@ -11,7 +11,7 @@ import com.threerings.everything.data._
 
 class ShopScreen (game :Everything) extends EveryScreen(game) {
 
-  override def createUI (root :Root) {
+  override def createUI () {
     // refresh our powerup and coin state
     game.gameSvc.getShopInfo().onSuccess(slot { res =>
       game.coins.update(res.coins)

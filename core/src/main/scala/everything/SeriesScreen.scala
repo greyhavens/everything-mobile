@@ -18,7 +18,7 @@ class SeriesScreen (game :Everything, who :PlayerName, path :Array[String], catI
 
   val cache = new UI.ImageCache(game)
 
-  override def createUI (root :Root) {
+  override def createUI () {
     val cards = new Group(new TableLayout(4).gaps(10, 10), Style.VALIGN.top)
     cards.add(TableLayout.colspan(new Label("Loading..."), 4))
     root.add(header(path(0)),

@@ -16,7 +16,7 @@ class CardBackScreen (
   upStatus :SlotStatus => Unit
 ) extends CardScreen(game, cache, card, counts, upStatus) {
 
-  override def createUI (root :Root) {
+  override def createUI () {
     addHeader(root)
     root.add(UI.stretchShim(),
              UI.wrapLabel(card.thing.descrip).addStyles(Style.FONT.is(UI.factsFont)),
@@ -32,7 +32,6 @@ class CardBackScreen (
                        new Label(game.device.formatDate(card.received))),
              UI.stretchShim(),
              buttons(counts.isDefined))
-    super.createUI(root)
   }
 
   override def onCardClick () {

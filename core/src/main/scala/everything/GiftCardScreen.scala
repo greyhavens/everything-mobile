@@ -17,7 +17,7 @@ import com.threerings.everything.data._
 class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
                       upStatus :SlotStatus => Unit) extends EveryScreen(game) {
 
-  override def createUI (root :Root) {
+  override def createUI () {
     val header = UI.plate(
       UI.icon(UI.cardImage(cache, card.toThingCard)),
       UI.headerLabel(card.thing.name),

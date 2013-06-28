@@ -41,7 +41,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
   }
   ctor()
 
-  override def createUI (root :Root) {
+  override def createUI () {
     val haveFree = freeFlips.map(Functions.greaterThan(0))
     val lackFree = freeFlips.map(Functions.lessThanEqual(0))
     val showNextFree = Values.and(lackFree, nextFlipCost.map(Functions.greaterThan(0)))

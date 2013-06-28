@@ -72,12 +72,12 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   def pop () :Unit = game.screens.remove(this, popTransition)
   protected def popTransition :ScreenStack.Transition = game.screens.slide.right.duration(300)
 
-  def createUI (root :Root)
+  val root = iface.createRoot(layout(), UI.sheet, layer)
+  def createUI () :Unit
 
   override def wasAdded () {
-    val root = iface.createRoot(layout(), UI.sheet, layer)
     root.addStyles(Style.BACKGROUND.is(background))
-    createUI(root)
+    createUI()
     root.setSize(width, height)
     // wire up the (hardware) back button handler
     _dbag.add(game.keyDown.connect(slot { k =>

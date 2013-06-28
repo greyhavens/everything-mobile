@@ -32,7 +32,7 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
       display()
   }
 
-  override def createUI (root :Root) {
+  override def createUI () {
     val buttons = new Group(AxisLayout.vertical.offEqualize).add(
       UI.wideButton("") { new OpenGiftsScreen(game).push() }.
         bindText(game.gifts.sizeView.map(rf { size => s"Gifts: $size!" })).

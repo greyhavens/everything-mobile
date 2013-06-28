@@ -19,7 +19,7 @@ class CollectionScreen (game :Everything, who :PlayerName) extends EveryScreen(g
   val things = new IntValue(0)
   val series = new IntValue(0)
 
-  override def createUI (root :Root) {
+  override def createUI () {
     val cats = new Group(new TableLayout(TableLayout.COL.fixed.alignRight,
                                          TableLayout.COL.fixed,
                                          TableLayout.COL.fixed.alignLeft).gaps(0, 10)).add(

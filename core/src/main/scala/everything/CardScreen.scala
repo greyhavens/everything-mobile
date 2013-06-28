@@ -17,12 +17,11 @@ abstract class CardScreen (
 
   override protected def layout () :Layout = AxisLayout.vertical().gap(0).offStretch
 
-  override def createUI (root :Root) {
+  override def wasAdded () {
+    super.wasAdded()
     root.layer.setHitTester(UI.absorber)
     root.layer.addListener(new Pointer.Adapter {
-      override def onPointerStart (event :Pointer.Event) {
-        onCardClick()
-      }
+      override def onPointerStart (event :Pointer.Event) = onCardClick()
     })
   }
 

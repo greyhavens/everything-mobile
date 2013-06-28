@@ -32,7 +32,7 @@ class CardFrontScreen (
     }
   }
 
-  override def createUI (root :Root) {
+  override def createUI () {
     addHeader(root)
     val image = UI.frameImage(
       cache(card.thing.image), Thing.MAX_IMAGE_WIDTH/2, Thing.MAX_IMAGE_HEIGHT/2)
@@ -51,7 +51,6 @@ class CardFrontScreen (
       case None => // skip it
     }
     root.add(UI.stretchShim(), buttons(counts.isDefined))
-    super.createUI(root)
   }
 
   override def onCardClick () {

@@ -13,7 +13,7 @@ import com.threerings.everything.data._
 class CategoryScreen (game :Everything, who :PlayerName, path :Array[String], ss :Seq[SeriesCard])
     extends EveryScreen(game) {
 
-  override def createUI (root :Root) {
+  override def createUI () {
     val cats = new Group(new TableLayout(TableLayout.COL.alignLeft,
                                          TableLayout.COL.fixed.alignLeft).gaps(5, 10),
                          Style.VALIGN.top)

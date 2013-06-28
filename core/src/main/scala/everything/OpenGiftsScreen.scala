@@ -14,7 +14,7 @@ class OpenGiftsScreen (game :Everything) extends EveryScreen(game) {
 
   val cache = new UI.ImageCache(game)
 
-  override def createUI (root :Root) {
+  override def createUI () {
     val cards = new Group(new TableLayout(4).gaps(10, 10))
     game.gifts.foreach { card =>
       cards.add(new CardButton(game, this, cache) {
