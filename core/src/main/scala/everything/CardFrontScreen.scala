@@ -13,7 +13,7 @@ import com.threerings.everything.data._
 class CardFrontScreen (
   game :Everything, cache :UI.ImageCache, card :Card, counts :Option[(Int,Int)],
   upStatus :SlotStatus => Unit
-) extends CardScreen(game, cache, card, upStatus)  {
+) extends CardScreen(game, cache, card, counts, upStatus)  {
 
   def setMessage (msg :String) = {
     _msg = msg

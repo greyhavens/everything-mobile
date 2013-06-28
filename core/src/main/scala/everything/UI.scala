@@ -21,10 +21,9 @@ import com.threerings.everything.data._
 
 object UI {
 
-  class ImageCache {
+  class ImageCache (game :Everything) {
     def apply (hash :String) :Image = {
-      _images.getOrElseUpdate(hash, assets.getRemoteImage( // TODO: more proper
-        s"http://s3.amazonaws.com/everything.threerings.net/${hash}"))
+      _images.getOrElseUpdate(hash, assets.getRemoteImage(game.cardImageURL(hash)))
     }
     private val _images = MMap[String,Image]()
   }

@@ -17,7 +17,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
   val freeFlips = new IntValue(0)
   val nextFlipCost = new IntValue(0)
   val unflipped = RMap.create[Rarity,Int]
-  val cache = new UI.ImageCache
+  val cache = new UI.ImageCache(game)
   val cards = new Group(new TableLayout(4).gaps(10, 10))
   var grid :Grid = _
 

@@ -71,6 +71,35 @@ namespace everything
       return result;
     }
 
+    // from Facebook interface
+    public RFuture showCardDialog (string actionRef, string cardAction, string cardName,
+                                   string cardDescrip, string imageURL, string categories,
+                                   string rarity, string everyURL, string targetId) {
+      NSMutableDictionary dict = new NSMutableDictionary();
+      addTo(dict, "name", cardName);
+      addTo(dict, "caption", cardAction);
+      addTo(dict, "description", cardDescrip);
+      addTo(dict, "link", everyURL);
+      addTo(dict, "picture", imageURL);
+      addTo(dict, "ref", actionRef);
+
+      // TODO: these cause crashing; yay!
+
+      // NSMutableDictionary props = new NSMutableDictionary();
+      // addTo(props, "Category", categories);
+      // addTo(props, "Rarity", rarity);
+      // dict.Add(new NSString("properties"), props);
+
+      // NSMutableDictionary action = new NSMutableDictionary();
+      // addTo(action, "name", "Collect Everything");
+      // addTo(action, "link", everyURL);
+      // dict.Add(new NSString("actions"), NSArray.FromNSObjects(action));
+
+      oldFB().Dialog("feed", dict, _noopDialogDel);
+
+      return RFuture.success(""); // TODO
+    }
+
     public void deauthorize () {
       if (_oldFB != null) {
         try { _oldFB.Logout(); }
@@ -115,6 +144,10 @@ namespace everything
         if (authErr != null) PlayN.log().warn("Failed to obtain session for invite", authErr);
         else showDialog("apprequests", "message", message);
       });
+    }
+
+    protected static void addTo (NSMutableDictionary dict, String key, String value) {
+      dict.Add(new NSString(key), new NSString(value));
     }
 
     protected delegate void SessionAction (Exception authErr);

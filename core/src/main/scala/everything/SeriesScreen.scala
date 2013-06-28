@@ -16,7 +16,7 @@ class SeriesScreen (game :Everything, who :PlayerName, path :Array[String], catI
   def this (game :Everything, who :PlayerName, path :Array[String], scard :SeriesCard) =
     this(game, who, path :+ scard.name, scard.categoryId)
 
-  val cache = new UI.ImageCache
+  val cache = new UI.ImageCache(game)
 
   override def createUI (root :Root) {
     val cards = new Group(new TableLayout(4).gaps(10, 10), Style.VALIGN.top)

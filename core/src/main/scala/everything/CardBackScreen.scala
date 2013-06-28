@@ -14,7 +14,7 @@ import com.threerings.everything.data._
 class CardBackScreen (
   game :Everything, cache :UI.ImageCache, card :Card, counts :Option[(Int,Int)],
   upStatus :SlotStatus => Unit
-) extends CardScreen(game, cache, card, upStatus) {
+) extends CardScreen(game, cache, card, counts, upStatus) {
 
   override def createUI (root :Root) {
     addHeader(root)

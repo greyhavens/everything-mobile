@@ -24,6 +24,7 @@ class Everything (val device :Device, val fb :Facebook) extends Game.Default(33)
   val gameSvc  :GameService  = if (mock) MockGameService  else new GameServiceClient(this, svcURL)
 
   val self  = Value.create[PlayerName](null)
+  val sess  = Value.create[SessionData](null)
   val coins = new IntValue(0)
   val likes = RMap.create[Int,Boolean]
   val pups  = RMap.create[Powerup,JInteger]
@@ -36,6 +37,9 @@ class Everything (val device :Device, val fb :Facebook) extends Game.Default(33)
 
   /** Updates our auth token. */
   def updateAuthToken (authTok :String) = storage.setItem("authtok", authTok)
+
+  // TODO: more proper?
+  def cardImageURL (hash :String) = s"http://s3.amazonaws.com/everything.threerings.net/${hash}"
 
   // TODO: trigger revalidation of session if we close the app and return to it after more than ~10
   // minutes
@@ -50,6 +54,7 @@ class Everything (val device :Device, val fb :Facebook) extends Game.Default(33)
     }).onFailure(main.onFailure).onSuccess { s :SessionData =>
       self.update(s.name)
       coins.update(s.coins)
+      sess.update(s)
       for (id <- s.likes) likes.put(id, true)
       for (id <- s.dislikes) likes.put(id, false)
       pups.putAll(s.powerups)

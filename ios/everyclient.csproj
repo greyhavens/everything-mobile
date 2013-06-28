@@ -102,14 +102,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <Content Include="assets\images\button\down.png" />
-    <Content Include="assets\images\button\small_down.png" />
-    <Content Include="assets\images\button\small_up.png" />
-    <Content Include="assets\images\button\small_wide_down.png" />
-    <Content Include="assets\images\button\small_wide_up.png" />
-    <Content Include="assets\images\button\up.png" />
-    <Content Include="assets\images\button\wide_down.png" />
-    <Content Include="assets\images\button\wide_up.png" />
     <Content Include="assets\images\card_back@2x.png" />
     <Content Include="assets\images\card_front@2x.png" />
     <Content Include="assets\images\card_gift@2x.png" />
@@ -124,6 +116,8 @@
     <Content Include="assets\images\lines\turnstile.png" />
     <Content Include="assets\images\money@2x.png" />
     <Content Include="assets\images\page_repeat@2x.png" />
+    <Content Include="assets\images\pupbtn_up@2x.png" />
+    <Content Include="assets\images\pupbtn_down@2x.png" />
     <Content Include="assets\images\pup\all_collected_series@2x.png" />
     <Content Include="assets\images\pup\all_new_cards@2x.png" />
     <Content Include="assets\images\pup\ensure_one_ix@2x.png" />

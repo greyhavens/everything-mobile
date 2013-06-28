@@ -12,7 +12,7 @@ import tripleplay.ui.layout.TableLayout
 
 class OpenGiftsScreen (game :Everything) extends EveryScreen(game) {
 
-  val cache = new UI.ImageCache
+  val cache = new UI.ImageCache(game)
 
   override def createUI (root :Root) {
     val cards = new Group(new TableLayout(4).gaps(10, 10))
