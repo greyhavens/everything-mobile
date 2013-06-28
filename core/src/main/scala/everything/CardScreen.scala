@@ -63,7 +63,6 @@ abstract class CardScreen (
         (s"$me got the $thing from ${card.giver}.", "got_gift", card.giver.facebookId.toString)
     val imageURL = s"${game.sess.get.backendURL}cardimg?thing=${card.thing.thingId}"
     game.fb.showCardDialog(ref, msg, thing, card.thing.descrip, imageURL,
-                           Category.getHierarchy(card.categories), card.thing.rarity.toString,
                            game.sess.get.everythingURL, tgtId) // TODO: onSuccess, etc.?
   }
 }

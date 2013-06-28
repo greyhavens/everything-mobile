@@ -19,6 +19,6 @@ trait Facebook {
   /** Shows a share card dialog.
     * @return the story id on success, null if the dialog was canceled. */
   def showCardDialog (actionRef :String, cardAction :String, cardName :String,
-                      cardDescrip :String, imageURL :String, categories :String,
-                      rarity :String, everyURL :String, targetId :String) :RFuture[String]
+                      cardDescrip :String, imageURL :String, everyURL :String,
+                      targetId :String) :RFuture[String]
 }

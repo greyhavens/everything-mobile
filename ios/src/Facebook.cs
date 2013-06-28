@@ -73,8 +73,8 @@ namespace everything
 
     // from Facebook interface
     public RFuture showCardDialog (string actionRef, string cardAction, string cardName,
-                                   string cardDescrip, string imageURL, string categories,
-                                   string rarity, string everyURL, string targetId) {
+                                   string cardDescrip, string imageURL, string everyURL,
+                                   string targetId) {
       NSMutableDictionary dict = new NSMutableDictionary();
       addTo(dict, "name", cardName);
       addTo(dict, "caption", cardAction);
@@ -82,21 +82,8 @@ namespace everything
       addTo(dict, "link", everyURL);
       addTo(dict, "picture", imageURL);
       addTo(dict, "ref", actionRef);
-
-      // TODO: these cause crashing; yay!
-
-      // NSMutableDictionary props = new NSMutableDictionary();
-      // addTo(props, "Category", categories);
-      // addTo(props, "Rarity", rarity);
-      // dict.Add(new NSString("properties"), props);
-
-      // NSMutableDictionary action = new NSMutableDictionary();
-      // addTo(action, "name", "Collect Everything");
-      // addTo(action, "link", everyURL);
-      // dict.Add(new NSString("actions"), NSArray.FromNSObjects(action));
-
+      addTo(dict, "actions", "[ { 'name': 'Collect Everything!', 'link': '" + everyURL + "' } ]");
       oldFB().Dialog("feed", dict, _noopDialogDel);
-
       return RFuture.success(""); // TODO
     }
 
