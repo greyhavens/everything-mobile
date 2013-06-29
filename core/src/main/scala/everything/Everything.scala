@@ -15,6 +15,9 @@ import com.threerings.everything.data._
 
 class Everything (val device :Device, val fb :Facebook) extends Game.Default(33) {
 
+  // propagate events so that our scroller can usurp button clicks
+  platform.setPropagateEvents(true)
+
   val screens = new ScreenStack
   val keyDown = Signal.create[Key]()
 

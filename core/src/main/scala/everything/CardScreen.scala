@@ -21,7 +21,10 @@ abstract class CardScreen (
     super.wasAdded()
     root.layer.setHitTester(UI.absorber)
     root.layer.addListener(new Pointer.Adapter {
-      override def onPointerStart (event :Pointer.Event) = onCardClick()
+      override def onPointerStart (event :Pointer.Event) = {
+        // ignore events that hit a child layer but are being propagated back up to us
+        if (event.hit == root.layer) onCardClick()
+      }
     })
   }
 
