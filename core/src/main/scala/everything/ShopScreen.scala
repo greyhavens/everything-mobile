@@ -25,14 +25,15 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
                              TableLayout.COL.fixed.alignLeft, TableLayout.COL.fixed.alignRight)
 
     def money (amount :Int) = UI.moneyIcon(amount).addStyles(Style.FONT.is(UI.writingFont(24)))
-    val coins = new Group(new TableLayout(cr, cd).gaps(5, 15)).
-      add(money( 5000), UI.button("$0.99") { todo() },
-          money(11000), UI.button("$1.99") { todo() },
-          money(24000), UI.button("$3.99") { todo() })
+    val coins = UI.hgroup(
+      UI.stretchShim(),
+      UI.vgroup0(money( 5000), UI.button("$0.99") { todo() }), UI.stretchShim(),
+      UI.vgroup0(money(11000), UI.button("$1.99") { todo() }), UI.stretchShim(),
+      UI.vgroup0(money(24000), UI.button("$3.99") { todo() }), UI.stretchShim())
 
     // COLS: icon ; name+descrip ; cost ; buy
     val pups = new Group(new TableLayout(cd, cl, cd).gaps(5, 5)).
-      setStylesheet(Stylesheet.builder.add(classOf[Label], Style.FONT.is(UI.writingFont(13))).create)
+      setStylesheet(Stylesheet.builder.add(classOf[Label], Style.FONT.is(UI.writingFont(16))).create)
 
     PupInfo foreach { case (pup, name, descrip) =>
       val descVal = game.pups.getView(pup).map(rf { (_ :JInteger) match {
@@ -72,10 +73,10 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
                else buy)
     }
 
-    root.add(header("Get Coins").add(UI.moneyIcon(game.coins, _dbag), UI.shim(5, 5)),
+    root.add(header("Get Coins", UI.moneyIcon(game.coins, _dbag), UI.shim(1, 5)),
+             /*UI.headerLabel(""), */ coins,
              AxisLayout.stretch(UI.vscroll(UI.vgroup(
-               coins, UI.shim(5, 10),
-               UI.headerLabel("Get Powerups"), pups))))
+               UI.shim(5, 10), UI.headerLabel("Get Powerups"), pups))))
   }
 
   val PupInfo = Seq(

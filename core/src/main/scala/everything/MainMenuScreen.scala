@@ -62,7 +62,7 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
       var firstLayout = entree
       override protected def layout () {
         super.layout()
-        if (firstLayout != null) {
+        if (firstLayout != null && _tglyph.layer != null) {
           _tglyph.layer.setAlpha(0)
           firstLayout(_tglyph.layer)
           firstLayout = null
