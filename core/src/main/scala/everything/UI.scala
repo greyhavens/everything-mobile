@@ -42,7 +42,6 @@ object UI {
   val textFont = writingFont(16)
   val moneyFont = machineFont(12)
   val buttonFont = writingFont(20)
-  val wideButtonFont = writingFont(24)
   val headerFont = machineFont(18)
   val subHeaderFont = machineFont(12)
   val notesHeaderFont = machineFont(14)
@@ -126,9 +125,6 @@ object UI {
     new Button(label).addStyles(styles :_*).addStyles(Style.UNDERLINE.on)
   def button (label :String, styles :Style.Binding[_]*)(action : =>Unit) :Button =
     inertButton(label, styles :_*).onClick(unitSlot(action))
-  def wideButton (label :String, styles :Style.Binding[_]*)(action : =>Unit) :Button =
-    new Button(label).addStyles(styles :_*).addStyles(Style.FONT.is(wideButtonFont)).
-      onClick(unitSlot(action))
   def labelButton (text :String, styles :Style.Binding[_]*)(action : => Unit) :Button =
     new LabelButton(text).addStyles(styles :_*).onClick(unitSlot(action))
   def imageButton (up :Image, down :Image)(action : => Unit) :ImageButton =

@@ -48,7 +48,7 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
   protected var _counts :Option[(Int,Int)] = None
   protected var _cachedCard :Card = _
   protected var _shaker :Animation.Handle = _
-  protected var _entree :Entree = b => b.fadeIn()
+  protected var _entree :Entree = CardButton.fadeIn
 
   def update (status :SlotStatus, card :ThingCard) = {
     _card = card
@@ -58,33 +58,6 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
 
   /** Configures this button's animated entree based on the supplied random seed. */
   def entree (entree :Entree) = { _entree = entree ; this }
-
-  def fadeIn () {
-    delayedStart().`then`.tweenAlpha(ilayer).to(1).in(300)
-  }
-
-  def flyIn () {
-    val r = Random.nextFloat()
-    val (x, y) = Random.nextInt(4) match {
-      case 0 /*t*/ => (-30f + r*(host.width+60f), -30f)
-      case 1 /*r*/ => (host.width+30f,            -30f + r*(host.height+60f))
-      case 2 /*b*/ => (-30f + r*(host.width+60f), host.height+30f)
-      case 3 /*l*/ => (-30f,                      -30f + r*(host.height+60f))
-    }
-    val lpos = Layer.Util.screenToLayer(layer, x, y)
-    ilayer.setTranslation(lpos.x, lpos.y)
-    delayedStart().`then`.
-      tweenAlpha(ilayer).to(1).in(1).`then`.
-      tweenXY(ilayer).to(UI.cardCtr.x, UI.cardCtr.y).in(500).easeOutBack
-  }
-
-  def dropIn () {
-    delayedStart().`then`.
-      tweenAlpha(ilayer).to(1).in(100).`then`.
-      tweenScale(ilayer).from(2).to(1).in(500).easeOutBack
-  }
-
-  protected def delayedStart () = host.iface.animator.delay(Random.nextInt(10)*100)
 
   /** Whether or not this card has been revealed. */
   protected def isRevealed (card :ThingCard) = card != null && card.image != null
@@ -180,6 +153,9 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
     })
   }
 
+  // our various entrees
+  protected def fx () = new FX(host, ilayer).delay(10, 100)
+
   override protected def getStyleClass = classOf[CardButton]
 
   override protected def layout () {
@@ -200,8 +176,12 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
 object CardButton {
   type Entree = CardButton => Unit
 
+  val fadeIn :Entree = _.fx().fadeIn(300)
+  val flyIn  :Entree = _.fx().fadeIn(1).flyIn(500)
+  val dropIn :Entree = _.fx().fadeIn(1).dropIn(2, 500)
+
   def randomEntree () :Entree = {
-    val entrees = Seq[Entree](_.fadeIn(), _.flyIn(), _.dropIn())
+    val entrees = Seq[Entree](fadeIn, flyIn, dropIn)
     entrees(Random.nextInt(entrees.size))
   }
 }

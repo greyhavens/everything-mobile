@@ -24,7 +24,7 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
     val (cd, cl, clf, cr) = (TableLayout.COL.fixed, TableLayout.COL.alignLeft,
                              TableLayout.COL.fixed.alignLeft, TableLayout.COL.fixed.alignRight)
 
-    def money (amount :Int) = UI.moneyIcon(amount).addStyles(Style.FONT.is(UI.wideButtonFont))
+    def money (amount :Int) = UI.moneyIcon(amount).addStyles(Style.FONT.is(UI.writingFont(24)))
     val coins = new Group(new TableLayout(cr, cd).gaps(5, 15)).
       add(money( 5000), UI.button("$0.99") { todo() },
           money(11000), UI.button("$1.99") { todo() },
