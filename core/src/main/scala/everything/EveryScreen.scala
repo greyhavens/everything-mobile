@@ -43,7 +43,8 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       root.layer.setHitTester(UI.absorber)
       root.addStyles(Style.BACKGROUND.is(background()))
       root.add(buttons)
-      root.pack(width-20, 0)
+      val psize = root.preferredSize(width-20, 0)
+      root.setSize(psize.width, math.min(psize.height, height-20))
       root.layer.setTranslation((width-root.size.width)/2, (height-root.size.height)/2);
       // TODO: animate reveal
     }
