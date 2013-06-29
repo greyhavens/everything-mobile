@@ -70,8 +70,8 @@ object UI {
     add(classOf[Element[_]], Style.COLOR.is(textColor), Style.FONT.is(textFont)).
     add(classOf[Element[_]], Style.Mode.DISABLED, Style.COLOR.is(0xFF999999)).
     add(classOf[Button], Style.BACKGROUND.is(Background.blank().inset(0, 1, 1, 0)),
-        Style.FONT.is(buttonFont), Style.TEXT_EFFECT.shadow, Style.SHADOW.is(0x55000000),
-        Style.SHADOW_X.is(1f), Style.SHADOW_Y.is(1f)).
+        Style.FONT.is(buttonFont), Style.UNDERLINE.on, Style.TEXT_EFFECT.shadow,
+        Style.SHADOW.is(0x55000000), Style.SHADOW_X.is(1f), Style.SHADOW_Y.is(1f)).
     add(classOf[Button], Style.Mode.SELECTED,
         Style.SHADOW.is(0x00000000), Style.BACKGROUND.is(Background.blank().inset(1, 0, 0, 1))).
     add(classOf[Button], Style.Mode.DISABLED, Style.TEXT_EFFECT.none).
@@ -122,7 +122,7 @@ object UI {
   }
 
   def inertButton (label :String, styles :Style.Binding[_]*) :Button =
-    new Button(label).addStyles(styles :_*).addStyles(Style.UNDERLINE.on)
+    new Button(label).addStyles(styles :_*)
   def button (label :String, styles :Style.Binding[_]*)(action : =>Unit) :Button =
     inertButton(label, styles :_*).onClick(unitSlot(action))
   def labelButton (text :String, styles :Style.Binding[_]*)(action : => Unit) :Button =
