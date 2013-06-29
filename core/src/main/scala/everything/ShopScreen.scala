@@ -31,9 +31,8 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
       UI.vgroup0(money(11000), UI.button("$1.99") { todo() }), UI.stretchShim(),
       UI.vgroup0(money(24000), UI.button("$3.99") { todo() }), UI.stretchShim())
 
-    // COLS: icon ; name+descrip ; cost ; buy
-    val pups = new Group(new TableLayout(cd, cl, cd).gaps(5, 5)).
-      setStylesheet(Stylesheet.builder.add(classOf[Label], Style.FONT.is(UI.writingFont(16))).create)
+    // COLS: icon ; name+descrip ; cost+charges
+    val pups = new Group(new TableLayout(cd, cl, cd).gaps(5, 5))
 
     PupInfo foreach { case (pup, name, descrip) =>
       val descVal = game.pups.getView(pup).map(rf { (_ :JInteger) match {
@@ -66,9 +65,8 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
           connectNotify(buy.enabledSlot))
       }
       pups.add(UI.icon(UI.getImage(s"pup/${pup.name.toLowerCase}.png")),
-               new Group(AxisLayout.vertical.gap(1), Style.HALIGN.left).add(
-                 UI.subHeaderLabel(name),
-                 descLbl),
+               new Group(AxisLayout.vertical.gap(0), Style.HALIGN.left).add(
+                 UI.subHeaderLabel(name), descLbl),
                if (pup.charges > 1) UI.vgroup0(buy, new Label(s"for ${pup.charges}"))
                else buy)
     }
