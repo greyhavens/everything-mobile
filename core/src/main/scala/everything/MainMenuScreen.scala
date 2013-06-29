@@ -15,6 +15,8 @@ import tripleplay.ui.layout.AxisLayout
 
 import com.threerings.everything.data._
 
+import tripleplay.ui.layout.TableLayout
+
 class MainMenuScreen (game :Everything) extends EveryScreen(game) {
 
   val bbox = new Box()
@@ -35,7 +37,7 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
     game.self.connect(unitSlot {
       val entree = entrees(Random.nextInt(entrees.size))
       bbox.set(new Group(AxisLayout.vertical.offEqualize).add(
-        menuButton("Gifts", entree) { new OpenGiftsScreen(game).push() }.
+        menuButton("Gifts", entree) { openGifts() }.
           bindText(game.gifts.sizeView.map(rf { size => s"Gifts: $size!" })).
           bindVisible(game.gifts.sizeView.map(rf { _ > 0 })),
         menuButton("Flip Cards!", entree) { new FlipCardsScreen(game).push() },
@@ -67,6 +69,27 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
         }
       }
     }.addStyles(Style.FONT.is(buttonFont)).onClick(unitSlot(action))
+  }
+
+  protected def openGifts () {
+    val cache = new UI.ImageCache(game)
+    val cards = new Group(new TableLayout(3).gaps(10, 10))
+    game.gifts.foreach { card =>
+      cards.add(new CardButton(game, this, cache) {
+        override protected def isGift = true
+        override protected def onReveal () {
+          shaking.update(true)
+          game.gameSvc.openGift(card.thingId, card.received).onFailure(onFailure).
+            onSuccess(slot { res =>
+              game.gifts.remove(card)
+              reveal(res)
+            })
+        }
+      })
+    }
+    new Dialog().addTitle("Open Your Gifts!").
+      add(AxisLayout.stretch(UI.vscroll(cards))).
+      addButton("Done", ()).display()
   }
 
   type Entree = Layer.HasSize => Unit
