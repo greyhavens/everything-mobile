@@ -18,36 +18,27 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
   val nextFlipCost = new IntValue(0)
   val unflipped = RMap.create[Rarity,Int]
   val cache = new UI.ImageCache(game)
-  val cards = new Group(new TableLayout(4).gaps(10, 10))
-  var grid :Grid = _
+  var gridId = 0
 
-  def ctor () {
-    // TODO: display a spinner over the button while we load the grid data
+  val cardGap = 10
+  val cardCols = 4
+  val cbox = new Box().setConstraint(Constraints.fixedSize(
+    UI.cardSize.width*cardCols + cardGap*(cardCols-1),
+    UI.cardSize.height*cardCols + cardGap*(cardCols-1)))
+  val cards = new Group(new TableLayout(cardCols).gaps(cardGap, cardGap))
+
+  // start the request for our cards immediately
+  val getGrid = {
     val pup :Powerup = Powerup.NOOP // TODO
     val expectHave = false // TODO
-    val load = new Dialog().addTitle("Getting cards...")
-    load.display()
-    game.gameSvc.getGrid(pup, expectHave).onFailure(onFailure).onSuccess(slot { res =>
-      noteStatus(res.status)
-      grid = res.grid
-      res.grid.unflipped.zipWithIndex.foreach {
-        case (count, idx) => unflipped.put(Rarity.values.apply(idx), count)
-      }
-      cards.zipWithIndex foreach {
-        case (cb :CardButton, ii) => cb.update(grid.slots(ii), grid.flipped(ii))
-      }
-      load.dispose()
-    })
+    game.gameSvc.getGrid(pup, expectHave)
   }
-  ctor()
 
   override def createUI () {
     val haveFree = freeFlips.map(Functions.greaterThan(0))
     val lackFree = freeFlips.map(Functions.lessThanEqual(0))
     val showNextFree = Values.and(lackFree, nextFlipCost.map(Functions.greaterThan(0)))
     val showNoFlips = Values.and(lackFree, nextFlipCost.map(Functions.lessThanEqual(0)))
-
-    for (ii <- 0 until 16) cards.add(cardWidget(ii))
 
     val uflabels = new Group(AxisLayout.horizontal).
       setStylesheet(Stylesheet.builder.add(
@@ -75,10 +66,36 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
                  todo()
                }),
              UI.stretchShim,
-             cards,
+             cbox.set(new Label("Getting cards...")),
              UI.shim(5, 5),
              uflabels,
              UI.stretchShim)
+  }
+
+  override def showTransitionCompleted () {
+    super.showTransitionCompleted()
+    // now that our show transition is complete, create our cards and animate them into view
+    getGrid.onFailure(onFailure).onSuccess(slot { res =>
+      // this gets called when we come *back* to this screen, so don't rebuild things then
+      if (cbox.contents != cards) {
+        noteStatus(res.status)
+        gridId = res.grid.gridId
+        res.grid.unflipped.zipWithIndex.foreach {
+          case (count, idx) => unflipped.put(Rarity.values.apply(idx), count)
+        }
+        val entree = CardButton.randomEntree()
+        for (ii <- 0 until 16) {
+          val card = cardWidget(ii)
+          cards.add(card.update(res.grid.slots(ii), res.grid.flipped(ii)))
+          // if the card is sold/gifted, just fade in the label, otherwise use a fancy entree
+          res.grid.slots(ii) match {
+            case SlotStatus.UNFLIPPED|SlotStatus.FLIPPED => card.entree(entree)
+            case _ => // leave it as fadein
+          }
+        }
+        cbox.set(cards)
+      }
+    })
   }
 
   def noteStatus (status :GameStatus) {
@@ -90,7 +107,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
   def cardWidget (ii :Int) = new CardButton(game, this, cache) {
     override protected def onReveal () {
       shaking.update(true)
-      game.gameSvc.flipCard(grid.gridId, ii, nextFlipCost.get).
+      game.gameSvc.flipCard(gridId, ii, nextFlipCost.get).
         bindComplete(enabledSlot). // disable while req is in-flight
         onFailure(onFlipFailure).
         onSuccess(slot { res =>

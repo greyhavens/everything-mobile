@@ -22,15 +22,15 @@ object MockGameService extends GameService with Mockery {
     val grid = new Grid
     grid.gridId = 1
     grid.status = GridStatus.NORMAL
-    grid.slots = Array.fill(Grid.GRID_SIZE)(SlotStatus.UNFLIPPED)
-    grid.flipped = Array.fill(Grid.GRID_SIZE)(null :ThingCard)
+    grid.slots = Array.fill(Grid.SIZE)(SlotStatus.UNFLIPPED)
+    grid.flipped = Array.fill(Grid.SIZE)(null :ThingCard)
     grid.unflipped = Array(8, 0, 8, 0, 0, 0, 0, 0, 0, 0)
     grid.expires = new Date(System.currentTimeMillis+24*60*60*1000L)
     grid
   }
 
   val start = System.currentTimeMillis
-  val cards = Array.tabulate(Grid.GRID_SIZE) { pos =>
+  val cards = Array.tabulate(Grid.SIZE) { pos =>
     if (pos % 2 == 0) FakeData.yanluoCard(start+pos) else FakeData.maltesersCard(start+pos)
   }
 

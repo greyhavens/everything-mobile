@@ -8,6 +8,7 @@ import playn.core.PlayN._
 import playn.core._
 import pythagoras.f.FloatMath
 import react.{RFuture, Value}
+import scala.util.Random
 import tripleplay.anim.Animation
 import tripleplay.shaders.RotateYShader
 import tripleplay.ui._
@@ -17,10 +18,12 @@ import com.threerings.everything.rpc.GameAPI
 
 class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
     extends SizableWidget(UI.cardSize) {
+  import CardButton._
 
   /** The layer that contains our card image. */
   val ilayer = graphics.createImageLayer()
   ilayer.setOrigin(UI.cardCtr.x, UI.cardCtr.y)
+  ilayer.setAlpha(0) // start out invisible
   layer.addAt(ilayer, UI.cardCtr.x, UI.cardCtr.y)
 
   /** Whether or not this card is currently jiggling. We jiggle the card while waiting for data after
@@ -45,12 +48,43 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
   protected var _counts :Option[(Int,Int)] = None
   protected var _cachedCard :Card = _
   protected var _shaker :Animation.Handle = _
+  protected var _entree :Entree = b => b.fadeIn()
 
   def update (status :SlotStatus, card :ThingCard) = {
     _card = card
     upStatus(status)
     this
   }
+
+  /** Configures this button's animated entree based on the supplied random seed. */
+  def entree (entree :Entree) = { _entree = entree ; this }
+
+  def fadeIn () {
+    delayedStart().`then`.tweenAlpha(ilayer).to(1).in(300)
+  }
+
+  def flyIn () {
+    val r = Random.nextFloat()
+    val (x, y) = Random.nextInt(4) match {
+      case 0 /*t*/ => (-30f + r*(host.width+60f), -30f)
+      case 1 /*r*/ => (host.width+30f,            -30f + r*(host.height+60f))
+      case 2 /*b*/ => (-30f + r*(host.width+60f), host.height+30f)
+      case 3 /*l*/ => (-30f,                      -30f + r*(host.height+60f))
+    }
+    val lpos = Layer.Util.screenToLayer(layer, x, y)
+    ilayer.setTranslation(lpos.x, lpos.y)
+    delayedStart().`then`.
+      tweenAlpha(ilayer).to(1).in(1).`then`.
+      tweenXY(ilayer).to(UI.cardCtr.x, UI.cardCtr.y).in(500).easeOutBack
+  }
+
+  def dropIn () {
+    delayedStart().`then`.
+      tweenAlpha(ilayer).to(1).in(100).`then`.
+      tweenScale(ilayer).from(2).to(1).in(500).easeOutBack
+  }
+
+  protected def delayedStart () = host.iface.animator.delay(Random.nextInt(10)*100)
 
   /** Whether or not this card has been revealed. */
   protected def isRevealed (card :ThingCard) = card != null && card.image != null
@@ -148,8 +182,26 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
 
   override protected def getStyleClass = classOf[CardButton]
 
+  override protected def layout () {
+    super.layout()
+    // the first time we're properly positioned, perform our dramatic entrance
+    if (_entree != null) {
+      _entree(this)
+      _entree = null
+    }
+  }
+
   override protected def onClick (event :Pointer.Event) {
     if (isRevealed(_card)) onView()
     else onReveal()
+  }
+}
+
+object CardButton {
+  type Entree = CardButton => Unit
+
+  def randomEntree () :Entree = {
+    val entrees = Seq[Entree](_.fadeIn(), _.flyIn(), _.dropIn())
+    entrees(Random.nextInt(entrees.size))
   }
 }
