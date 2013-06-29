@@ -85,6 +85,8 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
   }
 
   protected def reveal (res :GameAPI.CardResult) {
+    // disable interaction during the reveal animation
+    setEnabled(false)
     // wait until our thing image is ready, then start the flip
     cache(res.card.thing.image).addCallback(cb { thing =>
       shaking.update(false) // we can stop shaking now
@@ -121,6 +123,7 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
           blayer.setShader(null)
           ilayer.setShader(null)
           blayer.destroy()
+          setEnabled(true) // reenable interaction
           viewCard(res.card)
         }
       })
