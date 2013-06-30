@@ -5,7 +5,6 @@
 package everything
 
 import java.util.{ArrayList, HashMap}
-import react.RFuture
 import scala.collection.JavaConversions._
 
 import com.threerings.everything.data._
@@ -27,24 +26,24 @@ object MockEveryService extends EveryService with Mockery {
     data.backendURL = "https://everything-candidate.herokuapp.com/"
     data.facebookAppId = "107211406428"
     data.gifts = List()
-    RFuture.success(data)
+    success(data)
   }
 
   def getRecentFeed () = {
-    RFuture.success(Array())
+    success(Array())
   }
 
   def getUserFeed (userId :Int) = {
-    RFuture.success(Array())
+    success(Array())
   }
 
-  def getFriends () = RFuture.success(Array(
-    playerStats(player("Elvis", "Presley",    3, 3), 25, 6, 3, 15),
-    playerStats(player("Ella",  "Fitzgerald", 4, 4), 30, 4, 3, 25),
-    playerStats(player("Kurt",  "Kobain",     5, 5), 54, 9, 6,  3),
-    playerStats(player("Frank", "Sinatra",    6, 6), 12, 3, 2, 12)))
+  def getFriends () = success(Array(
+    playerStats(elvis, 25, 6, 3, 15),
+    playerStats(ella,  30, 4, 3, 25),
+    playerStats(kurt,  54, 9, 6,  3),
+    playerStats(frank, 12, 3, 2, 12)))
 
-  def getCredits () = RFuture.success({
+  def getCredits () = success({
     val res = new CreditsResult
     res.design =player("Michael", "Bayne", 1, 1)
     res.art = player("Josh", "Gramse", 2, 2)

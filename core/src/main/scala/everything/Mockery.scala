@@ -5,11 +5,17 @@
 package everything
 
 import java.util.Date
+import react.RFuture
 import scala.util.Random
 
 import com.threerings.everything.data._
 
 trait Mockery {
+
+  val elvis = player("Elvis", "Presley",    3, 3)
+  val ella  = player("Ella",  "Fitzgerald", 4, 4)
+  val kurt  = player("Kurt",  "Kobain",     5, 5)
+  val frank = player("Frank", "Sinatra",    6, 6)
 
   def player (name :String, surname :String, userId :Int, fbId :Long) = {
     val nm = PlayerName.create(userId)
@@ -44,5 +50,17 @@ trait Mockery {
     status.freeFlips = freeFlips
     status.nextFlipCost = nextFlipCost
     status
+  }
+
+  def success[T] (result :T) :RFuture[T] = {
+    val p = new DeferredPromise[T]()
+    p.onSuccess(result)
+    p
+  }
+
+  def failure[T] (msg :String) :RFuture[T] = {
+    val p = new DeferredPromise[T]()
+    p.onFailure(new Throwable(msg))
+    p
   }
 }
