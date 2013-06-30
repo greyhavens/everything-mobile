@@ -36,10 +36,19 @@ class FX (host :EveryScreen, layer :Layer.HasSize) {
   }
 
   def dropIn (scale :Float, duration :Int) = {
-    // TODO: change origin to center, animate, then change it back
-    _anim = _anim.tweenScale(layer).from(scale).to(1).in(duration).easeOutBack.`then`
+    val (otx, oty, ox, oy) = (layer.tx, layer.ty, layer.originX, layer.originY)
+    val (dx, dy) = (layer.width/2 - ox, layer.height/2 - oy)
+    // change origin to center, animate the scale, then change restore origin
+    def reOrigin (tx :Float, ty :Float, ox :Float, oy :Float) = new Runnable() {
+      def run = layer.setTranslation(tx, ty).setOrigin(ox, oy)
+    }
+    _anim = _anim.action(reOrigin(otx+dx, oty+dy, layer.width/2, layer.height/2)).`then`.
+      tweenScale(layer).from(scale).to(1).in(duration).easeOutBack.`then`.
+      action(reOrigin(otx, oty, ox, oy)).`then`
     this
   }
+
+  def popIn (duration :Int) = dropIn(0, duration)
 
   private var _anim :AnimBuilder = host.iface.animator
 }

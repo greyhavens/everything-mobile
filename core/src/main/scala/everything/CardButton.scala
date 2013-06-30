@@ -182,9 +182,10 @@ object CardButton {
   val fadeIn :Entree = _.fx().fadeIn(300)
   val flyIn  :Entree = _.fx().fadeIn(1).flyIn(500)
   val dropIn :Entree = _.fx().fadeIn(1).dropIn(2, 500)
+  val popIn :Entree = _.fx().fadeIn(1).popIn(500)
 
   def randomEntree () :Entree = {
-    val entrees = Seq[Entree](fadeIn, flyIn, dropIn)
+    val entrees = Seq[Entree](fadeIn, flyIn, dropIn, popIn)
     entrees(Random.nextInt(entrees.size))
   }
 }

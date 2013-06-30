@@ -95,8 +95,9 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
   type Entree = Layer.HasSize => Unit
   protected val entrees = Seq[Entree](
     new FX(this, _).fadeIn(500),
-    new FX(this, _).fadeIn(1).flyIn(500)/*,
-    new FX(this, _).fadeIn(1).dropIn(2, 500)*/ // TODO: reenable when origin is munged
+    new FX(this, _).fadeIn(1).flyIn(500),
+    new FX(this, _).fadeIn(1).dropIn(2, 500),
+    new FX(this, _).fadeIn(1).popIn(500)
   )
   protected val buttonFont = UI.writingFont(28)
 }
