@@ -17,16 +17,16 @@ import com.threerings.everything.data._
 class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
                       upStatus :SlotStatus => Unit) extends EveryScreen(game) {
 
+  // start our data request immediately
+  val giftInfo = game.gameSvc.getGiftCardInfo(card.thing.thingId, card.received)
+  val fbox = UI.stretchBox()
+
   override def createUI () {
     val header = UI.plate(
       UI.icon(UI.cardImage(cache, card.toThingCard)),
       UI.headerLabel(card.thing.name),
       UI.pathLabel(card.categories.map(_.name), 12),
       UI.tipLabel(s"Rarity: ${card.thing.rarity} - E${card.thing.rarity.value}"))
-    val friends = new Group(new TableLayout(
-      TableLayout.COL.fixed, TableLayout.COL.alignLeft,
-      TableLayout.COL.fixed, TableLayout.COL.fixed).gaps(5, 5)).add(
-      UI.shim(5, 5), new Label("Loading..."), UI.shim(5, 5), UI.shim(5, 5))
     val buttons = UI.bgroup(
       back("Cancel"),
       UI.button("Sell") {
@@ -36,16 +36,19 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
         }
       })
     val note = "Friends that have this card are not shown."
-    root.add(header,
-             new Label("Give to:"),
-             AxisLayout.stretch(UI.vscroll(friends)),
-             UI.tipLabel(note),
-             buttons)
+    root.add(header, new Label("Give to:"),
+             fbox.set(new Label("Loading...")),
+             UI.tipLabel(note), buttons)
+  }
 
-    game.gameSvc.getGiftCardInfo(card.thing.thingId, card.received).
-      onFailure(onFailure).
-      onSuccess(slot { res =>
-        friends.removeAll()
+  override def showTransitionCompleted () {
+    super.showTransitionCompleted()
+    giftInfo.onFailure(onFailure).onSuccess(slot { res =>
+      if (res.friends.isEmpty) fbox.set(new Label("All of your friends already have this card."))
+      else {
+        val friends = new Group(new TableLayout(
+          TableLayout.COL.fixed, TableLayout.COL.alignLeft,
+          TableLayout.COL.fixed, TableLayout.COL.fixed).gaps(5, 5))
         res.friends.sorted.foreach { f =>
           val like = f.like match {
             case null => UI.shim(5, 5)
@@ -57,11 +60,9 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
                       UI.button("Give")(showGivePopup(f.friend)),
                       UI.shim(5, 5))
         }
-        if (res.friends.isEmpty) {
-          friends.add(TableLayout.colspan(
-            new Label("All of your friends already have this card."), 4))
-        }
-      })
+        fbox.set(UI.vscroll(friends))
+      }
+    })
   }
 
   def showGivePopup (friend :PlayerName) :Unit = new Dialog().
