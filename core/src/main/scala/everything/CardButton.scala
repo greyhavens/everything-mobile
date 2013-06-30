@@ -6,7 +6,7 @@ package everything
 
 import playn.core.PlayN._
 import playn.core._
-import pythagoras.f.FloatMath
+import pythagoras.f.{FloatMath, Point}
 import react.{RFuture, Value}
 import scala.util.Random
 import tripleplay.anim.Animation
@@ -103,47 +103,51 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
     // wait until our thing image is ready, then start the flip
     cache(res.card.thing.image).addCallback(cb { thing =>
       shaking.update(false) // we can stop shaking now
-
-      // add another layer over our current one which will display the back of the card
-      val blayer = graphics.createImageLayer(ilayer.image)
-      layer.add(blayer.setDepth(1)) // render above our current layer
-
-      // create the rotating shaders; this is a bit hacky because the rotating shaders work in
-      // fractions of full screen coordinates, so we have to figure out where (in screen coordinates)
-      // the center of our card is... meh
-      val pos = Layer.Util.layerToScreen(layer, UI.cardCtr.x, UI.cardCtr.y)
-      pos.x /= host.width
-      pos.y = 0.5f // pos.y /= host.height
-      val topShader = new RotateYShader(graphics.ctx, pos.x, pos.y, 1)
-      blayer.setShader(topShader)
-      val botShader = new RotateYShader(graphics.ctx, pos.x, pos.y, 1)
-      ilayer.setShader(botShader)
-
-      // run up our flipping animation
-      host.iface.animator.tween(new Animation.Value() {
-        def initial = 0
-        def set (pct :Float) = {
-          topShader.angle = FloatMath.PI * pct;
-          botShader.angle = FloatMath.PI * (pct - 1);
-          if (pct >= 0.5f && !_flipped) {
-            blayer.setDepth(-1);
-            _flipped = true
-          }
-        }
-        var _flipped = false
-      }).to(1).in(300).`then`.action(new Runnable() {
-        def run () {
-          blayer.setShader(null)
-          ilayer.setShader(null)
-          blayer.destroy()
-          setEnabled(true) // reenable interaction
-          viewCard(res.card)
-        }
-      })
-
-      // update our main image to be the new card (this will be flipped in)
+      // flip the card over (use the current image as the old image for the flip)
+      animateFlip(ilayer.image)(viewCard(res.card))
+      // update our image to be the new card (this will be flipped in)
       update(SlotStatus.FLIPPED, res.card.toThingCard)
       _counts = Some((res.haveCount, res.thingsRemaining))
+      // once the flip animation completes, viewCard will be called
+    })
+  }
+
+  protected def animateFlip (oldImage :Image)(afterFlip : =>Unit) {
+    // add another layer over our current one which will display the back of the card
+    val blayer = graphics.createImageLayer(oldImage)
+    layer.add(blayer.setDepth(1)) // render above our current layer
+
+    // create the rotating shaders; this is a bit hacky because the rotating shaders work in
+    // fractions of full screen coordinates, so we have to figure out where (in screen coordinates)
+    // the center of our card is... meh
+    val pos = Layer.Util.layerToScreen(layer, UI.cardCtr.x, UI.cardCtr.y)
+    pos.x /= host.width
+    pos.y = 0.5f // pos.y /= host.height
+    val topShader = new RotateYShader(graphics.ctx, pos.x, pos.y, 1)
+    blayer.setShader(topShader)
+    val botShader = new RotateYShader(graphics.ctx, pos.x, pos.y, 1)
+    ilayer.setShader(botShader)
+
+    // run up our flipping animation
+    host.iface.animator.tween(new Animation.Value() {
+      def initial = 0
+      def set (pct :Float) = {
+        topShader.angle = FloatMath.PI * pct;
+        botShader.angle = FloatMath.PI * (pct - 1);
+        if (pct >= 0.5f && !_flipped) {
+          blayer.setDepth(-1);
+          _flipped = true
+        }
+      }
+      var _flipped = false
+    }).to(1).in(300).`then`.action(new Runnable() {
+      def run () {
+        blayer.setShader(null)
+        ilayer.setShader(null)
+        blayer.destroy()
+        setEnabled(true) // reenable interaction
+        afterFlip
+      }
     })
   }
 
@@ -170,13 +174,32 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
   }
 
   protected def gift (friend :PlayerName, msg :String) {
-    shaking.update(true)
-    ilayer.setImage(UI.cardGift) // TODO: restore original image if gifting fails?
-    game.gameSvc.giftCard(_card.thingId, _card.received, friend.userId, msg).
-      onFailure(host.onFailure).onSuccess(unitSlot {
-        shaking.update(false)
+    setEnabled(false)
+    // issue our service call to gift the card, but don't process the result just yet
+    val result = game.gameSvc.giftCard(_card.thingId, _card.received, friend.userId, msg)
+    // animate the card flipping back over to the gift back, then handle the service result
+    animateFlip(ilayer.image) {
+      result.onFailure(host.onFailure).onSuccess(unitSlot {
+        // create a copy of the card back image and animate it flying off the screen
+        val fly = graphics.createImageLayer(ilayer.image)
+        fly.setDepth(10) // render above everything else on screen
+        fly.setOrigin(fly.width/2, fly.height/2)
+        val spos = Layer.Util.layerToParent(ilayer, host.layer, fly.originX, fly.originY)
+        host.layer.addAt(fly, spos.x, spos.y)
+        val (swidth, sheight) = (host.width, host.height)
+        val dpos = Random.nextInt(4) match {
+          case 0 => new Point(swidth/2,           -fly.originY)
+          case 1 => new Point(swidth/2,           sheight+fly.originY)
+          case 2 => new Point(-fly.originX,       sheight/2)
+          case 3 => new Point(swidth+fly.originX, sheight/2)
+        }
+        host.iface.animator.tweenXY(fly).to(dpos).in(500).easeIn.`then`.destroy(fly)
+        // now update our underlying layer to show "Gifted"
         upStatus(SlotStatus.GIFTED)
       })
+      // TODO: restore original image and reenable on failure
+    }
+    ilayer.setImage(UI.cardGift)
   }
 
   protected def upStatus (status :SlotStatus) {
