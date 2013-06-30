@@ -82,6 +82,7 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
           game.gameSvc.openGift(card.thingId, card.received).onFailure(onFailure).
             onSuccess(slot { res =>
               game.gifts.remove(card)
+              // TODO: run "wrap up with bow" animation in reverse to unwrap, then flip it
               reveal(res)
             })
         }

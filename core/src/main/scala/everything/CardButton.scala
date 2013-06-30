@@ -179,6 +179,8 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
     val result = game.gameSvc.giftCard(_card.thingId, _card.received, friend.userId, msg)
     // animate the card flipping back over to the gift back, then handle the service result
     animateFlip(ilayer.image) {
+      // TODO: instead of flipping directly to gift card back, flip to normal card back then
+      // animate a bow wrapping around the card
       result.onFailure(host.onFailure).onSuccess(unitSlot {
         // create a copy of the card back image and animate it flying off the screen
         val fly = graphics.createImageLayer(ilayer.image)
