@@ -14,8 +14,8 @@ import tripleplay.ui.layout.{AxisLayout, TableLayout}
 
 import com.threerings.everything.data._
 
-class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
-                      upStatus :SlotStatus => Unit) extends EveryScreen(game) {
+class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card, source :CardButton)
+    extends EveryScreen(game) {
 
   // start our data request immediately
   val giftInfo = game.gameSvc.getGiftCardInfo(card.thing.thingId, card.received)
@@ -27,18 +27,15 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
       UI.headerLabel(card.thing.name),
       UI.pathLabel(card.categories.map(_.name), 12),
       UI.tipLabel(s"Rarity: ${card.thing.rarity} - E${card.thing.rarity.value}"))
-    val buttons = UI.bgroup(
-      back("Cancel"),
-      UI.button("Sell") {
-        maybeSellCard(card.toThingCard) {
-          upStatus(SlotStatus.SOLD)
-          clearParent() // remove our parent (card) screen from the stack as well
-        }
-      })
+    val sell = UI.button("Sell") { maybeSellCard(card.toThingCard) {
+      source.queueSell()
+      clearParent() // remove our parent (card) screen from the stack as well
+      pop()
+    }}
     val note = "Friends that have this card are not shown."
     root.add(header, new Label("Give to:"),
              fbox.set(new Label("Loading...")),
-             UI.tipLabel(note), buttons)
+             UI.tipLabel(note), UI.bgroup(back("Cancel"), sell))
   }
 
   override def showTransitionCompleted () {
@@ -80,12 +77,9 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card,
     display()
 
   def giveCard (friend :PlayerName, msg :String) {
-    upStatus(SlotStatus.GIFTED)
-    clearParent()
+    source.queueGift(friend, msg)
+    clearParent() // remove our parent (card) screen from the stack as well
     pop()
-    game.gameSvc.giftCard(card.thing.thingId, card.received, friend.userId, msg).
-      // TODO: if gifting fails, display the error back on the main screen
-      onFailure(onFailure)
   }
 
   def clearParent () {

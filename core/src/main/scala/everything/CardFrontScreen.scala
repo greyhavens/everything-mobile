@@ -11,9 +11,8 @@ import tripleplay.ui.layout.AxisLayout
 import com.threerings.everything.data._
 
 class CardFrontScreen (
-  game :Everything, cache :UI.ImageCache, card :Card, counts :Option[(Int,Int)],
-  upStatus :SlotStatus => Unit
-) extends CardScreen(game, cache, card, counts, upStatus)  {
+  game :Everything, cache :UI.ImageCache, card :Card, counts :Option[(Int,Int)], source :CardButton
+) extends CardScreen(game, cache, card, counts, source)  {
 
   def setMessage (msg :String) = {
     _msg = msg
@@ -54,7 +53,7 @@ class CardFrontScreen (
   }
 
   override def onCardClick () {
-    new CardBackScreen(game, cache, card, counts, upStatus).replace()
+    new CardBackScreen(game, cache, card, counts, source).replace()
   }
 
   def status (have :Int, remain :Int, card :Card) :Element[_] = {

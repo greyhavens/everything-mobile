@@ -12,9 +12,8 @@ import tripleplay.ui.layout.TableLayout
 import com.threerings.everything.data._
 
 class CardBackScreen (
-  game :Everything, cache :UI.ImageCache, card :Card, counts :Option[(Int,Int)],
-  upStatus :SlotStatus => Unit
-) extends CardScreen(game, cache, card, counts, upStatus) {
+  game :Everything, cache :UI.ImageCache, card :Card, counts :Option[(Int,Int)], source :CardButton
+) extends CardScreen(game, cache, card, counts, source) {
 
   override def createUI () {
     addHeader(root)
@@ -35,8 +34,7 @@ class CardBackScreen (
   }
 
   override def onCardClick () {
-    game.screens.replace(new CardFrontScreen(game, cache, card, counts, upStatus),
-                         pushTransition)
+    game.screens.replace(new CardFrontScreen(game, cache, card, counts, source), pushTransition)
   }
 
   def nameSource (source :String) = {

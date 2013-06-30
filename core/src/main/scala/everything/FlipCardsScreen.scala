@@ -25,7 +25,6 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
   val cbox = new Box().setConstraint(Constraints.fixedSize(
     UI.cardSize.width*cardCols + cardGap*(cardCols-1),
     UI.cardSize.height*cardCols + cardGap*(cardCols-1)))
-  val cards = new Group(new TableLayout(cardCols).gaps(cardGap, cardGap))
 
   // start the request for our cards immediately
   val getGrid = {
@@ -33,6 +32,29 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
     val expectHave = false // TODO
     game.gameSvc.getGrid(pup, expectHave)
   }
+
+  // once our show transition is complete, create our cards and animate them into view
+  onShown.connect(unitSlot {
+    getGrid.onFailure(onFailure).onSuccess(slot { res =>
+      noteStatus(res.status)
+      gridId = res.grid.gridId
+      res.grid.unflipped.zipWithIndex.foreach {
+        case (count, idx) => unflipped.put(Rarity.values.apply(idx), count)
+      }
+      val entree = CardButton.randomEntree()
+      val cards = new Group(new TableLayout(cardCols).gaps(cardGap, cardGap))
+      for (ii <- 0 until 16) {
+        val card = cardWidget(ii)
+        cards.add(card.update(res.grid.slots(ii), res.grid.flipped(ii)))
+        // if the card is sold/gifted, just fade in the label, otherwise use a fancy entree
+        res.grid.slots(ii) match {
+          case SlotStatus.UNFLIPPED|SlotStatus.FLIPPED => card.entree(entree)
+          case _ => // leave it as fadein
+        }
+      }
+      cbox.set(cards)
+    })
+  }).once()
 
   override def createUI () {
     val haveFree = freeFlips.map(Functions.greaterThan(0))
@@ -70,32 +92,6 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
              UI.shim(5, 5),
              uflabels,
              UI.stretchShim)
-  }
-
-  override def showTransitionCompleted () {
-    super.showTransitionCompleted()
-    // now that our show transition is complete, create our cards and animate them into view
-    getGrid.onFailure(onFailure).onSuccess(slot { res =>
-      // this gets called when we come *back* to this screen, so don't rebuild things then
-      if (cbox.contents != cards) {
-        noteStatus(res.status)
-        gridId = res.grid.gridId
-        res.grid.unflipped.zipWithIndex.foreach {
-          case (count, idx) => unflipped.put(Rarity.values.apply(idx), count)
-        }
-        val entree = CardButton.randomEntree()
-        for (ii <- 0 until 16) {
-          val card = cardWidget(ii)
-          cards.add(card.update(res.grid.slots(ii), res.grid.flipped(ii)))
-          // if the card is sold/gifted, just fade in the label, otherwise use a fancy entree
-          res.grid.slots(ii) match {
-            case SlotStatus.UNFLIPPED|SlotStatus.FLIPPED => card.entree(entree)
-            case _ => // leave it as fadein
-          }
-        }
-        cbox.set(cards)
-      }
-    })
   }
 
   def noteStatus (status :GameStatus) {

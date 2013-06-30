@@ -7,7 +7,7 @@ package everything
 import playn.core.PlayN._
 import playn.core._
 import pythagoras.f.Point
-import react.{Value, UnitSignal}
+import react.{Value, Signal, UnitSignal}
 
 import tripleplay.game.{ScreenStack, UIScreen}
 import tripleplay.ui._
@@ -55,8 +55,13 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     }
   }
 
+  /** A value updated in `wasHidden`/`wasShown`. */
   val isVisible = Value.create(false)
 
+  /** A signal emitted in `showTransitionCompleted`. */
+  val onShown = Signal.create[EveryScreen]()
+
+  /** Handles service failure by popping up a dialog. */
   val onFailure = (cause :Throwable) => {
     val msg = cause.getMessage
     if (msg == null || !msg.startsWith("e.")) log.warn("Erm, failure", cause)
@@ -91,6 +96,11 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     isVisible.update(true)
   }
 
+  override def showTransitionCompleted () {
+    super.showTransitionCompleted()
+    onShown.emit(this)
+  }
+
   override def wasHidden () {
     super.wasHidden()
     isVisible.update(false)
@@ -116,27 +126,12 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     value.connect(unitSlot { lid.dispose() }).once()
   }
 
-  /** Displays a dialog enabling the sale of `card`. On sale, `onSold` is invoked and this screen is
-    * popped. */
-  protected def maybeSellCard (card :ThingCard)(onSold : =>Unit) {
+  /** Displays a dialog enabling the sale of `card`. */
+  protected def maybeSellCard (card :ThingCard)(onSell : =>Unit) {
     val amount = card.rarity.saleValue
     new Dialog().addTitle("Sell Card").
       add(UI.hgroup(new Label(s"Sell ${card.name} for"), UI.moneyIcon(amount), new Label("?"))).
-      addButton("No", ()).addButton("Yes", sellCard(card, onSold)).display()
-  }
-
-  protected def sellCard (card :ThingCard, onSold : =>Unit) {
-    onSold
-    pop()
-    game.gameSvc.sellCard(card.thingId, card.received).onFailure(onFailure).
-      onSuccess(slot { res =>
-        game.coins.update(res.coins)
-        val catId = card.categoryId
-        res.newLike match {
-          case null => game.likes.remove(catId)
-          case like => game.likes.put(catId, like)
-        }
-      })
+      addButton("No", ()).addButton("Yes", onSell).display()
   }
 
   protected def background () :Background = Background.image(_bgImage).inset(5)

@@ -11,8 +11,7 @@ import tripleplay.ui.layout.AxisLayout
 import com.threerings.everything.data._
 
 abstract class CardScreen (
-  game :Everything, cache :UI.ImageCache, card :Card, counts :Option[(Int,Int)],
-  upStatus :SlotStatus => Unit
+  game :Everything, cache :UI.ImageCache, card :Card, counts :Option[(Int,Int)], source :CardButton
 ) extends EveryScreen(game) {
 
   override protected def layout () :Layout = AxisLayout.vertical().gap(0).offStretch
@@ -39,9 +38,12 @@ abstract class CardScreen (
     UI.stretchShim(),
     back(if (keepNotBack) "Keep" else "Back"),
     UI.stretchShim(),
-    UI.button("Sell") { maybeSellCard(card.toThingCard) { upStatus(SlotStatus.SOLD) }},
+    UI.button("Sell") { maybeSellCard(card.toThingCard) {
+      source.queueSell()
+      pop()
+    }},
     UI.stretchShim(),
-    UI.button("Gift") { new GiftCardScreen(game, cache, card, upStatus).push },
+    UI.button("Gift") { new GiftCardScreen(game, cache, card, source).push },
     UI.stretchShim(),
     UI.button("Share") { showShareDialog() },
     UI.stretchShim())

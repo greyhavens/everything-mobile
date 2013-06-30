@@ -59,6 +59,19 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
   /** Configures this button's animated entree based on the supplied random seed. */
   def entree (entree :Entree) = { _entree = entree ; this }
 
+  /** Queues this card up to be sold. This may be processed immediately if the card is on screen, or
+    * it will be deferred until the screen containing this card re-revealed. */
+  def queueSell () {
+    if (host.isVisible.get) sell()
+    else host.onShown.connect(unitSlot { sell() }).once()
+  }
+
+  /** Queues this card up to be gifted. See [queueSell] for details on when this will happen. */
+  def queueGift (friend :PlayerName, msg :String) {
+    if (host.isVisible.get) gift(friend, msg)
+    else host.onShown.connect(unitSlot { gift(friend, msg) }).once()
+  }
+
   /** Whether or not this card has been revealed. */
   protected def isRevealed (card :ThingCard) = card != null && card.image != null
 
@@ -136,12 +149,38 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
 
   protected def viewCard (card :Card) {
     _cachedCard = card
-    new CardFrontScreen(game, cache, card, _counts, upStatus _).setMessage(_msg).push()
+    new CardFrontScreen(game, cache, card, _counts, this).setMessage(_msg).push()
+  }
+
+  protected def sell () {
+    shaking.update(true)
+    game.gameSvc.sellCard(_card.thingId, _card.received).onFailure(host.onFailure).
+      onSuccess(slot { res =>
+        shaking.update(false)
+        game.coins.update(res.coins)
+        val catId = _card.categoryId
+        res.newLike match {
+          case null => game.likes.remove(catId)
+          case like => game.likes.put(catId, like)
+        }
+        // TODO: shatter old image into pieces, turn those into coins, then fly the coins up to
+        // the money label on our host screen (or ??? if it has no money label?)
+        upStatus(SlotStatus.SOLD)
+      })
+  }
+
+  protected def gift (friend :PlayerName, msg :String) {
+    shaking.update(true)
+    ilayer.setImage(UI.cardGift) // TODO: restore original image if gifting fails?
+    game.gameSvc.giftCard(_card.thingId, _card.received, friend.userId, msg).
+      onFailure(host.onFailure).onSuccess(unitSlot {
+        shaking.update(false)
+        upStatus(SlotStatus.GIFTED)
+      })
   }
 
   protected def upStatus (status :SlotStatus) {
     def dispensed (msg :String) = {
-      // TODO: swap out old icon in puff of smoke or something
       setEnabled(false)
       _card = null
       UI.statusImage(msg)
