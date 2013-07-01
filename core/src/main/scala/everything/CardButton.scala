@@ -16,8 +16,9 @@ import tripleplay.ui._
 import com.threerings.everything.data._
 import com.threerings.everything.rpc.GameAPI
 
-class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
-    extends SizableWidget(UI.cardSize) {
+class CardButton (
+  game :Everything, host :EveryScreen, cache :UI.ImageCache, cardsEnabled :Value[JBoolean]
+) extends SizableWidget(UI.cardSize) {
   import CardButton._
 
   /** The layer that contains our card image. */
@@ -41,6 +42,7 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
   })
 
   enableInteraction()
+  bindEnabled(cardsEnabled)
   update(SlotStatus.UNFLIPPED, null)
 
   protected var _card :ThingCard = _
@@ -87,7 +89,7 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
   protected def onView () {
     if (_cachedCard != null) viewCard(_cachedCard)
     else game.gameSvc.getCard(new CardIdent(game.self.get.userId, _card.thingId, _card.received)).
-      bindComplete(enabledSlot). // disable while req is in-flight
+      bindComplete(cardsEnabled.slot). // disable cards while req is in-flight
       onFailure(host.onFailure).
       onSuccess(viewCard _)
   }
@@ -98,8 +100,8 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
   }
 
   protected def reveal (res :GameAPI.CardResult) {
-    // disable interaction during the reveal animation
-    setEnabled(false)
+    // disable card interaction during the reveal animation
+    cardsEnabled.update(false)
     // wait until our thing image is ready, then start the flip
     cache(res.card.thing.image).addCallback(cb { thing =>
       shaking.update(false) // we can stop shaking now
@@ -145,7 +147,6 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
         blayer.setShader(null)
         ilayer.setShader(null)
         blayer.destroy()
-        setEnabled(true) // reenable interaction
         afterFlip
       }
     })
@@ -153,6 +154,7 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
 
   protected def viewCard (card :Card) {
     _cachedCard = card
+    cardsEnabled.update(true) // reenable card interaction
     new CardFrontScreen(game, cache, card, _counts, this).setMessage(_msg).push()
   }
 
@@ -206,8 +208,7 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
 
   protected def upStatus (status :SlotStatus) {
     def dispensed (msg :String) = {
-      setEnabled(false)
-      _card = null
+      _card = DISPENSED
       UI.statusImage(msg)
     }
     import SlotStatus._
@@ -236,7 +237,7 @@ class CardButton (game :Everything, host :EveryScreen, cache :UI.ImageCache)
 
   override protected def onClick (event :Pointer.Event) {
     if (isRevealed(_card)) onView()
-    else onReveal()
+    else if (_card != DISPENSED) onReveal()
   }
 }
 
@@ -252,4 +253,6 @@ object CardButton {
     val entrees = Seq[Entree](fadeIn, flyIn, dropIn, popIn)
     entrees(Random.nextInt(entrees.size))
   }
+
+  private val DISPENSED = new ThingCard
 }

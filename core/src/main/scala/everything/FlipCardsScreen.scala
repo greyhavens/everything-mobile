@@ -6,7 +6,7 @@ package everything
 
 import scala.collection.JavaConversions._
 
-import react.{Functions, IntValue, RMap, Values}
+import react.{Functions, IntValue, RMap, Value, Values}
 import tripleplay.ui._
 import tripleplay.ui.layout.{AxisLayout, TableLayout}
 
@@ -25,6 +25,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
   val cbox = new Box().setConstraint(Constraints.fixedSize(
     UI.cardSize.width*cardCols + cardGap*(cardCols-1),
     UI.cardSize.height*cardCols + cardGap*(cardCols-1)))
+  val cardsEnabled = Value.create(true :JBoolean)
 
   // start the request for our cards immediately
   val getGrid = {
@@ -110,11 +111,11 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
     nextFlipCost.update(status.nextFlipCost)
   }
 
-  def cardWidget (ii :Int) = new CardButton(game, this, cache) {
+  def cardWidget (ii :Int) = new CardButton(game, this, cache, cardsEnabled) {
     override protected def onReveal () {
       shaking.update(true)
       game.gameSvc.flipCard(gridId, ii, nextFlipCost.get).
-        bindComplete(enabledSlot). // disable while req is in-flight
+        bindComplete(cardsEnabled.slot). // disable cards, while req is in-flight
         onFailure(onFlipFailure).
         onSuccess(slot { res =>
           noteStatus(res.status)

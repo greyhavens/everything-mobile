@@ -9,6 +9,7 @@ import scala.util.Random
 
 import playn.core.Layer
 import playn.core.PlayN._
+import react.Value
 import tripleplay.game.UIScreen
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
@@ -74,12 +75,15 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
   protected def openGifts () {
     val cache = new UI.ImageCache(game)
     val cards = new Group(new TableLayout(3).gaps(10, 10))
+    val cardsEnabled = Value.create(true :JBoolean)
     game.gifts.foreach { card =>
-      cards.add(new CardButton(game, this, cache) {
+      cards.add(new CardButton(game, this, cache, cardsEnabled) {
         override protected def isGift = true
         override protected def onReveal () {
           shaking.update(true)
-          game.gameSvc.openGift(card.thingId, card.received).onFailure(onFailure).
+          game.gameSvc.openGift(card.thingId, card.received).
+            bindComplete(cardsEnabled.slot). // disable cards while req in flight
+            onFailure(onFailure).
             onSuccess(slot { res =>
               game.gifts.remove(card)
               // TODO: run "wrap up with bow" animation in reverse to unwrap, then flip it

@@ -4,6 +4,7 @@
 
 package everything
 
+import react.Value
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
 import tripleplay.ui.layout.TableLayout
@@ -17,6 +18,7 @@ class SeriesScreen (game :Everything, who :PlayerName, path :Array[String], catI
     this(game, who, path :+ scard.name, scard.categoryId)
 
   val cache = new UI.ImageCache(game)
+  val cardsEnabled = Value.create(true :JBoolean)
 
   override def createUI () {
     val cards = new Group(new TableLayout(4).gaps(10, 10), Style.VALIGN.top)
@@ -31,7 +33,7 @@ class SeriesScreen (game :Everything, who :PlayerName, path :Array[String], catI
         cards.removeAll()
         series.things.foreach(tc => {
           val status = if (tc == null) SlotStatus.UNFLIPPED else SlotStatus.FLIPPED
-          cards.add(new CardButton(game, this, cache).update(status, tc))
+          cards.add(new CardButton(game, this, cache, cardsEnabled).update(status, tc))
         })
       })
   }
