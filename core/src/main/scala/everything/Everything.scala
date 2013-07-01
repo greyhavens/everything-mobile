@@ -72,8 +72,10 @@ class Everything (val device :Device, val fb :Facebook) extends Game.Default(33)
     keyboard.setListener(new Keyboard.Adapter {
       override def onKeyDown (event :Keyboard.Event) = keyDown.emit(event.key)
     })
-    // display our main menu
-    main.push()
+    // if we've not authed (aka, we've never played); push the intro screen
+    if (!authToken.isDefined) new IntroScreen(this).push()
+    // otherwise head straight to the main menu
+    else main.push()
   }
 
   override def update (delta :Int) {
