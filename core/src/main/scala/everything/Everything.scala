@@ -32,7 +32,7 @@ class Everything (val device :Device, val fb :Facebook) extends Game.Default(33)
   val self    = Value.create[PlayerName](null)
   val sess    = Value.create[SessionData](null)
   val coins   = new IntValue(0)
-  val likes   = RMap.create[Int,Boolean]
+  val likes   = RMap.create[Int,JBoolean]
   val pups    = RMap.create[Powerup,JInteger]
   val gifts   = RList.create[ThingCard]
 

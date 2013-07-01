@@ -114,7 +114,7 @@ object MockGameService extends GameService with Mockery {
     success(())
   }
 
-  def setLike (catId :Int, like :Option[Boolean]) = {
+  def setLike (catId :Int, like :JBoolean) = {
     failure("TODO")
   }
 

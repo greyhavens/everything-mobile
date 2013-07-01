@@ -37,7 +37,7 @@ trait GameService {
   def giftCard (thingId :Int, created :Long, friendId :Int, message :String) :RFuture[Unit]
 
   /** Configures our 'like' setting for `catId`. */
-  def setLike (catId :Int, like :Option[Boolean]) :RFuture[Unit]
+  def setLike (catId :Int, like :JBoolean) :RFuture[Unit]
 
   /** Opens the specified gift. */
   def openGift (thingId :Int, created :Long) :RFuture[GiftResult]

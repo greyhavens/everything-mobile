@@ -37,6 +37,9 @@ object UI {
   lazy val cardBack = getImage("card_back.png")
   lazy val cardGift = getImage("card_gift.png")
 
+  lazy val like = (getImage("like/pos.png"), getImage("like/pos_sel.png"))
+  lazy val hate = (getImage("like/neg.png"), getImage("like/neg_sel.png"))
+
   val titleFont = machineFont(38)
   val menuFont = machineFont(24)
   val textFont = writingFont(16)

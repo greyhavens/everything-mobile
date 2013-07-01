@@ -15,10 +15,8 @@ class CardBackScreen (
   game :Everything, cache :UI.ImageCache, card :Card, counts :Option[(Int,Int)], source :CardButton
 ) extends CardScreen(game, cache, card, counts, source) {
 
-  override def createUI () {
-    addHeader(root)
-    root.add(UI.stretchShim(),
-             UI.wrapLabel(card.thing.descrip).addStyles(Style.FONT.is(UI.factsFont)),
+  override def createCardUI () {
+    root.add(UI.wrapLabel(card.thing.descrip).addStyles(Style.FONT.is(UI.factsFont)),
              UI.stretchShim(),
              new Label("Notes").addStyles(Style.FONT.is(UI.notesHeaderFont)),
              formatFacts(card.thing.facts.split("\n")),
@@ -28,9 +26,7 @@ class CardBackScreen (
                          PlayN.openURL(card.thing.source)
                        }),
              UI.hgroup(UI.subHeaderLabel("Flipped on:"),
-                       new Label(game.device.formatDate(card.received))),
-             UI.stretchShim(),
-             buttons(counts.isDefined))
+                       new Label(game.device.formatDate(card.received))))
   }
 
   override def onCardClick () {
@@ -55,7 +51,7 @@ class CardBackScreen (
                                               UI.wrapLabel(f).addStyles(ffont)))
   }
 
-  override protected def background = Background.image(UI.getImage("page_repeat.png")).inset(10)
+  override protected def background = Background.image(UI.getImage("page_repeat.png"))
 
   override protected def pushTransition = game.screens.flip.duration(300)
 }

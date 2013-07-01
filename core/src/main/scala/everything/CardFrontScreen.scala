@@ -31,15 +31,18 @@ class CardFrontScreen (
     }
   }
 
-  override def createUI () {
-    addHeader(root)
+  override def createCardUI () {
     val image = UI.frameImage(
       cache(card.thing.image), Thing.MAX_IMAGE_WIDTH/2, Thing.MAX_IMAGE_HEIGHT/2)
-    root.add(UI.stretchShim(),
-             UI.icon(image).addStyles(Style.ICON_POS.above),
-             UI.shim(5, 5),
-             UI.hgroup(UI.subHeaderLabel(s"Rarity: ${card.thing.rarity}"), UI.shim(15, 5),
-                       UI.moneyIcon(card.thing.rarity.value)))
+    root.add(UI.icon(image).addStyles(Style.ICON_POS.above),
+             UI.stretchShim(),
+             UI.hgroup(likeButton(card.thing.categoryId, false),
+                       UI.shim(30, 5),
+                       UI.subHeaderLabel(s"Rarity: ${card.thing.rarity}"), UI.shim(15, 5),
+                       UI.moneyIcon(card.thing.rarity.value),
+                       UI.shim(30, 5),
+                       likeButton(card.thing.categoryId, true)),
+             UI.stretchShim())
     if (card.giver != null) root.add(new Label(card.giver.name match {
       case null => "A birthday gift from Everything!"
       case name => s"A gift from ${card.giver}"
@@ -49,7 +52,6 @@ class CardFrontScreen (
         root.add(status(haveCount, thingsRemaining, card))
       case None => // skip it
     }
-    root.add(UI.stretchShim(), buttons(counts.isDefined))
   }
 
   override def onCardClick () {

@@ -29,24 +29,28 @@ abstract class CardScreen (
 
   protected def onCardClick () :Unit
 
-  protected def addHeader (root :Root) = root.add(
-    UI.pathLabel(card.categories.map(_.name)),
-    UI.headerLabel(card.thing.name),
-    UI.tipLabel(s"${card.position+1} of ${card.things}"))
+  override def createUI () {
+    root.add(header(card.thing.name),
+             UI.pathLabel(card.categories.map(_.name)),
+             UI.tipLabel(s"${card.position+1} of ${card.things}"),
+             UI.stretchShim())
+    createCardUI()
+    if (!root.childAt(root.childCount-1).isInstanceOf[Shim]) root.add(UI.stretchShim())
+    root.add(UI.hgroup(UI.stretchShim(),
+                       UI.button(if (counts.isDefined) "Keep" else "Back")(pop()),
+                       UI.stretchShim(),
+                       UI.button("Sell") { maybeSellCard(card.toThingCard) {
+                         source.queueSell()
+                         pop()
+                       }},
+                       UI.stretchShim(),
+                       UI.button("Gift") { new GiftCardScreen(game, cache, card, source).push },
+                       UI.stretchShim(),
+                       UI.button("Share") { showShareDialog() },
+                       UI.stretchShim()))
+  }
 
-  protected def buttons (keepNotBack :Boolean) = UI.hgroup(
-    UI.stretchShim(),
-    back(if (keepNotBack) "Keep" else "Back"),
-    UI.stretchShim(),
-    UI.button("Sell") { maybeSellCard(card.toThingCard) {
-      source.queueSell()
-      pop()
-    }},
-    UI.stretchShim(),
-    UI.button("Gift") { new GiftCardScreen(game, cache, card, source).push },
-    UI.stretchShim(),
-    UI.button("Share") { showShareDialog() },
-    UI.stretchShim())
+  protected def createCardUI () :Unit
 
   protected def showShareDialog () {
     val (me, thing, everyURL) = (game.self.get.name, card.thing.name, game.sess.get.everythingURL)

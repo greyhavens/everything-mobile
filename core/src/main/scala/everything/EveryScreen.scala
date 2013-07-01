@@ -82,7 +82,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   def createUI () :Unit
 
   override def wasAdded () {
-    root.addStyles(Style.BACKGROUND.is(background))
+    root.addStyles(Style.BACKGROUND.is(background().inset(5)))
     createUI()
     root.setSize(width, height)
     // wire up the (hardware) back button handler
@@ -134,7 +134,24 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       addButton("No", ()).addButton("Yes", onSell).display()
   }
 
-  protected def background () :Background = Background.image(_bgImage).inset(5)
+  protected def likeButton (catId :Int, like :Boolean) = {
+    val which = if (like) UI.like else UI.hate
+    val state = game.likes.getView(catId)
+    val cb = new CheckBox(Icons.image(which._2)) {
+      override def select (selected :Boolean) {
+        val newLike = if (selected) new JBoolean(like) else null
+        game.gameSvc.setLike(catId, newLike).onFailure(onFailure).onSuccess(unitSlot {
+          game.likes.put(catId, newLike)
+        })
+      }
+    }.addStyles(Style.BACKGROUND.is(Background.image(which._1)))
+    state.map(rf {
+      lk => java.lang.Boolean.valueOf(lk != null && lk.booleanValue == like)
+    }).connectNotify(cb.checked.slot)
+    cb
+  }
+
+  protected def background () :Background = Background.image(_bgImage)
 
   /** Handles a click on the hardware back button. */
   protected def onHardwareBack () {
