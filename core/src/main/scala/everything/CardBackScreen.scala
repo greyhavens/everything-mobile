@@ -29,7 +29,7 @@ class CardBackScreen (
                        new Label(game.device.formatDate(card.received))))
   }
 
-  override def onCardClick () {
+  override def onScreenTap () {
     game.screens.replace(new CardFrontScreen(game, cache, card, counts, source), pushTransition)
   }
 

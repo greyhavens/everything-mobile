@@ -27,7 +27,7 @@ class Everything (val device :Device, val fb :Facebook) extends Game.Default(33)
   val everySvc :EveryService = if (mock) MockEveryService else new EveryServiceClient(this, svcURL)
   val gameSvc  :GameService  = if (mock) MockGameService  else new GameServiceClient(this, svcURL)
 
-  val screens = new ScreenStack
+  val screens = new ScreenStack()
   val keyDown = Signal.create[Key]()
   val self    = Value.create[PlayerName](null)
   val sess    = Value.create[SessionData](null)

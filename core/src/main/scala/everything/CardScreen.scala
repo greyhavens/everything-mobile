@@ -16,19 +16,6 @@ abstract class CardScreen (
 
   override protected def layout () :Layout = AxisLayout.vertical().gap(0).offStretch
 
-  override def wasAdded () {
-    super.wasAdded()
-    root.layer.setHitTester(UI.absorber)
-    root.layer.addListener(new Pointer.Adapter {
-      override def onPointerStart (event :Pointer.Event) = {
-        // ignore events that hit a child layer but are being propagated back up to us
-        if (event.hit == root.layer) onCardClick()
-      }
-    })
-  }
-
-  protected def onCardClick () :Unit
-
   override def createUI () {
     root.add(header(card.thing.name),
              UI.pathLabel(card.categories.map(_.name)),

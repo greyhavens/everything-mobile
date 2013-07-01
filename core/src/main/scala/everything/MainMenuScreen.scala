@@ -93,6 +93,8 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
       addButton("Done", ()).display()
   }
 
+  override protected def onSwipeRight () {} // don't pop, we got nowhere to go
+
   type Entree = Layer.HasSize => Unit
   protected val entrees = Seq[Entree](
     new FX(this, _).fadeIn(500),

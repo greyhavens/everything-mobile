@@ -54,7 +54,7 @@ class CardFrontScreen (
     }
   }
 
-  override def onCardClick () {
+  override def onScreenTap () {
     new CardBackScreen(game, cache, card, counts, source).replace()
   }
 

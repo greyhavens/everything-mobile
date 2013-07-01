@@ -6,7 +6,7 @@ package everything
 
 import playn.core.PlayN._
 import playn.core._
-import pythagoras.f.Point
+import pythagoras.f.{Rectangle, Point}
 import react.{Value, Signal, UnitSignal}
 
 import tripleplay.game.{ScreenStack, UIScreen}
@@ -89,6 +89,38 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     _dbag.add(game.keyDown.connect(slot { k =>
       if (k == Key.BACK) onHardwareBack()
     }))
+    // create a swipe right gesture which means "go back"
+    root.layer.setHitTester(UI.absorber)
+    root.layer.addListener(new Pointer.Adapter {
+      override def onPointerStart (event :Pointer.Event) = {
+        _start.set(event.x, event.y)
+        _lastMove = event.time
+        _maxDist = 0
+        _startedOnChild = (event.hit != root.layer)
+      }
+      override def onPointerDrag (event :Pointer.Event) {
+        // TODO: if we stop for a while and then start dragging again, reset _start?
+        _lastMove = event.time
+        _maxDist = math.max(_maxDist, _start.distance(event.x, event.y))
+      }
+      override def onPointerEnd (event :Pointer.Event) = {
+        val duration = event.time - _lastMove
+        val (xdist, ydist) = (math.abs(event.x - _start.x), math.abs(event.y - _start.y))
+        val isRight = event.x > _start.x
+        // if we are clearly swiping left or right, do our swipe action
+        // TODO: be more lenient about y direction as long as we're mostly moving right?
+        if (duration < 500 && xdist > width/3 && ydist < height/8) {
+          if (isRight) onSwipeRight() else onSwipeLeft()
+        }
+        // if we seem to be tapping and didn't start on an existing UI element, do our tap action
+        else if (_maxDist < 10 && !_startedOnChild) onScreenTap()
+        else log.info(s"Nah $duration $xdist $ydist ${_maxDist}")
+      }
+      val _start = new Point()
+      var _startedOnChild = false
+      var _lastMove = 0d
+      var _maxDist = 0f
+    })
   }
 
   override def wasShown () {
@@ -163,6 +195,15 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       // if this screen has a back button, and it's enabled, click  it
       _back != null && _back.isEnabled) _back.click()
   }
+
+  /** Called if the user swipes left across the screen. Defaults to NOOP. */
+  protected def onSwipeLeft () {}
+
+  /** Called if the user swipes right across the screen. Defaults to [pop]. */
+  protected def onSwipeRight () { pop() }
+
+  /** Called if a tap occurs on the screen where there are no interactive elements. */
+  protected def onScreenTap () {} // noop
 
   protected def todo () = new Dialog().addTitle("TODO").addButton("OK", ()).display()
 
