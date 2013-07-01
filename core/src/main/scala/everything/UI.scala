@@ -167,14 +167,15 @@ object UI {
   def frameImage (image :Image, width :Float, height :Float) = {
     val frame = graphics.createImage(width, height)
     image.addCallback(cb { img =>
-      val border = 1
-      val scale = math.min((width-2*border)/img.width, (height-2*border)/img.height)
+      val b = 1f
+      val scale = math.min((width-2*b)/img.width, (height-2*b)/img.height)
       val (iwidth, iheight) = (img.width*scale, img.height*scale)
-      val (fwidth, fheight) = (iwidth+2*border, iheight+2*border)
+      val (fwidth, fheight) = (iwidth+2*b, iheight+2*b)
       val (fx, fy) = ((width-fwidth)/2, (height-fheight)/2)
       frame.canvas.
-        setStrokeColor(textColor).strokeRect(fx, fy, fwidth-0.5f, fheight-0.5f).
-        translate(fx+border, fy+border).
+        setFillColor(0xFFFFFFFF).fillRect(fx, fy, fwidth, fheight).
+        setStrokeColor(textColor).strokeRect(fx+b/2, fy+b/2, fwidth-b, fheight-b).
+        translate(fx+b, fy+b).
         scale(scale, scale).drawImage(img, 0, 0)
     })
     frame
