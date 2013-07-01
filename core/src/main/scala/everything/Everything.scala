@@ -18,20 +18,23 @@ class Everything (val device :Device, val fb :Facebook) extends Game.Default(33)
   // propagate events so that our scroller can usurp button clicks
   platform.setPropagateEvents(true)
 
-  val screens = new ScreenStack
-  val keyDown = Signal.create[Key]()
-
+  // some are-we-testing bits
   val mock = false
-  val svcURL = "http://everything-candidate.herokuapp.com/json/" // TODO
+  val isCandidate = platformType == Platform.Type.JAVA
+  val herokuId = if (isCandidate) "everything-candidate" else "everything"
+
+  val svcURL = s"http://$herokuId.herokuapp.com/json/"
   val everySvc :EveryService = if (mock) MockEveryService else new EveryServiceClient(this, svcURL)
   val gameSvc  :GameService  = if (mock) MockGameService  else new GameServiceClient(this, svcURL)
 
-  val self  = Value.create[PlayerName](null)
-  val sess  = Value.create[SessionData](null)
-  val coins = new IntValue(0)
-  val likes = RMap.create[Int,Boolean]
-  val pups  = RMap.create[Powerup,JInteger]
-  val gifts = RList.create[ThingCard]
+  val screens = new ScreenStack
+  val keyDown = Signal.create[Key]()
+  val self    = Value.create[PlayerName](null)
+  val sess    = Value.create[SessionData](null)
+  val coins   = new IntValue(0)
+  val likes   = RMap.create[Int,Boolean]
+  val pups    = RMap.create[Powerup,JInteger]
+  val gifts   = RList.create[ThingCard]
 
   val main = new MainMenuScreen(this);
 
