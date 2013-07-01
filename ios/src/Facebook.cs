@@ -24,7 +24,10 @@ namespace everything
 
     public string accessToken () {
       var session = FBSession.ActiveSession;
-      return (session == null) ? null : session.AccessToken;
+      if (session == null) return null;
+      if (session.ExpirationDate.SecondsSinceReferenceDate <
+          NSDate.Now.SecondsSinceReferenceDate) return null;
+      return session.AccessToken;
     }
 
     // from Facebook interface
@@ -121,6 +124,8 @@ namespace everything
       if (_oldFB == null) {
         var session = FBSession.ActiveSession;
         _oldFB = new OldFacebook(session.AppID, _noopSessDel);
+        // PlayN.log().info("Using old FB with [token=" + session.AccessToken +
+        //                  ", expire=" + session.ExpirationDate + "]");
         _oldFB.AccessToken = session.AccessToken;
         _oldFB.ExpirationDate = session.ExpirationDate;
       }
