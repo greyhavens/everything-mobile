@@ -73,6 +73,57 @@
       </plugin>
 
       <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.7</version>
+        <executions>
+          <!-- customize AndroidManifest.xml and strings.xml.tmpl based on build parameters -->
+          <execution>
+            <id>gen-android-build-files</id>
+            <!-- the phase can't be 'generate-sources' because (regardless of what order we list
+                 things here in the POM) Maven always runs android-maven-plugin first, which chokes
+                 when it sees no AndroidManifest.xml -->
+            <phase>initialize</phase>
+            <configuration>
+              <target>
+                <property file="../etc/${app}-app.properties"/>
+                <copy file="${project.basedir}/tmpl/AndroidManifest.xml"
+                      tofile="${project.basedir}/AndroidManifest.xml"
+                      overwrite="true">
+                  <filterset>
+                    <filter token="app_id" value="${app_id}"/>
+                    <filter token="app_vers" value="${app_vers}"/>
+                    <filter token="app_vers_code" value="${app_vers_code}"/>
+                    <filter token="app_mode" value="${app_mode}"/>
+                    <filter token="debuggable" value="${debuggable}"/>
+                  </filterset>
+                </copy>
+                <copy file="${project.basedir}/tmpl/res/values/strings.xml"
+                      tofile="${project.basedir}/res/values/strings.xml"
+                      overwrite="true">
+                  <filterset>
+                    <filter token="app_name" value="${app_name}"/>
+                    <filter token="facebook_appid" value="${facebook_appid}"/>
+                  </filterset>
+                </copy>
+              </target>
+            </configuration>
+            <goals><goal>run</goal></goals>
+          </execution>
+          <!-- prune a few bits of iOS only media to keep the Android build below 50MB -->
+          <execution>
+            <id>prune-ios-only-media</id>
+            <phase>prepare-package</phase>
+            <configuration>
+              <target>
+                <delete file="assets/images/main/bg-568h@2x.jpg"/>
+              </target>
+            </configuration>
+            <goals><goal>run</goal></goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
         <groupId>com.jayway.maven.plugins.android.generation2</groupId>
         <artifactId>android-maven-plugin</artifactId>
         <version>${android.maven.version}</version>

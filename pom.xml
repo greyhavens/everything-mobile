@@ -17,6 +17,7 @@
     <scala.version>2.10.1</scala.version>
     <playn.version>1.8-SNAPSHOT</playn.version>
     <android.maven.version>3.6.0</android.maven.version>
+    <app>test</app>
   </properties>
 
   <modules>

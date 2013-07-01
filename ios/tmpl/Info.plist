@@ -3,16 +3,16 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDisplayName</key>
-	<string>Everything</string>
+	<string>@app_name@</string>
 	<key>CFBundleIconFiles</key>
 	<array>
 		<string>touch-icon-57x57</string>
 		<string>touch-icon-72x72</string>
 	</array>
 	<key>CFBundleIdentifier</key>
-	<string>com.threerings.everything</string>
+	<string>@app_id@</string>
 	<key>CFBundleVersion</key>
-	<string>0.5</string>
+	<string>@app_vers@</string>
 	<key>MinimumOSVersion</key>
 	<string>5.0</string>
 	<key>UIDeviceFamily</key>
@@ -40,11 +40,11 @@
 			<string>facebook</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>fb118743765954</string>
+				<string>fb@facebook_appid@</string>
 			</array>
 		</dict>
 	</array>
 	<key>FacebookAppID</key>
-	<string>118743765954</string>
+	<string>@facebook_appid@</string>
 </dict>
 </plist>

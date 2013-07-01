@@ -44,10 +44,63 @@
   <build>
     <!-- use bin as that's where MonoDevelop puts its build bits -->
     <directory>bin</directory>
-    <!-- omit the version from the dll name so it doesn't change with releases -->
+    <!-- omit the version from the dll name; we'll never bump this version -->
     <finalName>${project.artifactId}</finalName>
 
     <plugins>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.7</version>
+        <executions>
+          <!-- customizes our config files for this build -->
+          <execution>
+            <id>gen-ios-build-files</id>
+            <phase>generate-sources</phase>
+            <configuration>
+              <target>
+                <property file="../etc/${app}-app.properties"/>
+                <copy file="${project.basedir}/tmpl/Info.plist"
+                      tofile="${project.basedir}/Info.plist"
+                      overwrite="true">
+                  <filterset>
+                    <filter token="app_name" value="${app_name}"/>
+                    <filter token="app_id" value="${app_id}"/>
+                    <filter token="app_vers" value="${app_vers}"/>
+                    <filter token="facebook_appid" value="${facebook_appid}"/>
+                  </filterset>
+                </copy>
+                <copy file="${project.basedir}/tmpl/everyclient.csproj"
+                      tofile="${project.basedir}/everyclient.csproj"
+                      overwrite="true">
+                  <filterset>
+                    <filter token="app_signer" value="${app_signer}"/>
+                    <filter token="app_cert" value="${app_cert}"/>
+                  </filterset>
+                </copy>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+
+          <!-- adds our assets to the .csproj file -->
+          <execution>
+            <id>add-assets</id>
+            <phase>generate-resources</phase>
+            <configuration>
+              <target>
+                <property file="../etc/${app}-app.properties"/>
+                <exec executable="${project.basedir}/add-assets"/>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <groupId>com.samskivert</groupId>
         <artifactId>ikvm-maven-plugin</artifactId>
@@ -99,6 +152,23 @@
             <goals><goal>deploy-device</goal></goals>
           </execution>
         </executions>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>2.5</version>
+        <configuration>
+          <filesets>
+            <!-- clean up our generated build metadata files -->
+            <fileset>
+              <directory>${project.basedir}</directory>
+              <includes>
+                <include>Info.plist</include>
+                <include>everyclient.csproj</include>
+              </includes>
+            </fileset>
+          </filesets>
+        </configuration>
       </plugin>
     </plugins>
   </build>

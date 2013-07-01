@@ -1,5 +1,9 @@
+android/AndroidManifest.xml
+android/res/values/strings.xml
 assets/fonts
 assets/images
+ios/Info.plist
 ios/bin
+ios/everyclient.csproj
 ios/everyclient.userprefs
 ios/obj
