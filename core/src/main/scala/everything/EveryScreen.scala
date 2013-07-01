@@ -138,6 +138,11 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     isVisible.update(false)
   }
 
+  override def wasRemoved () {
+    super.wasRemoved()
+    _dbag.clear()
+  }
+
   protected def layout () :Layout = AxisLayout.vertical().offStretch
 
   protected def header (title :String, right :Element[_]*) = UI.hgroup(
@@ -177,9 +182,9 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
         })
       }
     }.addStyles(Style.BACKGROUND.is(Background.image(which._1)))
-    state.map(rf {
+    _dbag.add(state.map(rf {
       lk => java.lang.Boolean.valueOf(lk != null && lk.booleanValue == like)
-    }).connectNotify(cb.checked.slot)
+    }).connectNotify(cb.checked.slot))
     cb
   }
 
