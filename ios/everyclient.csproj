@@ -68,6 +68,7 @@
     <MtouchArch>ARMv7</MtouchArch>
     <BuildIpa>True</BuildIpa>
     <IpaPackageName />
+    <CodesignProvision>F1568740-7650-452B-8FE2-CECB4C0F2BF0</CodesignProvision>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -101,9 +102,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <Content Include="assets\images\card_back@2x.png" />
-    <Content Include="assets\images\card_front@2x.png" />
-    <Content Include="assets\images\card_gift@2x.png" />
     <Content Include="assets\images\like\neg.png" />
     <Content Include="assets\images\like\neg_sel.png" />
     <Content Include="assets\images\like\pos.png" />
@@ -113,23 +111,26 @@
     <Content Include="assets\images\lines\line.png" />
     <Content Include="assets\images\lines\tee.png" />
     <Content Include="assets\images\lines\turnstile.png" />
-    <Content Include="assets\images\money@2x.png" />
-    <Content Include="assets\images\page_repeat@2x.png" />
-    <Content Include="assets\images\pupbtn_up@2x.png" />
-    <Content Include="assets\images\pupbtn_down@2x.png" />
-    <Content Include="assets\images\pup\all_collected_series@2x.png" />
-    <Content Include="assets\images\pup\all_new_cards@2x.png" />
-    <Content Include="assets\images\pup\ensure_one_ix@2x.png" />
-    <Content Include="assets\images\pup\ensure_one_vii@2x.png" />
-    <Content Include="assets\images\pup\ensure_one_viii@2x.png" />
-    <Content Include="assets\images\pup\ensure_one_x@2x.png" />
-    <Content Include="assets\images\pup\extra_flip@2x.png" />
-    <Content Include="assets\images\pup\show_category@2x.png" />
-    <Content Include="assets\images\pup\show_series@2x.png" />
-    <Content Include="assets\images\pup\show_subcategory@2x.png" />
     <Content Include="assets\fonts\copper.ttf" />
     <Content Include="assets\fonts\josschrift.ttf" />
     <Content Include="assets\fonts\treasure.ttf" />
+    <Content Include="assets\images\card_back%402x.png" />
+    <Content Include="assets\images\card_front%402x.png" />
+    <Content Include="assets\images\card_gift%402x.png" />
+    <Content Include="assets\images\money%402x.png" />
+    <Content Include="assets\images\page_repeat%402x.png" />
+    <Content Include="assets\images\pupbtn_up%402x.png" />
+    <Content Include="assets\images\pupbtn_down%402x.png" />
+    <Content Include="assets\images\pup\all_collected_series%402x.png" />
+    <Content Include="assets\images\pup\all_new_cards%402x.png" />
+    <Content Include="assets\images\pup\ensure_one_ix%402x.png" />
+    <Content Include="assets\images\pup\ensure_one_vii%402x.png" />
+    <Content Include="assets\images\pup\ensure_one_viii%402x.png" />
+    <Content Include="assets\images\pup\ensure_one_x%402x.png" />
+    <Content Include="assets\images\pup\extra_flip%402x.png" />
+    <Content Include="assets\images\pup\show_category%402x.png" />
+    <Content Include="assets\images\pup\show_series%402x.png" />
+    <Content Include="assets\images\pup\show_subcategory%402x.png" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\" />
@@ -140,7 +141,7 @@
     <BundleResource Include="Resources\Default-568h%402x.png" />
     <BundleResource Include="Resources\Default%402x.png" />
     <BundleResource Include="Resources\FacebookSDKResources.bundle\FBDialog\images\close.png" />
-    <BundleResource Include="Resources\FacebookSDKResources.bundle\FBDialog\images\close@2x.png" />
     <BundleResource Include="Resources\FacebookSDKResources.bundle\FBDialog\images\fbicon.png" />
+    <BundleResource Include="Resources\FacebookSDKResources.bundle\FBDialog\images\close%402x.png" />
   </ItemGroup>
 </Project>
