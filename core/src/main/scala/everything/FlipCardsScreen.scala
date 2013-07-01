@@ -75,18 +75,28 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
       uflabels.add(label)
     }
 
+    val status = UI.hgroup(
+      new Label("Free flips:").bindVisible(haveFree),
+      new ValueLabel(freeFlips).bindVisible(haveFree),
+      new Label("Next flip:").bindVisible(showNextFree),
+      UI.moneyIcon(nextFlipCost, _dbag).bindVisible(showNextFree),
+      new Label("No more flips.").bindVisible(showNoFlips),
+      UI.shim(25, 5),
+      UI.imageButton(UI.getImage("pupbtn_up.png"), UI.getImage("pupbtn_down.png")) {
+        todo()
+      })
+
+    // fade our extra bits in once we have our cards
+    uflabels.layer.setAlpha(0)
+    status.layer.setAlpha(0)
+    getGrid.onSuccess(unitSlot {
+      iface.animator.tweenAlpha(uflabels.layer).to(1).in(500).easeIn
+      iface.animator.tweenAlpha(status.layer).to(1).in(500).easeIn
+    })
+
     root.add(header("Flip Your Cards", UI.moneyIcon(game.coins, _dbag), UI.shim(1, 5)),
              UI.shim(5, 5),
-             UI.hgroup(
-               new Label("Free flips:").bindVisible(haveFree),
-               new ValueLabel(freeFlips).bindVisible(haveFree),
-               new Label("Next flip:").bindVisible(showNextFree),
-               UI.moneyIcon(nextFlipCost, _dbag).bindVisible(showNextFree),
-               new Label("No more flips.").bindVisible(showNoFlips),
-               UI.shim(25, 5),
-               UI.imageButton(UI.getImage("pupbtn_up.png"), UI.getImage("pupbtn_down.png")) {
-                 todo()
-               }),
+             status,
              UI.stretchShim,
              cbox.set(new Label("Getting cards...")),
              UI.shim(5, 5),
