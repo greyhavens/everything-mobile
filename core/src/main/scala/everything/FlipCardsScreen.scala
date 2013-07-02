@@ -65,7 +65,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
 
     val uflabels = new Group(AxisLayout.horizontal).
       setStylesheet(Stylesheet.builder.add(
-        classOf[Label], Style.FONT.is(UI.writingFont(12))).create).
+        classOf[Label], Style.FONT.is(UI.machineFont(12))).create).
       add(new Label("Unflipped cards:"))
     Rarity.values foreach { r =>
       val label = new Label()
