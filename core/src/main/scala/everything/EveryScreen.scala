@@ -113,7 +113,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
           if (isRight) onSwipeRight() else onSwipeLeft()
         }
         // if we seem to be tapping and didn't start on an existing UI element, do our tap action
-        else if (_maxDist < 10 && !_startedOnChild) onScreenTap()
+        else if (_maxDist < 10 && !_startedOnChild) onScreenTap(event)
         else log.info(s"Nah $duration $xdist $ydist ${_maxDist}")
       }
       val _start = new Point()
@@ -212,7 +212,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   protected def onSwipeRight () { pop() }
 
   /** Called if a tap occurs on the screen where there are no interactive elements. */
-  protected def onScreenTap () {} // noop
+  protected def onScreenTap (event :Pointer.Event) {} // noop
 
   protected def todo () = new Dialog().addTitle("TODO").addButton("OK", ()).display()
 

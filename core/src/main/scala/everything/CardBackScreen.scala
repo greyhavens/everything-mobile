@@ -4,7 +4,7 @@
 
 package everything
 
-import playn.core.PlayN
+import playn.core._
 import pythagoras.f.Point
 import tripleplay.ui._
 import tripleplay.ui.layout.TableLayout
@@ -29,7 +29,7 @@ class CardBackScreen (
                        new Label(game.device.formatDate(card.received))))
   }
 
-  override def onScreenTap () {
+  override def onCardTap () {
     game.screens.replace(new CardFrontScreen(game, cache, card, counts, source), pushTransition)
   }
 

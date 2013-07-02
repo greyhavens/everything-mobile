@@ -16,6 +16,20 @@ abstract class CardScreen (
 
   override protected def layout () :Layout = AxisLayout.vertical().gap(0).offStretch
 
+  val buttons = UI.hgroup(
+    UI.stretchShim(),
+    UI.button(if (counts.isDefined) "Keep" else "Back")(pop()),
+    UI.stretchShim(),
+    UI.button("Sell") { maybeSellCard(card.toThingCard) {
+      source.queueSell()
+      pop()
+    }},
+    UI.stretchShim(),
+    UI.button("Gift") { new GiftCardScreen(game, cache, card, source).push },
+    UI.stretchShim(),
+    UI.button("Share") { showShareDialog() },
+    UI.stretchShim())
+
   override def createUI () {
     root.add(header(card.thing.name),
              UI.pathLabel(card.categories.map(_.name)),
@@ -23,21 +37,16 @@ abstract class CardScreen (
              UI.stretchShim())
     createCardUI()
     if (!root.childAt(root.childCount-1).isInstanceOf[Shim]) root.add(UI.stretchShim())
-    root.add(UI.hgroup(UI.stretchShim(),
-                       UI.button(if (counts.isDefined) "Keep" else "Back")(pop()),
-                       UI.stretchShim(),
-                       UI.button("Sell") { maybeSellCard(card.toThingCard) {
-                         source.queueSell()
-                         pop()
-                       }},
-                       UI.stretchShim(),
-                       UI.button("Gift") { new GiftCardScreen(game, cache, card, source).push },
-                       UI.stretchShim(),
-                       UI.button("Share") { showShareDialog() },
-                       UI.stretchShim()))
+    root.add(buttons)
+  }
+
+  override def onScreenTap (event :Pointer.Event) {
+    // ignore taps down in the action button zone
+    if (event.localY < buttons.layer.ty) onCardTap()
   }
 
   protected def createCardUI () :Unit
+  protected def onCardTap () :Unit
 
   protected def showShareDialog () {
     val (me, thing, everyURL) = (game.self.get.name, card.thing.name, game.sess.get.everythingURL)
