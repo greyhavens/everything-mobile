@@ -41,7 +41,15 @@ object MockGameService extends GameService with Mockery {
   }
 
   def getSeries (ownerId :Int, categoryId :Int) = {
-    failure("TODO")
+    val s = new Series
+    s.categoryId = categoryId
+    s.name = "Mock Series"
+    s.creator = elvis
+    val now = System.currentTimeMillis
+    s.things = Array(null, FakeData.yanluo.toCard(now), null,
+                     FakeData.maltesers.toCard(now), null, null,
+                     null, null, null, null, null, null, null, null, null, null, null, null)
+    success(s)
   }
 
   def getCard (ident :CardIdent) = {
