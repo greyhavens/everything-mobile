@@ -150,6 +150,10 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     UI.headerLabel(title),
     AxisLayout.stretch(UI.hgroup(right :_*).addStyles(Style.HALIGN.right)))
 
+  protected def headerPlate (image :Element[_], elems :Element[_]*) = UI.hgroup(
+    back(), UI.stretchShim(), image, UI.vgroup0(elems :_*).addStyles(Style.HALIGN.left),
+    UI.stretchShim())
+
   protected def back () = noteBack(new Button(Icons.image(UI.backImage)).onClick(unitSlot(pop())))
   protected def back (label :String) = noteBack(UI.button(label)(pop()))
   protected def noteBack (back :Button) = _back match {
