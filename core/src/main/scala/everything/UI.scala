@@ -61,6 +61,7 @@ object UI {
     cardFront.width-8, TextFormat.Alignment.CENTER)
   val smallCardCfg = new TextConfig(textColor).withFont(writingFont(8)).withWrapping(
     cardFront.width-8, TextFormat.Alignment.CENTER)
+  val collectCfg = new TextConfig(textColor).withFont(writingFont(24))
 
   val absorber = new Layer.HitTester {
     def hitTest (layer :Layer, p :Point) = layer.hitTestDefault(p) match {
@@ -102,7 +103,7 @@ object UI {
   protected def add (group :Group, elems :Seq[Element[_]]) = (group /: elems)(_ add _)
 
   /** Creates a vertical-only scroller containing `group`. */
-  def vscroll (contents :Group) = new Scroller(contents).setBehavior(Scroller.Behavior.VERTICAL)
+  def vscroll (contents :Element[_]) = new Scroller(contents).setBehavior(Scroller.Behavior.VERTICAL)
 
   /** Creates a shim with the specified dimensions. */
   def shim (width :Float, height :Float) = new Shim(width, height)
