@@ -24,7 +24,7 @@ class EverythingActivity extends GameActivity {
     private val _dfmt = DateFormat.getDateInstance()
   }
   val facebook = new DroidBook(this)
-  lazy val game = new Everything(device, facebook)
+  lazy val game = new Everything(false, device, facebook)
 
   override def onCreate (savedInstanceState :Bundle) {
     super.onCreate(savedInstanceState)

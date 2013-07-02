@@ -13,13 +13,12 @@ import tripleplay.game.ScreenStack
 
 import com.threerings.everything.data._
 
-class Everything (val device :Device, val fb :Facebook) extends Game.Default(33) {
+class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends Game.Default(33) {
 
   // propagate events so that our scroller can usurp button clicks
   platform.setPropagateEvents(true)
 
   // some are-we-testing bits
-  val mock = false
   val isCandidate = platformType == Platform.Type.JAVA
   val herokuId = if (isCandidate) "everything-candidate" else "everything"
 

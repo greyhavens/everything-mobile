@@ -41,7 +41,8 @@ object EverythingJava {
       def formatDate (when :Long) = _dfmt.format(new Date(when))
       private val _dfmt = DateFormat.getDateInstance()
     }
-    PlayN.run(new Everything(device, facebook))
+    val mock = args.headOption.map(_ == "mock").getOrElse(false)
+    PlayN.run(new Everything(mock, device, facebook))
   }
 
   private final val MillisPerMinute = 1000*60

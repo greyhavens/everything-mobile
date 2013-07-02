@@ -17,7 +17,7 @@ namespace everything
       pconfig.iPadLikePhone = true;
       if (_hack) preventStripping();
       IOSPlatform.register(app, pconfig);
-      PlayN.run(new Everything(new IOSDevice(), _facebook));
+      PlayN.run(new Everything(false, new IOSDevice(), _facebook));
       return true;
     }
 
