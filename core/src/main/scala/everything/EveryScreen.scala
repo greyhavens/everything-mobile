@@ -106,7 +106,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   def createUI () :Unit
 
   override def wasAdded () {
-    root.addStyles(Style.BACKGROUND.is(background().inset(5)))
+    root.addStyles(Style.BACKGROUND.is(background().inset(game.device.statusBarHeight, 5, 5, 5)))
     createUI()
     root.setSize(width, height)
     // wire up the (hardware) back button handler

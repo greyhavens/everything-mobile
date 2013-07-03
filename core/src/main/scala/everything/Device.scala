@@ -6,6 +6,9 @@ package everything
 
 trait Device {
 
+  /** Returns the height of our translucent status bar (if any). */
+  def statusBarHeight :Float
+
   /** Returns the current timezone offset as "minutes before GMT". */
   def timeZoneOffset :Int
 

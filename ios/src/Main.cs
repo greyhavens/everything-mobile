@@ -12,12 +12,12 @@ namespace everything
   public partial class AppDelegate : IOSApplicationDelegate {
 
     override public bool FinishedLaunching (UIApplication app, NSDictionary options) {
-      app.SetStatusBarHidden(true, true);
       var pconfig = new IOSPlatform.Config();
       pconfig.iPadLikePhone = true;
       if (_hack) preventStripping();
-      IOSPlatform.register(app, pconfig);
-      PlayN.run(new Everything(false, new IOSDevice(), _facebook));
+      var p = IOSPlatform.register(app, pconfig);
+      p.rootViewController().WantsFullScreenLayout = true;
+      PlayN.run(new Everything(false, new IOSDevice(app), _facebook));
       return true;
     }
 
@@ -40,8 +40,13 @@ namespace everything
   }
 
   public class IOSDevice : Device {
-    public IOSDevice () {
+    public IOSDevice (UIApplication app) {
+      _app = app;
       _fmt.DateStyle = NSDateFormatterStyle.Medium;
+    }
+
+    public float statusBarHeight () {
+      return _app.StatusBarFrame.Height;
     }
 
     public int timeZoneOffset () {
@@ -55,6 +60,7 @@ namespace everything
       return _fmt.ToString(NSDate.FromTimeIntervalSince1970(when/1000d));
     }
 
+    protected readonly UIApplication _app;
     protected NSDateFormatter _fmt = new NSDateFormatter();
   }
 

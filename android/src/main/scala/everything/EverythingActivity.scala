@@ -15,6 +15,7 @@ import react.RFuture
 class EverythingActivity extends GameActivity {
 
   val device = new Device {
+    def statusBarHeight = 0
     def timeZoneOffset = {
       val tz = TimeZone.getDefault
       // Java returns millis to add to GMT, we want minutes to subtract from GMT
