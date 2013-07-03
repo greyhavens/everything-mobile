@@ -87,6 +87,7 @@ object UI {
         Style.FONT.is(textFont), Style.SHADOW_X.is(0.5f), Style.SHADOW_Y.is(0.5f)).
     add(classOf[LabelButton], Style.Mode.SELECTED,
         Style.BACKGROUND.is(Background.blank().inset(0.5f, 0, 0, 0.5f))).
+    // add(classOf[Group], Style.BACKGROUND.is(Background.solid(0xFFCCCCCC))).
     create()
 
   def hgroup (gap :Int = 5) = new Group(AxisLayout.horizontal().gap(gap))
