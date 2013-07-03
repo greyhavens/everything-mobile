@@ -19,7 +19,7 @@ import com.threerings.everything.data.ThingCard
 abstract class EveryScreen (game :Everything) extends UIScreen {
 
   class Dialog {
-    val root = iface.createRoot(AxisLayout.vertical.offStretch, UI.sheet, layer)
+    val root = iface.createRoot(layout(), UI.sheet).addStyles(Style.BACKGROUND.is(background()))
     val buttons = UI.hgroup()
 
     def add (elem :Element[_]) = { root.add(elem) ; this }
@@ -33,20 +33,26 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       this
     }
 
-    def background () :Background =
-      Background.composite(Background.solid(UI.textColor).inset(1),
-                           Background.croppedImage(UI.getImage("page_repeat.png")).inset(9))
+    def layout () :Layout = AxisLayout.vertical.offStretch
+    def background () :Background = Background.composite(
+      Background.solid(UI.textColor).inset(1),
+      Background.croppedImage(UI.getImage("page_repeat.png")).inset(9))
 
     def display () {
-      root.layer.setDepth(Short.MaxValue)
+      if (buttons.childCount > 0) root.add(buttons)
       // absorb all clicks below our root layer
       root.layer.setHitTester(UI.absorber)
-      root.addStyles(Style.BACKGROUND.is(background()))
-      root.add(buttons)
+      // render above everything else
+      root.layer.setDepth(Short.MaxValue)
+      // compute our preferred size, then restrict it to fit inside the screen
       val psize = root.preferredSize(width-20, 0)
       root.setSize(psize.width, math.min(psize.height, height-20))
-      root.layer.setTranslation((width-root.size.width)/2, (height-root.size.height)/2);
-      // TODO: animate reveal
+      root.layer.setOrigin(root.size.width/2, root.size.height/2)
+      root.layer.setTranslation(width/2, height/2);
+      // animate reveal
+      root.layer.setScale(0)
+      iface.animator.add(layer, root.layer).`then`.
+        tweenScale(root.layer).to(1).in(500).easeOutBack
     }
 
     def dispose () {
