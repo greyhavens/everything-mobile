@@ -30,8 +30,11 @@ object UI {
 
   val cardSize   = new Dimension(154/2, 184/2)
   val cardCtr    = new Point(cardSize.width/2, cardSize.height/2)
-  val cardInsets = new Insets(1+2, 3+5, 3+1, 1+5) // shadow+border
+  val cardShadow = new Insets(1, 3, 3, 1) // shadow
+  val cardInsets = new Insets(cardShadow.top+2, cardShadow.right+5,
+                              cardShadow.bottom+1, cardShadow.left+5) // shadow+border
   val cardTextHt = 14
+  val partCardTextHt = 12
   val cardImgBox = new Dimension(cardSize.width-cardInsets.width,
                                  cardSize.height-cardInsets.height-2*cardTextHt)
 
@@ -40,6 +43,7 @@ object UI {
   lazy val cardFront = getImage("card_front.png")
   lazy val cardBack = getImage("card_back.png")
   lazy val cardGift = getImage("card_gift.png")
+  lazy val cardPart = getImage("card_part.png")
 
   lazy val like = (getImage("like/pos.png"), getImage("like/pos_sel.png"))
   lazy val hate = (getImage("like/neg.png"), getImage("like/neg_sel.png"))
@@ -61,11 +65,13 @@ object UI {
   def glyphFont (size :Int) = graphics.createFont("Copperplate", Font.Style.BOLD, size)
 
   val statusCfg = new TextConfig(textColor).withFont(writingFont(18))
-  val cardCfg = new TextConfig(textColor).withFont(writingFont(10)).withWrapping(
-    cardFront.width-8, TextFormat.Alignment.CENTER)
-  val smallCardCfg = new TextConfig(textColor).withFont(writingFont(8)).withWrapping(
-    cardFront.width-8, TextFormat.Alignment.CENTER)
   val collectCfg = new TextConfig(textColor).withFont(writingFont(24))
+  val cardCfg = new TextConfig(textColor).withFont(writingFont(10))
+  val smallCardCfg = cardCfg.withFont(writingFont(8)).withWrapping(
+    cardFront.width-cardShadow.width-4, TextFormat.Alignment.CENTER)
+  val partCardCfg = new TextConfig(0xFF640000).withFont(glyphFont(10))
+  val smallPartCardCfg = partCardCfg.withFont(glyphFont(8)).withWrapping(
+    cardFront.width-cardShadow.width-10, TextFormat.Alignment.CENTER)
 
   val absorber = new Layer.HitTester {
     def hitTest (layer :Layer, p :Point) = layer.hitTestDefault(p) match {
@@ -193,8 +199,11 @@ object UI {
   def cardImage (cache :ImageCache, card :ThingCard) = {
     val cardimg = graphics.createImage(cardFront.width, cardFront.height)
     cardimg.canvas.drawImage(cardFront, 0, 0)
-    val nameCfg = if (card.name.length > 10) smallCardCfg else cardCfg
-    val title = nameCfg.layout(card.name)
+    val (nameCfg, name) = {
+      val full = cardCfg.layout(card.name)
+      if (full.width <= smallCardCfg.format.wrapWidth) (cardCfg, full)
+      else (smallCardCfg, smallCardCfg.layout(card.name))
+    }
     val rarity = cardCfg.layout(card.rarity.toString)
     cache(card.image).addCallback(cb { thing =>
       // TODO: if the name wraps and cuts into the card area, use a smaller cardImgBox to determine
@@ -206,11 +215,26 @@ object UI {
       // cardimg.canvas.setStrokeColor(textColor).strokeRect(
       //   sx-0.5f, sy-0.5f, swidth+0.5f, sheight+0.5f)
       cardimg.canvas.drawImage(thing, sx, sy, swidth, sheight)
-      nameCfg.renderCX(cardimg.canvas, title, cardimg.width/2,
-                       cardInsets.top + math.max((cardTextHt-title.height)/2, -1))
+      nameCfg.renderCX(cardimg.canvas, name, cardimg.width/2,
+                       cardInsets.top + math.max((cardTextHt-name.height)/2, -1))
       cardCfg.renderCX(cardimg.canvas, rarity, cardimg.width/2,
                        cardimg.height - rarity.height - cardInsets.bottom)
     })
+    cardimg
+  }
+
+  def partCardImage (card :ThingCard) = {
+    val cardimg = graphics.createImage(cardPart.width, cardPart.height)
+    cardimg.canvas.drawImage(cardPart, 0, 0)
+    val (nameCfg, name) = {
+      val full = partCardCfg.layout(card.name)
+      if (full.width <= smallPartCardCfg.format.wrapWidth) (partCardCfg, full)
+      else (smallPartCardCfg, smallPartCardCfg.layout(card.name))
+    }
+    nameCfg.renderCX(cardimg.canvas, name,
+                     cardInsets.left + (cardimg.width - cardInsets.width)/2,
+                     // subtract one more here because box is not vertically centered, sign
+                     cardInsets.top + (cardimg.height - cardInsets.height - name.height)/2 - 1)
     cardimg
   }
 

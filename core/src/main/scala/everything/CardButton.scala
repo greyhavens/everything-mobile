@@ -216,7 +216,9 @@ class CardButton (
       case        GIFTED|
           RECRUIT_GIFTED => dispensed("Gifted!")
       case          SOLD => dispensed("Sold!")
-      case     UNFLIPPED => if (isGift) UI.cardGift else UI.cardBack
+      case     UNFLIPPED => if (_card != null && _card.name != null) UI.partCardImage(_card)
+                            else if (isGift) UI.cardGift
+                            else UI.cardBack
       case       FLIPPED => UI.cardImage(cache, _card)
     })
   }
