@@ -114,6 +114,8 @@ object MockGameService extends GameService with Mockery {
   }
 
   def getGiftCardInfo (thingId :Int, created :Long) = {
+    val pos = cards.indexWhere(c => c.thing.thingId == thingId && c.received == created)
+    grid.slots(pos) = SlotStatus.GIFTED
     val result = new GiftInfoResult
     result.things = 10
     def friend (name :PlayerName, has :Int) = {
