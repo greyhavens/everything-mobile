@@ -6,6 +6,7 @@ package everything
 
 import scala.collection.JavaConversions._
 
+import playn.core.Layer
 import react.{Functions, IntValue, RMap, Value, Values}
 import tripleplay.ui._
 import tripleplay.ui.layout.{AxisLayout, TableLayout}
@@ -29,6 +30,8 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
 
   // start the request for our cards immediately
   val getGrid = game.gameSvc.getGrid(Powerup.NOOP, false)
+
+  val pupsBtn = new ImageButton(UI.getImage("pupbtn_up.png"), UI.getImage("pupbtn_down.png"))
 
   // once our show transition is complete, create our cards and animate them into view
   onShown.connect(unitSlot {
@@ -80,9 +83,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
       UI.moneyIcon(nextFlipCost, _dbag).bindVisible(showNextFree),
       new Label("No more flips.").bindVisible(showNoFlips),
       UI.shim(25, 5).bindVisible(haveUnflipped),
-      UI.imageButton(UI.getImage("pupbtn_up.png"), UI.getImage("pupbtn_down.png")) {
-        todo()
-      }.bindVisible(haveUnflipped))
+      pupsBtn.bindVisible(haveUnflipped).onClick(unitSlot { showPupMenu() }))
 
     // fade our extra bits in once we have our cards
     uflabels.layer.setAlpha(0)
@@ -125,6 +126,38 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
 
   override protected def layout () :Layout = AxisLayout.vertical().offStretch.gap(0)
 
+  def showPupMenu () {
+    val dialog = new Dialog() {
+      override def layout = AxisLayout.vertical.offStretch.gap(0)
+      override def background = Background.blank()
+    }
+    val itembg = UI.getImage("pupmenu/item.png")
+    def item (elems :Element[_]*) = UI.hgroup(2).add(elems :_*).
+      addStyles(Style.BACKGROUND.is(Background.image(itembg))).
+      setConstraint(Constraints.fixedSize(itembg.width, itembg.height))
+    val topimg = UI.getImage("pupmenu/top.png")
+    dialog.add(UI.imageButton(topimg, topimg) { dialog.dispose() })
+    val zero = (v :JInteger) => if (v == null) java.lang.Integer.valueOf(0) else v
+    for ((pup, name) <- PupInfo) {
+      val action = UI.labelButton(name) {
+        dialog.dispose()
+        todo()
+      }.addStyles(Style.FONT.is(UI.machineFont(7)), Style.TEXT_WRAP.on, Style.UNDERLINE.off,
+                  Style.HALIGN.left, Style.VALIGN.top)
+      val have = game.pups.getView(pup).map(rf(zero))
+      action.bindEnabled(have.map(Functions.greaterThan(0)))
+      dialog.add(item(UI.pupIcon(pup),
+                      action.setConstraint(Constraints.fixedSize(48, itembg.height-3)),
+                      new ValueLabel(have).addStyles(Style.FONT.is(UI.machineFont(10)))))
+    }
+    dialog.add(item(UI.labelButton("Cancel") { dialog.dispose() }.
+      addStyles(Style.FONT.is(UI.machineFont(12)), Style.UNDERLINE.off, Style.VALIGN.top).
+      setConstraint(Constraints.fixedHeight(itembg.height-5))))
+    dialog.add(UI.icon(UI.getImage("pupmenu/bot.png")))
+    val spos = Layer.Util.layerToParent(pupsBtn.layer, layer, 0, 0)
+    dialog.displayAt(spos.x, spos.y)
+  }
+
   protected val onFlipFailure = (cause :Throwable) => cause.getMessage match {
     case "e.nsf_for_flip" => new Dialog().
         addTitle("Oops, Out of Coins!").
@@ -135,4 +168,11 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
         display()
     case _ => onFailure.apply(cause)
   }
+
+  // TODO: consolidate this with info from ShopScreen
+  protected val PupInfo = Seq(
+    (Powerup.SHOW_CATEGORY, "Reveal Category"),
+    (Powerup.SHOW_SUBCATEGORY, "Reveal Sub-category"),
+    (Powerup.SHOW_SERIES, "Reveal Series")
+  )
 }
