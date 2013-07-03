@@ -17,7 +17,13 @@ object MockGameService extends GameService with Mockery {
 
   val coins = new IntValue(4239)
   val freeFlips = new IntValue(2)
-  val pups = new HashMap[Powerup,JInteger]
+  val pups = {
+    val map = new HashMap[Powerup,JInteger]
+    map.put(Powerup.SHOW_CATEGORY, 1)
+    map.put(Powerup.SHOW_SUBCATEGORY, 3)
+    map.put(Powerup.SHOW_SERIES, 1)
+    map
+  }
 
   val grid = {
     val grid = new Grid

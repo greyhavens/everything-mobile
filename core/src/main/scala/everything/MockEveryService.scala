@@ -16,7 +16,7 @@ object MockEveryService extends EveryService with Mockery {
     val data = new SessionData
     data.name = player("Testy", "Testerson", 2, 2)
     data.coins = 42
-    data.powerups = new HashMap[Powerup,JInteger]
+    data.powerups = MockGameService.pups
     data.likes = new ArrayList[JInteger]
     data.dislikes = new ArrayList[Integer]
     data.gridsConsumed = 5
