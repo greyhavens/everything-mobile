@@ -14,8 +14,8 @@ import playn.core._
 import pythagoras.f.{Dimension, IDimension, FloatMath, MathUtil, Point}
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
-import tripleplay.util.DestroyableBag
-import tripleplay.util.TextConfig
+import tripleplay.ui.util.Insets
+import tripleplay.util.{DestroyableBag, TextConfig}
 
 import com.threerings.everything.data._
 
@@ -28,8 +28,12 @@ object UI {
     private val _images = MMap[String,Image]()
   }
 
-  val cardSize = new Dimension(132/2, 158/2)
-  val cardCtr = new Point(cardSize.width/2, cardSize.height/2)
+  val cardSize   = new Dimension(154/2, 184/2)
+  val cardCtr    = new Point(cardSize.width/2, cardSize.height/2)
+  val cardInsets = new Insets(1+2, 3+5, 3+1, 1+5) // shadow+border
+  val cardTextHt = 14
+  val cardImgBox = new Dimension(cardSize.width-cardInsets.width,
+                                 cardSize.height-cardInsets.height-2*cardTextHt)
 
   val textColor = 0xFF442D17
   lazy val coinsIcon = getImage("money.png")
@@ -192,15 +196,19 @@ object UI {
     val title = nameCfg.layout(card.name)
     val rarity = cardCfg.layout(card.rarity.toString)
     cache(card.image).addCallback(cb { thing =>
-      // these are hardcoded because the image is asymmetric and has built-in shadow... blah.
-      val scale = math.min(42/thing.width, 50/thing.height)
+      // TODO: if the name wraps and cuts into the card area, use a smaller cardImgBox to determine
+      // how much we should scale our card, and move the card image down as well
+      val scale = math.min(cardImgBox.width/thing.width, cardImgBox.height/thing.height)
       val (swidth, sheight) = (thing.width*scale, thing.height*scale)
-      val (sx, sy) = (math.round((64-swidth)/2), math.round((78-sheight)/2))
+      val sx = math.round(cardInsets.left + (cardSize.width-cardInsets.width-swidth)/2)
+      val sy = math.round(cardInsets.top + (cardSize.height-cardInsets.height-sheight)/2)
       // cardimg.canvas.setStrokeColor(textColor).strokeRect(
       //   sx-0.5f, sy-0.5f, swidth+0.5f, sheight+0.5f)
       cardimg.canvas.drawImage(thing, sx, sy, swidth, sheight)
-      nameCfg.renderCX(cardimg.canvas, title, cardimg.width/2, 2)
-      cardCfg.renderCX(cardimg.canvas, rarity, cardimg.width/2, cardimg.height-rarity.height-2)
+      nameCfg.renderCX(cardimg.canvas, title, cardimg.width/2,
+                       cardInsets.top + math.max((cardTextHt-title.height)/2, -1))
+      cardCfg.renderCX(cardimg.canvas, rarity, cardimg.width/2,
+                       cardimg.height - rarity.height - cardInsets.bottom)
     })
     cardimg
   }

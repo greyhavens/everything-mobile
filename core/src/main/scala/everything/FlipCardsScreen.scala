@@ -20,7 +20,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
   val cache = new UI.ImageCache(game)
   var gridId = 0
 
-  val cardGap = 10
+  val cardGap = 2
   val cardCols = 4
   val cbox = new Box().setConstraint(Constraints.fixedSize(
     UI.cardSize.width*cardCols + cardGap*(cardCols-1),
