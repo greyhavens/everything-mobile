@@ -162,6 +162,7 @@ object UI {
     dbag.add(coins.map(Functions.TO_STRING).connectNotify(label.text.slot()))
     label
   }
+  def pupIcon (pup :Powerup) = icon(pupImage(pup))
 
   lazy val backImage = {
     val lay = graphics.layoutText("\u27A8", new TextFormat().withFont(glyphFont(28)))
@@ -171,6 +172,7 @@ object UI {
   }
 
   def getImage (path :String) = assets.getImageSync(s"images/$path")
+  def pupImage (pup :Powerup) = getImage(s"pup/${pup.name.toLowerCase}.png")
 
   def friendImage (name :PlayerName) :Image = friendImage(name.facebookId)
   def friendImage (fbId :Long) :Image = {

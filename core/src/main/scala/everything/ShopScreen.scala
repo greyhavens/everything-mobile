@@ -64,7 +64,7 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
         _dbag.add(game.pups.getView(pup).map(rf { c => new JBoolean(c == null || c == 0) }).
           connectNotify(buy.enabledSlot))
       }
-      pups.add(UI.icon(UI.getImage(s"pup/${pup.name.toLowerCase}.png")),
+      pups.add(UI.pupIcon(pup),
                new Group(AxisLayout.vertical.gap(0), Style.HALIGN.left).add(
                  UI.subHeaderLabel(name), descLbl),
                if (pup.charges > 1) UI.vgroup0(buy, new Label(s"for ${pup.charges}"))
