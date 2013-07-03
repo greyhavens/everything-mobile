@@ -149,8 +149,23 @@ object MockGameService extends GameService with Mockery {
       case 0 => failure("Lack powerup")
       case n =>
         pups.put(pup, n-1)
-        // TODO: apply powerup to grid?
+        pup match {
+          case Powerup.SHOW_CATEGORY => reveal(grid, 0)
+          case Powerup.SHOW_SUBCATEGORY => reveal(grid, 1)
+          case Powerup.SHOW_SERIES => reveal(grid, 2)
+          case _ => println(s"Asked to use weird powerup? $pup")
+        }
         success(grid)
+    }
+  }
+
+  protected def reveal (grid :Grid, depth :Int) {
+    cards.zipWithIndex.foreach { case (c, idx) =>
+      if (grid.flipped(idx) == null || grid.flipped(idx).thingId == 0) {
+        val tc = new ThingCard
+        tc.name = c.categories(depth).name
+        grid.flipped(idx) = tc
+      }
     }
   }
 
