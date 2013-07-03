@@ -28,11 +28,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
   val cardsEnabled = Value.create(true :JBoolean)
 
   // start the request for our cards immediately
-  val getGrid = {
-    val pup :Powerup = Powerup.NOOP // TODO
-    val expectHave = false // TODO
-    game.gameSvc.getGrid(pup, expectHave)
-  }
+  val getGrid = game.gameSvc.getGrid(Powerup.NOOP, false)
 
   // once our show transition is complete, create our cards and animate them into view
   onShown.connect(unitSlot {
@@ -62,6 +58,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
     val lackFree = freeFlips.map(Functions.lessThanEqual(0))
     val showNextFree = Values.and(lackFree, nextFlipCost.map(Functions.greaterThan(0)))
     val showNoFlips = Values.and(lackFree, nextFlipCost.map(Functions.lessThanEqual(0)))
+    val haveUnflipped = showNoFlips.map(Functions.NOT)
 
     val uflabels = new Group(AxisLayout.horizontal).
       setStylesheet(Stylesheet.builder.add(
@@ -82,10 +79,10 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
       new Label("Next flip:").bindVisible(showNextFree),
       UI.moneyIcon(nextFlipCost, _dbag).bindVisible(showNextFree),
       new Label("No more flips.").bindVisible(showNoFlips),
-      UI.shim(25, 5),
+      UI.shim(25, 5).bindVisible(haveUnflipped),
       UI.imageButton(UI.getImage("pupbtn_up.png"), UI.getImage("pupbtn_down.png")) {
         todo()
-      })
+      }.bindVisible(haveUnflipped))
 
     // fade our extra bits in once we have our cards
     uflabels.layer.setAlpha(0)
@@ -125,6 +122,8 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
         })
     }
   }
+
+  override protected def layout () :Layout = AxisLayout.vertical().offStretch.gap(0)
 
   protected val onFlipFailure = (cause :Throwable) => cause.getMessage match {
     case "e.nsf_for_flip" => new Dialog().
