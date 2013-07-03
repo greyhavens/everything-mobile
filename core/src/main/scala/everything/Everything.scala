@@ -15,8 +15,25 @@ import com.threerings.everything.data._
 
 class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends Game.Default(33) {
 
+  // revalidate our session if we're paused for > 10 mins
+  final val RevalidatePeriod = 10*60*60*1000L
+
   // propagate events so that our scroller can usurp button clicks
   platform.setPropagateEvents(true)
+  platform.setLifecycleListener(new PlayN.LifecycleListener() {
+    var _paused = System.currentTimeMillis
+    override def onPause () {
+      _paused = System.currentTimeMillis
+    }
+    override def onResume () {
+      val pauseTime = System.currentTimeMillis - _paused
+      if (pauseTime > RevalidatePeriod) {
+        log.info(s"Paused for ${pauseTime/60*1000}s, revalidating session.")
+        validateSession()
+      }
+    }
+    override def onExit () {} // nada
+  })
 
   // some are-we-testing bits
   val isCandidate = platformType == Platform.Type.JAVA
@@ -45,9 +62,6 @@ class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends G
 
   // TODO: more proper?
   def cardImageURL (hash :String) = s"http://s3.amazonaws.com/everything.threerings.net/${hash}"
-
-  // TODO: trigger revalidation of session if we close the app and return to it after more than ~10
-  // minutes
 
   // TODO: trigger revaliation of session if we do an RPC call and it fails due to invalid auth
   // token
