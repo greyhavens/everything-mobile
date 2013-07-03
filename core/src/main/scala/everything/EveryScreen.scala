@@ -6,7 +6,7 @@ package everything
 
 import playn.core.PlayN._
 import playn.core._
-import pythagoras.f.{Rectangle, Point}
+import pythagoras.f.{MathUtil, Rectangle, Point}
 import react.{Value, Signal, UnitSignal}
 
 import tripleplay.game.{ScreenStack, UIScreen}
@@ -50,7 +50,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       root.layer.setOrigin(root.size.width/2, root.size.height/2)
       root.layer.setTranslation(width/2, height/2);
       // animate reveal
-      root.layer.setScale(0)
+      root.layer.setScale(MathUtil.EPSILON)
       iface.animator.add(layer, root.layer).`then`.
         tweenScale(root.layer).to(1).in(500).easeOutBack
     }
@@ -65,14 +65,14 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       root.layer.setAlpha(0)
       iface.animator.add(layer, root.layer).`then`.
         tweenAlpha(root.layer).to(1).in(500)
-      // root.layer.setScale(1, 0)
-      // iface.animator.add(layer, root.layer).`then`.
-      //   tweenScaleY(root.layer).to(1).in(500).easeOut
     }
 
     def dispose () {
       val hide = if (root.layer.originX == 0) iface.animator.tweenAlpha(root.layer).to(0).in(500)
-                 else iface.animator.tweenScale(root.layer).to(0).in(500).easeIn
+                 // avoid scaling down to zero because that can cause freakoutery on mouse-based
+                 // backends as motion events come in and the backend tries to do an inverse
+                 // transform on a matrix with zero scale; meh
+                 else iface.animator.tweenScale(root.layer).to(MathUtil.EPSILON).in(500).easeIn
       hide.`then`.action(new Runnable {
         def run = iface.destroyRoot(root)
       })
