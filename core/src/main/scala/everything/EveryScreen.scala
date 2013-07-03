@@ -20,6 +20,10 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
 
   class Dialog {
     val root = iface.createRoot(layout(), UI.sheet).addStyles(Style.BACKGROUND.is(background()))
+    // absorb all clicks below our root layer, and render above everything else
+    root.layer.setHitTester(UI.absorber)
+    root.layer.setDepth(Short.MaxValue)
+
     val buttons = UI.hgroup()
 
     def add (elem :Element[_]) = { root.add(elem) ; this }
@@ -40,10 +44,6 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
 
     def display () {
       if (buttons.childCount > 0) root.add(buttons)
-      // absorb all clicks below our root layer
-      root.layer.setHitTester(UI.absorber)
-      // render above everything else
-      root.layer.setDepth(Short.MaxValue)
       // compute our preferred size, then restrict it to fit inside the screen
       val psize = root.preferredSize(width-20, 0)
       root.setSize(psize.width, math.min(psize.height, height-20))
@@ -55,9 +55,27 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
         tweenScale(root.layer).to(1).in(500).easeOutBack
     }
 
+    def displayAt (x :Float, y :Float) {
+      if (buttons.childCount > 0) root.add(buttons)
+      // compute our preferred size, then restrict it to fit inside the screen
+      val psize = root.preferredSize(width-x-10, 0)
+      root.setSize(psize.width, math.min(psize.height, height-y-10))
+      root.layer.setTranslation(x, y);
+      // animate reveal vertically
+      root.layer.setAlpha(0)
+      iface.animator.add(layer, root.layer).`then`.
+        tweenAlpha(root.layer).to(1).in(500)
+      // root.layer.setScale(1, 0)
+      // iface.animator.add(layer, root.layer).`then`.
+      //   tweenScaleY(root.layer).to(1).in(500).easeOut
+    }
+
     def dispose () {
-      // TODO: animate dismiss
-      iface.destroyRoot(root)
+      val hide = if (root.layer.originX == 0) iface.animator.tweenAlpha(root.layer).to(0).in(500)
+                 else iface.animator.tweenScale(root.layer).to(0).in(500).easeIn
+      hide.`then`.action(new Runnable {
+        def run = iface.destroyRoot(root)
+      })
     }
   }
 
