@@ -141,7 +141,22 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
     for ((pup, name) <- PupInfo) {
       val action = UI.labelButton(name) {
         dialog.dispose()
-        todo()
+        game.gameSvc.usePowerup(gridId, pup).onFailure(onFailure).onSuccess(slot { grid =>
+          game.pups.update(pup, game.pups.get(pup)-1)
+          val cards = cbox.contents.asInstanceOf[Group]
+          for (ii <- 0 until grid.flipped.size) {
+            val card = cards.childAt(ii).asInstanceOf[CardButton]
+            grid.slots(ii) match {
+              case s @ SlotStatus.UNFLIPPED =>
+                // unveil in a sweep from upper left to lower right; TODO: smoke puff over label?
+                val (row, col) = (ii / 4, ii % 4)
+                iface.animator.delay(50*row+50*col).`then`.action(new Runnable() {
+                  def run () = card.update(s, grid.flipped(ii))
+                })
+              case _ => // nada
+            }
+          }
+        })
       }.addStyles(Style.FONT.is(UI.machineFont(7)), Style.TEXT_WRAP.on, Style.UNDERLINE.off,
                   Style.HALIGN.left, Style.VALIGN.top)
       val have = game.pups.getView(pup).map(rf(zero))
