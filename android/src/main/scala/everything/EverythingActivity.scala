@@ -6,6 +6,7 @@ package everything
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.WindowManager
 import java.text.DateFormat
 import java.util.{Date, TimeZone}
 import playn.android.GameActivity
@@ -51,6 +52,7 @@ class EverythingActivity extends GameActivity {
   }
 
   override def platform = super.platform // make visible to friends
+  override def makeWindowFlags = super.makeWindowFlags & ~WindowManager.LayoutParams.FLAG_FULLSCREEN
   override def usePortraitOrientation = true
   override def logIdent = "every"
 
