@@ -10,7 +10,8 @@ class IntroScreen (game :Everything) extends EveryScreen(game) {
 
   override def createUI () {
     val arrow = "\u2b07"
-    root.add(UI.headerLabel("Welcome to\nThe Everything Game!").addStyles(Style.TEXT_WRAP.on),
+    root.add(UI.shim(10, 10),
+             UI.headerLabel("Welcome to\nThe Everything Game!").addStyles(Style.TEXT_WRAP.on),
              UI.shim(10, 10),
              UI.wrapLabel("What is Everything?\nPlease refer to this handy infographic:").
                addStyles(Style.HALIGN.center),
@@ -25,6 +26,7 @@ class IntroScreen (game :Everything) extends EveryScreen(game) {
              UI.stretchShim(),
              UI.bgroup(UI.button("Let's Go!") {
                game.main.replace()
-             }))
+             }),
+             UI.shim(10, 10))
   }
 }
