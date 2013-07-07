@@ -71,7 +71,7 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
                else buy)
     }
 
-    root.add(header("Get Coins", UI.moneyIcon(game.coins, _dbag), UI.shim(1, 5)),
+    root.add(header("Get Coins", purseLabel, UI.shim(1, 5)),
              /*UI.headerLabel(""), */ coins,
              AxisLayout.stretch(UI.vscroll(UI.vgroup(
                UI.shim(5, 10), UI.headerLabel("Get Powerups"), pups))))

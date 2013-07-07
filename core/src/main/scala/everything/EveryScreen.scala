@@ -92,6 +92,10 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     new Dialog().addTitle("Oops!").addText(I18n.xlate(msg)).addButton("OK", ()).display()
   }
 
+  /** A purse label, which may or may not get incorporated into the UI. It's broken out here so that
+    * we can fling coins at it when we create the card sold animation. */
+  lazy val purseLabel = UI.moneyIcon(game.coins, _dbag)
+
   /** Returns the coordinates of the specified layer in this screen's coordinate system. */
   def pos (layer :Layer) :Point = Layer.Util.layerToParent(layer, this.layer, 0, 0)
 

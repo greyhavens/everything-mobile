@@ -93,7 +93,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
       iface.animator.tweenAlpha(status.layer).to(1).in(500).easeIn
     })
 
-    root.add(header("Flip Your Cards", UI.moneyIcon(game.coins, _dbag), UI.shim(1, 5)),
+    root.add(header("Flip Your Cards", purseLabel, UI.shim(1, 5)),
              UI.shim(5, 5),
              status,
              UI.stretchShim,
