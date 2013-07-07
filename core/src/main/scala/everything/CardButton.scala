@@ -163,12 +163,56 @@ class CardButton (
     game.gameSvc.sellCard(_card.thingId, _card.received).onFailure(host.onFailure).
       onSuccess(slot { res =>
         shaking.update(false)
-        game.coins.update(res.coins)
         val catId = _card.categoryId
         res.newLike match {
           case null => game.likes.remove(catId)
           case like => game.likes.put(catId, like)
         }
+
+        // shatter the old image into pieces, crossfade those into coins and then fly them up to
+        // the money label
+        val pl = host.purseLabel
+        val tgtPos = if (pl.isAdded()) host.pos(pl.layer).addLocal(pl.size.width/2, pl.size.height/2)
+                     else new Point(host.width/2, -10)
+        val cimage = ilayer.image
+        val (xparts, yparts) = saleFrags(_card.rarity.ordinal)
+        val (fwidth, fheight) = (cimage.width/xparts, cimage.height/yparts)
+        val cardPos = Layer.Util.layerToParent(ilayer, host.layer, 0, 0)
+        for (yy <- 0 until yparts ; xx <- 0 until xparts) {
+          val (xoff, yoff) = (xx*fwidth, yy*fheight)
+          val fimage = cimage.subImage(xoff, yoff, fwidth, fheight)
+          val flayer = graphics.createImageLayer(fimage)
+          flayer.setOrigin(fwidth/2, fheight/2)
+          val clayer = graphics.createImageLayer(UI.coinsIcon)
+          clayer.setOrigin(clayer.width/2, clayer.height/2)
+          clayer.setAlpha(0)
+          val center = new Point(xoff + fwidth/2, yoff + fheight/2)
+          val startPos = cardPos.add(center.x, center.y)
+          val delta = center.add(-cimage.width/2, -cimage.height/2)
+          val expPos = startPos.subtract(delta.x/4, // + Random.nextFloat()*delta.x/8,
+                                         delta.y/4) // + Random.nextFloat()*delta.y/8)
+          host.layer.addAt(flayer, startPos.x, startPos.y)
+          host.layer.addAt(clayer, startPos.x, startPos.y)
+          val expTime = 200
+          // move the fragment to the "exploded" position, while fading it out
+          host.iface.animator.tweenAlpha(flayer).to(0).in(expTime)
+          host.iface.animator.tweenXY(flayer).to(expPos).in(expTime).easeOutBack.
+            `then`.destroy(flayer)
+          // move the coin to the exploded position while fading it in
+          host.iface.animator.tweenAlpha(clayer).to(1).in(expTime)
+          host.iface.animator.tweenXY(clayer).to(expPos).in(expTime).easeOutBack.
+            `then`.delay(200+Random.nextInt(200)).
+            `then`.tweenXY(clayer).to(tgtPos).in(500).easeIn.
+            `then`.destroy(clayer)
+          // host.iface.animator.tweenRotation(flayer).to(4*FloatMath.PI).in(1500)
+        }
+
+        // wait for the sell card animation to complete, then update our coin coint
+        host.iface.animator.addBarrier()
+        host.iface.animator.action(new Runnable() {
+          def run = game.coins.update(res.coins)
+        })
+
         // TODO: shatter old image into pieces, turn those into coins, then fly the coins up to
         // the money label on our host screen (or ??? if it has no money label?)
         upStatus(SlotStatus.SOLD)
@@ -255,6 +299,9 @@ object CardButton {
     val entrees = Seq[Entree](fadeIn, flyIn, dropIn, popIn)
     entrees(Random.nextInt(entrees.size))
   }
+
+  /** The number of fragments into which to break a card, when selling, based on rarity. */
+  val saleFrags = Seq((2, 2), (2, 3), (3, 3), (3, 4), (3, 5), (4, 4), (4, 5), (5, 6), (6, 8), (8, 8))
 
   private val DISPENSED = new ThingCard
 }
