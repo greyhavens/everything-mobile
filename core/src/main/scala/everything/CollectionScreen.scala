@@ -12,7 +12,7 @@ import playn.core.PlayN._
 import playn.core._
 import playn.core.util.Clock
 import pythagoras.f.{Dimension, MathUtil}
-import react.IntValue
+import react.{IntValue, Value}
 import tripleplay.anim.Flicker
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
@@ -24,12 +24,14 @@ import com.threerings.everything.data._
 class CollectionScreen (game :Everything, who :PlayerName) extends EveryScreen(game) {
 
   val (things, series) = (new IntValue(0), new IntValue(0))
+  val collect = Value.create(null :PlayerCollection)
   val cbox = UI.stretchBox()
   var cview = new CollectionView(new java.util.HashMap[String,JMap[String,JList[SeriesCard]]]())
 
-  val getColl = game.gameSvc.getCollection(who.userId)
+  val getCol = game.gameSvc.getCollection(who.userId)
   onShown.connect(unitSlot {
-    getColl.onFailure(onFailure).onSuccess(slot { col =>
+    getCol.onFailure(onFailure).onSuccess(slot { col =>
+      collect.update(col)
       cview = new CollectionView(col.series)
       cbox.set(cview)
     })
@@ -41,20 +43,70 @@ class CollectionScreen (game :Everything, who :PlayerName) extends EveryScreen(g
                          UI.tipLabel("Series:"),
                          new ValueLabel(series).addStyles(Style.FONT.is(UI.tipFont)))
     bits.layer.setAlpha(0)
+
+    val all = UI.toggleButton("All") { cbox.set(cview) }
+    val faves = UI.toggleButton("Faves") {
+      // use our 'always up-to-date' favorites info if we're looking at our own collection
+      def selfLike (s :SeriesCard) = game.likes.get(s.categoryId) == java.lang.Boolean.TRUE
+      def ownerLike (s :SeriesCard) = collect.get.likes.contains(s.categoryId)
+      cbox.set(filteredView(if (who.userId == game.self.get.userId) selfLike _ else ownerLike _))
+    }
+    val comp = UI.toggleButton("Done") {
+      cbox.set(filteredView(s => s.things == s.owned))
+    }
+    val near = UI.toggleButton("One More!") {
+      cbox.set(filteredView(s => s.things-1 == s.owned))
+    }
+    val modes = UI.bgroup(all, faves, comp, near)
+    val sel = new Selector(modes, all).preventDeselection
+    modes.layer.setAlpha(0)
+
     root.add(headerPlate(UI.icon(UI.frameImage(UI.friendImage(who), 36, 36)),
                          UI.headerLabel(who.toString), bits),
-             cbox.set(new Label("Loading...")))
+             cbox.set(new Label("Loading...")), modes)
+
     // fade our bits in when the collection arrives
-    getColl.onSuccess(slot { col =>
+    getCol.onSuccess(slot { col =>
       things.update(col.countCards)
       series.update(col.countSeries)
       iface.animator.tweenAlpha(bits.layer).to(1).in(500).easeIn
+      iface.animator.tweenAlpha(modes.layer).to(1).in(500).easeIn
     })
   }
 
   override def paint (clock :Clock) {
     super.paint(clock)
     cview.paint(clock)
+  }
+
+  protected def favesView () = filteredView(
+    series => game.likes.get(series.categoryId) == java.lang.Boolean.TRUE)
+
+  protected def nearView () = filteredView(series => series.things-1 == series.owned)
+
+  protected def filteredView (pred :SeriesCard => Boolean) = {
+    val group = UI.vgroup0().addStyles(Style.HALIGN.left).
+      setStylesheet(Stylesheet.builder.add(classOf[Button], Style.FONT.is(UI.collectFont)).create())
+    var lastParent = 0
+    for ((cat, scats) <- collect.get.series ; (scat, ss) <- scats ; s <- ss) {
+      if (pred(s)) {
+        addSeriesLabel(group, Seq(cat, scat), lastParent, s)
+        lastParent = s.parentId
+      }
+    }
+    if (group.childCount == 0) group.add(new Label("TODO: no faves!"))
+    UI.vscroll(group)
+  }
+
+  protected def addSeriesLabel (group :Group, path :Seq[String], lastParentId :Int,
+                                series :SeriesCard) = {
+    val pie = UI.pieImage(series.owned / series.things.toFloat, 8)
+    if (series.parentId != lastParentId) group.add(UI.pathLabel(path, 18))
+    val sbutton = UI.labelButton(series.name) {
+      new SeriesScreen(game, who, path :+ series.name, series.categoryId).push()
+    }.addStyles(Style.UNDERLINE.off)
+    sbutton.icon.update(Icons.image(pie))
+    group.add(sbutton)
   }
 
   class CollectionView (data :JMap[String,JMap[String,JList[SeriesCard]]]) extends Shim(1, 1) {
