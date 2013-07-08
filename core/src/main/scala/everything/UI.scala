@@ -123,7 +123,7 @@ object UI {
   def stretchShim () :Shim = AxisLayout.stretch(shim(1, 1))
 
   def label (text :String, font :Font) = new Label(text).addStyles(Style.FONT.is(font))
-  def headerLabel (text :String) = label(text, headerFont)
+  def headerLabel (text :String) = label(text, headerFont).addStyles(Style.AUTO_SHRINK.on)
   def subHeaderLabel (text :String) = label(text, subHeaderFont)
   def tipLabel (text :String) = label(text, tipFont)
   def wrapLabel (text :String) = new Label(text).addStyles(Style.TEXT_WRAP.on, Style.HALIGN.left)
