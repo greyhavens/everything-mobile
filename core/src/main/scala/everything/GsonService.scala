@@ -41,7 +41,11 @@ abstract class GsonService (game :Everything, baseURL :String) {
             throw new Net.HttpException(rsp.responseCode, rsp.payloadString)
           noteAuthCookie(rsp)
           log.info(s"RSP $method ${rsp.payloadString}")
-          Try.success(rfun(rsp.payloadString))
+          rsp.payloadString match {
+            case pay if (pay startsWith "OK ") => Try.success(rfun(pay.substring(3)))
+            case pay if (pay startsWith "ERR ") => throw new Exception(pay.substring(4))
+            case pay => throw new Exception("Unknown response: " + pay)
+          }
         } catch {
           case e :Throwable => Try.failure[R](e)
         }
