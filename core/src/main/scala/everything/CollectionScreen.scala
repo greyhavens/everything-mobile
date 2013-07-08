@@ -49,13 +49,15 @@ class CollectionScreen (game :Everything, who :PlayerName) extends EveryScreen(g
       // use our 'always up-to-date' favorites info if we're looking at our own collection
       def selfLike (s :SeriesCard) = game.likes.get(s.categoryId) == java.lang.Boolean.TRUE
       def ownerLike (s :SeriesCard) = collect.get.likes.contains(s.categoryId)
-      cbox.set(filteredView(if (who.userId == game.self.get.userId) selfLike _ else ownerLike _))
+      cbox.set(filteredView(if (who.userId == game.self.get.userId) selfLike _ else ownerLike _,
+                            s"${who.name} has no favorite series."))
     }
     val comp = UI.toggleButton("Done") {
-      cbox.set(filteredView(s => s.things == s.owned))
+      cbox.set(filteredView(s => s.things == s.owned, s"${who.name} has no completed series."))
     }
     val near = UI.toggleButton("One More!") {
-      cbox.set(filteredView(s => s.things-1 == s.owned))
+      cbox.set(filteredView(s => s.things-1 == s.owned,
+                            s"${who.name} has no almost complete series."))
     }
     val modes = UI.bgroup(all, faves, comp, near)
     val sel = new Selector(modes, all).preventDeselection
@@ -79,12 +81,7 @@ class CollectionScreen (game :Everything, who :PlayerName) extends EveryScreen(g
     cview.paint(clock)
   }
 
-  protected def favesView () = filteredView(
-    series => game.likes.get(series.categoryId) == java.lang.Boolean.TRUE)
-
-  protected def nearView () = filteredView(series => series.things-1 == series.owned)
-
-  protected def filteredView (pred :SeriesCard => Boolean) = {
+  protected def filteredView (pred :SeriesCard => Boolean, emptyMsg :String) = {
     val group = UI.vgroup0().addStyles(Style.HALIGN.left).
       setStylesheet(Stylesheet.builder.add(classOf[Button], Style.FONT.is(UI.collectFont)).create())
     var lastParent = 0
@@ -94,8 +91,8 @@ class CollectionScreen (game :Everything, who :PlayerName) extends EveryScreen(g
         lastParent = s.parentId
       }
     }
-    if (group.childCount == 0) group.add(new Label("TODO: no faves!"))
-    UI.vscroll(group)
+    if (group.childCount == 0) UI.wrapLabel(emptyMsg).addStyles(Style.HALIGN.center)
+    else UI.vscroll(group)
   }
 
   protected def addSeriesLabel (group :Group, path :Seq[String], lastParentId :Int,
