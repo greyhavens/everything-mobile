@@ -6,8 +6,8 @@ package everything
 
 import scala.collection.JavaConversions._
 
-import playn.core.Keyboard
 import playn.core.PlayN._
+import playn.core._
 import tripleplay.game.{Screen, ScreenStack}
 import tripleplay.ui._
 import tripleplay.ui.layout.{AxisLayout, TableLayout}
@@ -71,8 +71,14 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card, source
     addButton("Give", giveCard(friend, "")).
     addButton("+Message", keyboard.getText(
       Keyboard.TextType.DEFAULT, s"Message to ${friend.name}:", "", cb { msg =>
-        if (msg != null) giveCard(friend, msg)
-        else showGivePopup(friend)
+        if (msg == null) showGivePopup(friend)
+        else if (platformType != Platform.Type.IOS) giveCard(friend, msg)
+        // for some reason, iOS (7 beta at least) causes some jerkiness when dismissing the getText
+        // popup, which janks up our transition back to the previous screen; so we delay a bit to
+        // work around that; meh
+        else iface.animator.delay(100).`then`.action(new Runnable() {
+          def run = giveCard(friend, msg)
+        })
       })).
     display()
 
