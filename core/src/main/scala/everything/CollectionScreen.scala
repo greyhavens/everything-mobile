@@ -101,7 +101,7 @@ class CollectionScreen (game :Everything, who :PlayerName) extends EveryScreen(g
     if (series.parentId != lastParentId) group.add(UI.pathLabel(path, 18))
     val sbutton = UI.labelButton(series.name) {
       new SeriesScreen(game, who, path :+ series.name, series.categoryId).push()
-    }.addStyles(Style.UNDERLINE.off)
+    }.addStyles(Style.UNDERLINE.off, Style.AUTO_SHRINK.on, Style.HALIGN.left)
     sbutton.icon.update(Icons.image(pie))
     group.add(sbutton)
   }
