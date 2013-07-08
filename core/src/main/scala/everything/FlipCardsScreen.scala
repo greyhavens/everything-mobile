@@ -19,6 +19,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
   val nextFlipCost = new IntValue(0)
   val unflipped = RMap.create[Rarity,Int]
   val cache = new UI.ImageCache(game)
+  val selfId = game.self.get.userId
   var gridId = 0
 
   val cardGap = 2
@@ -45,7 +46,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
       val cards = new Group(new TableLayout(cardCols).gaps(cardGap, cardGap))
       for (ii <- 0 until 16) {
         val card = cardWidget(ii)
-        cards.add(card.update(res.grid.slots(ii), res.grid.flipped(ii)))
+        cards.add(card.update(res.grid.slots(ii), selfId, res.grid.flipped(ii)))
         // if the card is sold/gifted, just fade in the label, otherwise use a fancy entree
         res.grid.slots(ii) match {
           case SlotStatus.UNFLIPPED|SlotStatus.FLIPPED => card.entree(entree)
@@ -151,7 +152,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
                 // unveil in a sweep from upper left to lower right; TODO: smoke puff over label?
                 val (row, col) = (ii / 4, ii % 4)
                 iface.animator.delay(50*row+50*col).`then`.action(new Runnable() {
-                  def run () = card.update(s, grid.flipped(ii))
+                  def run () = card.update(s, selfId, grid.flipped(ii))
                 })
               case _ => // nada
             }

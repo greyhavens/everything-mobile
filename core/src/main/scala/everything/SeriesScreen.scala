@@ -11,10 +11,10 @@ import tripleplay.ui.layout.TableLayout
 
 import com.threerings.everything.data._
 
-class SeriesScreen (game :Everything, who :PlayerName, path :Array[String], catId :Int)
+class SeriesScreen (game :Everything, who :PlayerName, path :Seq[String], catId :Int)
     extends EveryScreen(game) {
 
-  def this (game :Everything, who :PlayerName, path :Array[String], scard :SeriesCard) =
+  def this (game :Everything, who :PlayerName, path :Seq[String], scard :SeriesCard) =
     this(game, who, path :+ scard.name, scard.categoryId)
 
   val cbox = UI.stretchBox()
@@ -27,7 +27,7 @@ class SeriesScreen (game :Everything, who :PlayerName, path :Array[String], catI
       val cards = new Group(new TableLayout(4).gaps(2, 2), Style.VALIGN.top)
       series.things.foreach(tc => {
         val status = if (tc == null) SlotStatus.UNFLIPPED else SlotStatus.FLIPPED
-        cards.add(new CardButton(game, this, cache, cardsEnabled).update(status, tc))
+        cards.add(new CardButton(game, this, cache, cardsEnabled).update(status, who.userId, tc))
       })
       cbox.set(UI.vscroll(cards))
       crbox.set(UI.hgroup(UI.shim(5, 5),

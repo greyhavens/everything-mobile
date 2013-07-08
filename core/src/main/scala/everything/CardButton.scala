@@ -43,8 +43,9 @@ class CardButton (
 
   enableInteraction()
   bindEnabled(cardsEnabled)
-  update(SlotStatus.UNFLIPPED, null)
+  update(SlotStatus.UNFLIPPED, 0, null)
 
+  protected var _ownerId = 0
   protected var _card :ThingCard = _
   protected var _msg :String = null
   protected var _counts :Option[(Int,Int)] = None
@@ -52,7 +53,8 @@ class CardButton (
   protected var _shaker :Animation.Handle = _
   protected var _entree :Entree = CardButton.fadeIn
 
-  def update (status :SlotStatus, card :ThingCard) = {
+  def update (status :SlotStatus, ownerId :Int, card :ThingCard) = {
+    _ownerId = ownerId
     _card = card
     upStatus(status)
     this
@@ -88,7 +90,7 @@ class CardButton (
   /** Called if an already-flipped card is clicked. */
   protected def onView () {
     if (_cachedCard != null) viewCard(_cachedCard)
-    else game.gameSvc.getCard(new CardIdent(game.self.get.userId, _card.thingId, _card.received)).
+    else game.gameSvc.getCard(new CardIdent(_ownerId, _card.thingId, _card.received)).
       bindComplete(cardsEnabled.slot). // disable cards while req is in-flight
       onFailure(host.onFailure).
       onSuccess(viewCard _)
@@ -108,7 +110,7 @@ class CardButton (
       // flip the card over (use the current image as the old image for the flip)
       animateFlip(ilayer.image)(viewCard(res.card))
       // update our image to be the new card (this will be flipped in)
-      update(SlotStatus.FLIPPED, res.card.toThingCard)
+      update(SlotStatus.FLIPPED, res.card.owner.userId, res.card.toThingCard)
       _counts = Some((res.haveCount, res.thingsRemaining))
       // once the flip animation completes, viewCard will be called
     })
