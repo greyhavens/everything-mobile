@@ -31,7 +31,9 @@ abstract class CardScreen (
     UI.stretchShim())
 
   override def createUI () {
-    root.add(header(card.thing.name),
+    root.add(UI.hgroup(back(),
+                       AxisLayout.stretch(UI.headerLabel(card.thing.name)),
+                       UI.shim(UI.backImage.width, 1)).addStyles(Style.HALIGN.left),
              UI.pathLabel(card.categories.map(_.name)),
              UI.tipLabel(s"${card.position+1} of ${card.things}"),
              UI.stretchShim())
