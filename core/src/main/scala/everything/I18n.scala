@@ -23,6 +23,6 @@ object I18n {
     case E_ALREADY_OWN_POWERUP => "You already own that powerup."
     case E_NSF_FOR_PURCHASE => "You don't have enough coins to buy that powerup."
     case E_LACK_CHARGE => "You don't have any charges left for that powerup."
-    case _ => msg
+    case _ => if (msg.length > 256) s"${msg.substring(0, 256)}..." else msg
   }
 }
