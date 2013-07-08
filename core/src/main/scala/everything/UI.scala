@@ -57,6 +57,7 @@ object UI {
   val subHeaderFont = machineFont(12)
   val notesHeaderFont = machineFont(14)
   val tipFont = writingFont(14)
+  val collectFont = writingFont(24)
   val factsFont = graphics.createFont("Georgia", Font.Style.PLAIN, 16)
 
   def machineFont (size :Float) = graphics.createFont(
@@ -65,7 +66,7 @@ object UI {
   def glyphFont (size :Int) = graphics.createFont("Copperplate", Font.Style.BOLD, size)
 
   val statusCfg = new TextConfig(textColor).withFont(writingFont(18))
-  val collectCfg = new TextConfig(textColor).withFont(writingFont(24))
+  val collectCfg = new TextConfig(textColor).withFont(collectFont)
   val cardCfg = new TextConfig(textColor).withFont(writingFont(10))
   val smallCardCfg = cardCfg.withFont(writingFont(8)).withWrapping(
     cardFront.width-cardShadow.width-4, TextFormat.Alignment.CENTER)
@@ -142,6 +143,13 @@ object UI {
     inertButton(label, styles :_*).onClick(unitSlot(action))
   def labelButton (text :String, styles :Style.Binding[_]*)(action : => Unit) :Button =
     new LabelButton(text).addStyles(styles :_*).onClick(unitSlot(action))
+  def toggleButton (text :String, styles :Style.Binding[_]*)(action : => Unit) :ToggleButton = {
+    val tb = new ToggleButton(text) {
+      override protected def getStyleClass = classOf[Button]
+    }.addStyles(styles :_*)
+    tb.clicked.connect(unitSlot(action))
+    tb
+  }
   def imageButton (up :Image, down :Image)(action : => Unit) :ImageButton =
     new ImageButton(up, down).onClick(unitSlot(action))
   def moneyButton (amount :Int)(action :(Button => Unit)) = {
@@ -248,7 +256,7 @@ object UI {
   }
 
   // from http://hansmuller-flex.blogspot.com/2011/10/more-about-approximating-circular-arcs.html
-  def pieImage (pct :Float, radius :Float) = {
+  def pieImage (pct :Float, radius :Float) :Image = {
     case class Curve (x1 :Float, y1 :Float, x2 :Float, y2 :Float,
                       x3 :Float, y3 :Float, x4 :Float, y4 :Float)
     def smallArc (a1 :Float, a2 :Float) :Curve = {
