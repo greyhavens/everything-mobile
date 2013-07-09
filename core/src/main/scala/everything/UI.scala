@@ -61,7 +61,7 @@ object UI {
   val factsFont = graphics.createFont("Georgia", Font.Style.PLAIN, 16)
 
   def machineFont (size :Float) = graphics.createFont(
-    "Copperplate Gothic Bold", Font.Style.PLAIN, size)
+    "CopperplateGothic-Bold", Font.Style.PLAIN, size)
   def writingFont (size :Float) = graphics.createFont("Josschrift", Font.Style.PLAIN, size)
   def glyphFont (size :Int) = graphics.createFont("Copperplate", Font.Style.BOLD, size)
 

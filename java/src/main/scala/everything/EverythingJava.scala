@@ -23,7 +23,7 @@ object EverythingJava {
     config.storageFileName = "playn" + fbId
 
     val pf = JavaPlatform.register(config)
-    pf.graphics.registerFont("Copperplate Gothic Bold", "fonts/copper.ttf")
+    pf.graphics.registerFont("CopperplateGothic-Bold", "fonts/copper.ttf")
     pf.graphics.registerFont("Treasure Map Deadhand", "fonts/treasure.ttf")
     pf.graphics.registerFont("Josschrift", "fonts/josschrift.ttf")
 
