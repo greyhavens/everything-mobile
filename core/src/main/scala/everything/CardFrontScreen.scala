@@ -48,8 +48,7 @@ class CardFrontScreen (
       case name => s"A gift from ${card.giver}"
     }))
     counts match {
-      case Some((haveCount, thingsRemaining)) =>
-        root.add(status(haveCount, thingsRemaining, card))
+      case Some((haveCount, thingsRemaining)) => root.add(status(haveCount, thingsRemaining, card))
       case None => // skip it
     }
   }
@@ -59,18 +58,17 @@ class CardFrontScreen (
   }
 
   def status (have :Int, remain :Int, card :Card) :Element[_] = {
+    val cat = card.getSeries
+    def link (text :String) = UI.hgroup(
+      new Label(text), UI.labelButton(cat.name) {
+        new SeriesScreen(game, game.self.get, card.categories.map(_.name), cat.categoryId).push()
+      })
+
     if (have > 1) new Label(s"You already have $have of these cards.")
     else if (have > 0) new Label("You already have this card.")
-    else if (remain == 1) new Label("You only need one more card to complete this series!")
-    else if (remain == 0) new Label(s"You have completed the ${card.getSeries.name} series!")
-    else {
-      val cat = card.getSeries
-      UI.hgroup(new Label(s"You have ${cat.things - remain} of ${cat.things}"),
-                UI.labelButton(cat.name) {
-                  new SeriesScreen(game, game.self.get, card.categories.map(_.name),
-                                   cat.categoryId).push()
-                })
-    }
+    else if (remain == 1) new Label(s"You need one more card to complete this series!")
+    else if (remain == 0) link("You completed ")
+    else link(s"You have ${cat.things - remain} of ${cat.things}")
   }
 
   private var _msg :String = _
