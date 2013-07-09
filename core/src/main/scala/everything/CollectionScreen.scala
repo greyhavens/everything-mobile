@@ -111,7 +111,8 @@ class CollectionScreen (game :Everything, who :PlayerName) extends EveryScreen(g
     layer.setHitTester(UI.absorber)
 
     abstract class FloatingLabel (val text :String, parent :ParentLabel, val next :FloatingLabel) {
-      val image = UI.collectCfg.toImage(text)
+      lazy val image = renderImage
+      def renderImage = UI.collectCfg.toImage(text)
 
       def left :Float = if (parent == null) 0 else parent.left + 15
       def last :FloatingLabel = if (next == nil) this else next.last
@@ -248,7 +249,7 @@ class CollectionScreen (game :Everything, who :PlayerName) extends EveryScreen(g
         // render whatever part of our children is visible
         val bot = math.min(maxy, ny + ch)
         lastChildBot = bot
-        children.render(surf, ny, bot)
+        if (childrenHeight > 0) children.render(surf, ny, bot)
 
         // render the line connecting us to our children
         if (ch > 0 && lastChildBot > ny-5) surf.drawLine(left+7, ny-5, left+7, lastChildBot, 1)
@@ -288,6 +289,17 @@ class CollectionScreen (game :Everything, who :PlayerName) extends EveryScreen(g
             def makeChildren = (series :\ nil) { case (s, next) =>
               new FloatingLabel(s.name, this, next) {
                 val pie = UI.pieImage(s.owned / s.things.toFloat, 8)
+                override def renderImage = {
+                  val avail = size.width - left - pie.width - 2
+                  var cfg = UI.collectCfg
+                  var lay = cfg.layout(text)
+                  while (lay.width > avail && cfg.format.font.size > 10) {
+                    cfg = cfg.withFont(cfg.format.font.derive(cfg.format.font.size-1))
+                    lay = cfg.layout(text)
+                  }
+                  cfg.toImage(lay)
+                }
+
                 override def renderSelf (surf :Surface, x :Float, y :Float, maxy :Float) = {
                   surf.drawImage(pie, x, y + image.height/2 - pie.height/2)
                   super.renderSelf(surf, x + pie.width + 2, y, maxy)
