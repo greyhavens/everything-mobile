@@ -25,8 +25,8 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
   val cardGap = 2
   val cardCols = 4
   val cbox = new Box().setConstraint(Constraints.fixedSize(
-    UI.cardSize.width*cardCols + cardGap*(cardCols-1),
-    UI.cardSize.height*cardCols + cardGap*(cardCols-1)))
+    UI.card.size.width*cardCols + cardGap*(cardCols-1),
+    UI.card.size.height*cardCols + cardGap*(cardCols-1)))
   val cardsEnabled = Value.create(true :JBoolean)
 
   // start the request for our cards immediately
@@ -95,11 +95,10 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
     })
 
     root.add(header("Flip Your Cards", purseLabel, UI.shim(1, 5)),
-             UI.shim(5, 5),
              status,
              UI.stretchShim,
              cbox.set(new Label("Getting cards...")),
-             UI.shim(5, 5),
+             UI.shim(5, 2),
              uflabels,
              UI.stretchShim)
   }
@@ -110,7 +109,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
     nextFlipCost.update(status.nextFlipCost)
   }
 
-  def cardWidget (ii :Int) = new CardButton(game, this, cache, cardsEnabled) {
+  def cardWidget (ii :Int) = new CardButton(game, this, cache, UI.card, cardsEnabled) {
     override protected def onReveal () {
       shaking.update(true)
       game.gameSvc.flipCard(gridId, ii, nextFlipCost.get).
@@ -158,17 +157,17 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
             }
           }
         })
-      }.addStyles(Style.FONT.is(UI.machineFont(7)), Style.TEXT_WRAP.on, Style.UNDERLINE.off,
+      }.addStyles(Style.FONT.is(UI.machineFont(9)), Style.TEXT_WRAP.on, Style.UNDERLINE.off,
                   Style.HALIGN.left, Style.VALIGN.top)
       val have = game.pups.getView(pup).map(rf(zero))
       action.bindEnabled(have.map(Functions.greaterThan(0)))
       dialog.add(item(UI.pupIcon(pup),
-                      action.setConstraint(Constraints.fixedSize(48, itembg.height-3)),
+                      action.setConstraint(Constraints.fixedSize(itembg.width/2, itembg.height-6)),
                       new ValueLabel(have).addStyles(Style.FONT.is(UI.machineFont(10)))))
     }
     dialog.add(item(UI.labelButton("Cancel") { dialog.dispose() }.
-      addStyles(Style.FONT.is(UI.machineFont(12)), Style.UNDERLINE.off, Style.VALIGN.top).
-      setConstraint(Constraints.fixedHeight(itembg.height-5))))
+      addStyles(Style.FONT.is(UI.machineFont(16)), Style.UNDERLINE.off, Style.VALIGN.top).
+      setConstraint(Constraints.fixedHeight(itembg.height-10))))
     dialog.add(UI.icon(UI.getImage("pupmenu/bot.png")))
     val spos = Layer.Util.layerToParent(pupsBtn.layer, layer, 0, 0)
     dialog.displayAt(spos.x, spos.y)

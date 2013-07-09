@@ -17,15 +17,16 @@ import com.threerings.everything.data._
 import com.threerings.everything.rpc.GameAPI
 
 class CardButton (
-  game :Everything, host :EveryScreen, cache :UI.ImageCache, cardsEnabled :Value[JBoolean]
-) extends SizableWidget(UI.cardSize) {
+  game :Everything, host :EveryScreen, cache :UI.ImageCache, rendo :UI.CardRenderer,
+  enabled :Value[JBoolean]
+) extends SizableWidget(rendo.size) {
   import CardButton._
 
   /** The layer that contains our card image. */
   val ilayer = graphics.createImageLayer()
-  ilayer.setOrigin(UI.cardCtr.x, UI.cardCtr.y)
+  ilayer.setOrigin(rendo.ctr.x, rendo.ctr.y)
   ilayer.setAlpha(0) // start out invisible
-  layer.addAt(ilayer, UI.cardCtr.x, UI.cardCtr.y)
+  layer.addAt(ilayer, rendo.ctr.x, rendo.ctr.y)
 
   /** Whether or not this card is currently jiggling. We jiggle the card while waiting for data after
     * the user has requested to flip it. */
@@ -35,14 +36,14 @@ class CardButton (
       _shaker = host.iface.animator.
         shake(ilayer).bounds(-1, 1, -1, 1).cycleTime(50).in(60000).handle
     } else if (!isShaking && _shaker != null) {
-      ilayer.setTranslation(UI.cardCtr.x, UI.cardCtr.y)
+      ilayer.setTranslation(rendo.ctr.x, rendo.ctr.y)
       _shaker.cancel()
       _shaker = null
     }
   })
 
   enableInteraction()
-  bindEnabled(cardsEnabled)
+  bindEnabled(enabled)
   update(SlotStatus.UNFLIPPED, 0, null)
 
   protected var _ownerId = 0
@@ -91,7 +92,7 @@ class CardButton (
   protected def onView () {
     if (_cachedCard != null) viewCard(_cachedCard)
     else game.gameSvc.getCard(new CardIdent(_ownerId, _card.thingId, _card.received)).
-      bindComplete(cardsEnabled.slot). // disable cards while req is in-flight
+      bindComplete(enabled.slot). // disable cards while req is in-flight
       onFailure(host.onFailure).
       onSuccess(viewCard _)
   }
@@ -103,7 +104,7 @@ class CardButton (
 
   protected def reveal (res :GameAPI.CardResult) {
     // disable card interaction during the reveal animation
-    cardsEnabled.update(false)
+    enabled.update(false)
     // wait until our thing image is ready, then start the flip
     cache(res.card.thing.image).addCallback(cb { thing =>
       shaking.update(false) // we can stop shaking now
@@ -124,7 +125,7 @@ class CardButton (
     // create the rotating shaders; this is a bit hacky because the rotating shaders work in
     // fractions of full screen coordinates, so we have to figure out where (in screen coordinates)
     // the center of our card is... meh
-    val pos = Layer.Util.layerToScreen(layer, UI.cardCtr.x, UI.cardCtr.y)
+    val pos = Layer.Util.layerToScreen(layer, rendo.ctr.x, rendo.ctr.y)
     pos.x /= host.width
     pos.y = 0.5f // pos.y /= host.height
     val topShader = new RotateYShader(graphics.ctx, pos.x, pos.y, 1)
@@ -156,7 +157,7 @@ class CardButton (
 
   protected def viewCard (card :Card) {
     _cachedCard = card
-    cardsEnabled.update(true) // reenable card interaction
+    enabled.update(true) // reenable card interaction
     new CardFrontScreen(game, cache, card, _counts, this).setMessage(_msg).push()
   }
 
@@ -249,23 +250,23 @@ class CardButton (
       })
       // TODO: restore original image and reenable on failure
     }
-    ilayer.setImage(UI.cardGift)
+    ilayer.setImage(rendo.gift)
   }
 
   protected def upStatus (status :SlotStatus) {
     def dispensed (msg :String) = {
       _card = DISPENSED
-      UI.statusImage(msg)
+      rendo.statusImage(msg)
     }
     import SlotStatus._
     ilayer.setImage(status match {
       case        GIFTED|
           RECRUIT_GIFTED => dispensed("Gifted!")
       case          SOLD => dispensed("Sold!")
-      case     UNFLIPPED => if (_card != null && _card.name != null) UI.partCardImage(_card)
-                            else if (isGift) UI.cardGift
-                            else UI.cardBack
-      case       FLIPPED => UI.cardImage(cache, _card)
+      case     UNFLIPPED => if (_card != null && _card.name != null) rendo.partImage(_card)
+                            else if (isGift) rendo.gift
+                            else rendo.back
+      case       FLIPPED => rendo.image(cache, _card)
     })
   }
 

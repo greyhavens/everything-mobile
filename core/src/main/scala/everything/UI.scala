@@ -28,23 +28,85 @@ object UI {
     private val _images = MMap[String,Image]()
   }
 
-  val cardSize   = new Dimension(154/2, 184/2)
-  val cardCtr    = new Point(cardSize.width/2, cardSize.height/2)
-  val cardShadow = new Insets(1, 3, 3, 1) // shadow
-  val cardInsets = new Insets(cardShadow.top+2, cardShadow.right+5,
-                              cardShadow.bottom+1, cardShadow.left+5) // shadow+border
-  val cardTextHt = 14
-  val partCardTextHt = 12
-  val cardImgBox = new Dimension(cardSize.width-cardInsets.width,
-                                 cardSize.height-cardInsets.height-2*cardTextHt)
+  class CardRenderer (prefix :String, width :Float, height :Float, textSize :Int,
+                      shadow :Insets, border :Insets) {
+    val front = getImage(prefix + "/front.png")
+    val back  = getImage(prefix + "/back.png")
+    val gift  = getImage(prefix + "/gift.png")
+    val part  = getImage(prefix + "/part.png")
+
+    val textHt = textSize + 4 // TODO: really?
+    val size   = new Dimension(width, height)
+    val ctr    = new Point(size.width/2, size.height/2)
+    val insets = new Insets(shadow.top+border.top, shadow.right+border.right,
+                            shadow.bottom+border.bottom, shadow.left+border.left)
+    val imgBox = new Dimension(size.width-insets.width, size.height-insets.height-2*textHt)
+
+    val cfg = new TextConfig(textColor).withFont(writingFont(textSize))
+    val smallCfg = cfg.withFont(writingFont(MathUtil.ifloor(textSize*0.8f))).withWrapping(
+      front.width-shadow.width-4, TextFormat.Alignment.CENTER)
+
+    val partCfg = new TextConfig(0xFF640000).withFont(glyphFont(10))
+    val smallPartCfg = partCfg.withFont(glyphFont(8)).withWrapping(
+      front.width-shadow.width-10, TextFormat.Alignment.CENTER)
+
+    def image (cache :ImageCache, card :ThingCard) = {
+      val cardimg = graphics.createImage(front.width, front.height)
+      cardimg.canvas.drawImage(front, 0, 0)
+      val (nameCfg, name) = {
+        val full = cfg.layout(card.name)
+        if (full.width <= smallCfg.format.wrapWidth) (cfg, full)
+        else (smallCfg, smallCfg.layout(card.name))
+      }
+      val rarity = cfg.layout(card.rarity.toString)
+      cache(card.image).addCallback(cb { thing =>
+        // TODO: if the name wraps and cuts into the card area, use a smaller imgBox to determine
+        // how much we should scale our card, and move the card image down as well
+        val scale = math.min(imgBox.width/thing.width, imgBox.height/thing.height)
+        val (swidth, sheight) = (thing.width*scale, thing.height*scale)
+        val sx = math.round(insets.left + (size.width-insets.width-swidth)/2)
+        val sy = math.round(insets.top + (size.height-insets.height-sheight)/2)
+        // cardimg.canvas.setStrokeColor(textColor).strokeRect(
+        //   sx-0.5f, sy-0.5f, swidth+0.5f, sheight+0.5f)
+        cardimg.canvas.drawImage(thing, sx, sy, swidth, sheight)
+        nameCfg.renderCX(cardimg.canvas, name, cardimg.width/2,
+                         insets.top + math.max((textHt-name.height)/2, -1))
+        cfg.renderCX(cardimg.canvas, rarity, cardimg.width/2,
+                     cardimg.height - rarity.height - insets.bottom)
+      })
+      cardimg
+    }
+
+    def partImage (card :ThingCard) = {
+      val cardimg = graphics.createImage(part.width, part.height)
+      cardimg.canvas.drawImage(part, 0, 0)
+      val (nameCfg, name) = {
+        val full = partCfg.layout(card.name)
+        if (full.width <= smallPartCfg.format.wrapWidth) (partCfg, full)
+        else (smallPartCfg, smallPartCfg.layout(card.name))
+      }
+      nameCfg.renderCX(cardimg.canvas, name,
+                       insets.left + (cardimg.width - insets.width)/2,
+                       // subtract one more here because box is not vertically centered, sigh
+                       insets.top + (cardimg.height - insets.height - name.height)/2 - 1)
+      cardimg
+    }
+
+    def statusImage (status :String) = {
+      val image = graphics.createImage(front.width, front.height)
+      val slay = statusCfg.layout(status)
+      statusCfg.renderCX(image.canvas, slay, image.width/2, (image.height - slay.height)/2)
+      image
+    }
+  }
+
+  lazy val card = new CardRenderer(
+    "card", 154/2, 184/2, 10, new Insets(1, 3, 3, 1), new Insets(2, 5, 1, 5))
+  lazy val bigCard = new CardRenderer(
+    "bigcard", 206/2, 246/2, 14, new Insets(1.5f, 4, 4, 1.5f), new Insets(2.5f, 7, 2, 7))
 
   val textColor = 0xFF442D17
   lazy val coinsIcon = getImage("money.png")
-  lazy val cardFront = getImage("card_front.png")
-  lazy val cardBack = getImage("card_back.png")
-  lazy val cardGift = getImage("card_gift.png")
-  lazy val cardPart = getImage("card_part.png")
-
   lazy val like = (getImage("like/pos.png"), getImage("like/pos_sel.png"))
   lazy val hate = (getImage("like/neg.png"), getImage("like/neg_sel.png"))
 
@@ -67,12 +129,6 @@ object UI {
 
   val statusCfg = new TextConfig(textColor).withFont(writingFont(18))
   val collectCfg = new TextConfig(textColor).withFont(collectFont)
-  val cardCfg = new TextConfig(textColor).withFont(writingFont(10))
-  val smallCardCfg = cardCfg.withFont(writingFont(8)).withWrapping(
-    cardFront.width-cardShadow.width-4, TextFormat.Alignment.CENTER)
-  val partCardCfg = new TextConfig(0xFF640000).withFont(glyphFont(10))
-  val smallPartCardCfg = partCardCfg.withFont(glyphFont(8)).withWrapping(
-    cardFront.width-cardShadow.width-10, TextFormat.Alignment.CENTER)
 
   val absorber = new Layer.HitTester {
     def hitTest (layer :Layer, p :Point) = layer.hitTestDefault(p) match {
@@ -268,55 +324,6 @@ object UI {
         scale(scale, scale).drawImage(img, 0, 0)
     })
     frame
-  }
-
-  def cardImage (cache :ImageCache, card :ThingCard) = {
-    val cardimg = graphics.createImage(cardFront.width, cardFront.height)
-    cardimg.canvas.drawImage(cardFront, 0, 0)
-    val (nameCfg, name) = {
-      val full = cardCfg.layout(card.name)
-      if (full.width <= smallCardCfg.format.wrapWidth) (cardCfg, full)
-      else (smallCardCfg, smallCardCfg.layout(card.name))
-    }
-    val rarity = cardCfg.layout(card.rarity.toString)
-    cache(card.image).addCallback(cb { thing =>
-      // TODO: if the name wraps and cuts into the card area, use a smaller cardImgBox to determine
-      // how much we should scale our card, and move the card image down as well
-      val scale = math.min(cardImgBox.width/thing.width, cardImgBox.height/thing.height)
-      val (swidth, sheight) = (thing.width*scale, thing.height*scale)
-      val sx = math.round(cardInsets.left + (cardSize.width-cardInsets.width-swidth)/2)
-      val sy = math.round(cardInsets.top + (cardSize.height-cardInsets.height-sheight)/2)
-      // cardimg.canvas.setStrokeColor(textColor).strokeRect(
-      //   sx-0.5f, sy-0.5f, swidth+0.5f, sheight+0.5f)
-      cardimg.canvas.drawImage(thing, sx, sy, swidth, sheight)
-      nameCfg.renderCX(cardimg.canvas, name, cardimg.width/2,
-                       cardInsets.top + math.max((cardTextHt-name.height)/2, -1))
-      cardCfg.renderCX(cardimg.canvas, rarity, cardimg.width/2,
-                       cardimg.height - rarity.height - cardInsets.bottom)
-    })
-    cardimg
-  }
-
-  def partCardImage (card :ThingCard) = {
-    val cardimg = graphics.createImage(cardPart.width, cardPart.height)
-    cardimg.canvas.drawImage(cardPart, 0, 0)
-    val (nameCfg, name) = {
-      val full = partCardCfg.layout(card.name)
-      if (full.width <= smallPartCardCfg.format.wrapWidth) (partCardCfg, full)
-      else (smallPartCardCfg, smallPartCardCfg.layout(card.name))
-    }
-    nameCfg.renderCX(cardimg.canvas, name,
-                     cardInsets.left + (cardimg.width - cardInsets.width)/2,
-                     // subtract one more here because box is not vertically centered, sign
-                     cardInsets.top + (cardimg.height - cardInsets.height - name.height)/2 - 1)
-    cardimg
-  }
-
-  def statusImage (status :String) = {
-    val image = graphics.createImage(cardFront.width, cardFront.height)
-    val slay = statusCfg.layout(status)
-    statusCfg.renderCX(image.canvas, slay, image.width/2, (image.height - slay.height)/2)
-    image
   }
 
   // from http://hansmuller-flex.blogspot.com/2011/10/more-about-approximating-circular-arcs.html

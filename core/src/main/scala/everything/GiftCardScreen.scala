@@ -23,7 +23,7 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card, source
 
   override def createUI () {
     val header = UI.plate(
-      UI.icon(UI.cardImage(cache, card.toThingCard)),
+      UI.icon(UI.card.image(cache, card.toThingCard)),
       UI.headerLabel(card.thing.name),
       UI.pathLabel(card.categories.map(_.name), 12),
       UI.tipLabel(s"Rarity: ${card.thing.rarity} - E${card.thing.rarity.value}"))

@@ -24,10 +24,11 @@ class SeriesScreen (game :Everything, who :PlayerName, path :Seq[String], catId 
     getSeries.onFailure(onFailure).onSuccess(slot { series =>
       val cache = new UI.ImageCache(game)
       val cardsEnabled = Value.create(true :JBoolean)
-      val cards = new Group(new TableLayout(4).gaps(2, 2), Style.VALIGN.top)
+      val cards = new Group(new TableLayout(3).gaps(2, 2), Style.VALIGN.top)
       series.things.foreach(tc => {
         val status = if (tc == null) SlotStatus.UNFLIPPED else SlotStatus.FLIPPED
-        cards.add(new CardButton(game, this, cache, cardsEnabled).update(status, who.userId, tc))
+        cards.add(new CardButton(game, this, cache, UI.bigCard, cardsEnabled).
+          update(status, who.userId, tc))
       })
       cbox.set(UI.vscroll(cards))
       crbox.set(UI.hgroup(UI.shim(5, 5),

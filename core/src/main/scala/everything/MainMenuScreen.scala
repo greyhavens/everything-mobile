@@ -77,7 +77,7 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
     val cards = new Group(new TableLayout(3).gaps(10, 10))
     val cardsEnabled = Value.create(true :JBoolean)
     game.gifts.foreach { card =>
-      cards.add(new CardButton(game, this, cache, cardsEnabled) {
+      cards.add(new CardButton(game, this, cache, UI.card, cardsEnabled) {
         override protected def isGift = true
         override protected def onReveal () {
           shaking.update(true)
