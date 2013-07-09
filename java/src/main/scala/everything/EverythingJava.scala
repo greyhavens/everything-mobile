@@ -14,7 +14,7 @@ import react.RFuture
 object EverythingJava {
 
   def main (args :Array[String]) {
-    val fbId = if (false) "1008138021" /*testy*/ else "540615819" /*mdb*/
+    val fbId = if (true) "1008138021" /*testy*/ else "540615819" /*mdb*/
 
     val config = new JavaPlatform.Config
     config.width = 320
