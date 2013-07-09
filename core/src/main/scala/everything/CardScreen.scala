@@ -4,7 +4,7 @@
 
 package everything
 
-import playn.core.Pointer
+import playn.core._
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
 
@@ -69,6 +69,8 @@ abstract class CardScreen (
       "link", everyURL,
       "picture", s"${game.sess.get.backendURL}cardimg?thing=${card.thing.thingId}",
       "actions", s"[ { 'name': 'Collect Everything!', 'link': '${everyURL}' } ]",
-      "ref", ref)) // TODO: onSuccess, etc.?
+      "ref", ref)).onFailure(onFailure).onSuccess(slot { id =>
+        PlayN.log.info(s"Shared on FB $id.")
+      })
   }
 }
