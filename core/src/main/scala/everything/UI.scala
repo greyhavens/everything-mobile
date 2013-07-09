@@ -129,13 +129,77 @@ object UI {
   def wrapLabel (text :String) = new Label(text).addStyles(Style.TEXT_WRAP.on, Style.HALIGN.left)
   def glyphLabel (glyph :String) = label(glyph, glyphFont(14))
 
-  def pathLabel (path :Seq[String], fontSize :Int = 14) = {
-    val (font, gfont) = (writingFont(fontSize), glyphFont(fontSize))
-    (UI.hgroup() /: path)((g, p) => g.childCount match {
-      case 0 => g.add(label(p, font))
-      case n => g.add(label(Category.SEP_CHAR, gfont), label(p, font))
-    })
+  trait GlyphRenderer {
+    def computeSize (hintX :Float, hintY :Float) :Dimension
+    def render (canvas :Canvas) :Unit
   }
+  class RenderedWidget (renderer :GlyphRenderer) extends Widget[RenderedWidget] {
+    protected def getStyleClass = classOf[RenderedWidget]
+    protected def createLayoutData (hintX :Float, hintY :Float) = new LayoutData {
+      override def computeSize (hintX :Float, hintY :Float) = renderer.computeSize(hintX, hintY)
+      override def layout (left :Float, top :Float, width :Float, height :Float) {
+        super.layout(left, top, width, height)
+        if (width == 0 && height == 0) _glyph.destroy()
+        else {
+          _glyph.prepare(width, height)
+          _glyph.layer().setTranslation(left, top)
+          renderer.render(_glyph.canvas)
+        }
+      }
+    }
+    protected val _glyph = new Glyph()
+  }
+  def glyphWidget (renderer :GlyphRenderer) = new RenderedWidget(renderer)
+
+  def pathLabel (path :Seq[String], fontSize :Int = 14) = glyphWidget(new GlyphRenderer() {
+    final val MinFontSize = 8
+    var lay :Layout = _
+    var hint = 0f
+
+    def computeSize (hintX :Float, hintY :Float) = {
+      lay = (if (hint == hintX && lay != null) lay
+             else if (hintX == 0) new Layout(fontSize)
+             else layForSize(hintX, fontSize))
+      hint = hintX
+      lay.size
+    }
+
+    def render (canvas :Canvas) {
+      (if (lay != null && lay.size.width <= canvas.width) lay
+       else layForSize(canvas.width, fontSize)).render(canvas)
+    }
+
+    def layForSize (width :Float, fontSize :Int) :Layout = {
+      val lay = new Layout(fontSize)
+      if (lay.size.width <= width || fontSize <= MinFontSize) lay
+      else layForSize(width, fontSize-1)
+    }
+
+    class Layout (fontSize :Int) {
+      val (font, gfont) = (writingFont(fontSize), glyphFont(fontSize))
+      val sepFmt = new TextFormat().withFont(gfont)
+      val sepLay = graphics.layoutText(Category.SEP_CHAR, sepFmt)
+      val pathFmt = new TextFormat().withFont(font)
+      val pathLays = path.map(graphics.layoutText(_, pathFmt))
+      val size = new Dimension((sepLay.width + Gap*2) * (path.size-1) + pathLays.map(_.width).sum,
+                               math.max(sepLay.height, pathLays.map(_.height).max))
+      def render (canvas :Canvas) {
+        canvas.setFillColor(textColor)
+        val dx = (canvas.width - size.width)/2
+        val nx = render(canvas, pathLays.head, dx)
+        (nx /: pathLays.drop(1)) { (x, lay) =>
+          val nx = render(canvas, sepLay, x+Gap)
+          render(canvas, lay, nx+Gap)
+        }
+      }
+      def render (canvas :Canvas, text :TextLayout, dx :Float) = {
+        canvas.fillText(text, dx, (canvas.height - text.height)/2)
+        dx + text.width
+      }
+
+      final val Gap = 2f
+    }
+  })
 
   def inertButton (label :String, styles :Style.Binding[_]*) :Button =
     new Button(label).addStyles(styles :_*)
