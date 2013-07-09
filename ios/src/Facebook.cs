@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Web;
+
 using MonoTouch.UIKit;
 using MonoTouch.Foundation;
 using MonoTouch.FacebookConnect;
-using OldFacebook = MonoTouch.FacebookConnect.Facebook;
 
 using playn.core;
 using playn.core.util;
@@ -25,9 +26,11 @@ namespace everything
     public string accessToken () {
       var session = FBSession.ActiveSession;
       if (session == null) return null;
-      if (session.ExpirationDate.SecondsSinceReferenceDate <
+      var data = session.AccessTokenData;
+      if (data == null) return null;
+      if (data.ExpirationDate.SecondsSinceReferenceDate <
           NSDate.Now.SecondsSinceReferenceDate) return null;
-      return session.AccessToken;
+      return data.AccessToken;
     }
 
     // from Facebook interface
@@ -42,11 +45,6 @@ namespace everything
     }
 
     public void deauthorize () {
-      if (_oldFB != null) {
-        try { _oldFB.Logout(); }
-        catch (Exception e) { PlayN.log().warn("Choked clearing old FB object", e); }
-        _oldFB = null;
-      }
       var session = FBSession.ActiveSession;
       if (session != null) session.CloseAndClearTokenInformation();
     }
@@ -54,13 +52,12 @@ namespace everything
     // from Facebook interface
     public RFuture showDialog (string action, string[] paramz) {
       return withSession(delegate (Callback cb) {
-        dialog(action, paramz);
-        cb.onSuccess(""); // TODO
+        FBWebDialogs.PresentFeedDialogModally(null, toDict(paramz), handler(cb));
       });
     }
 
     public RFuture nativeDialog (UIViewController rctrl, string name, string caption,
-                                  string descrip, string link, UIImage photo) {
+                                 string descrip, string link, UIImage photo) {
       return withSession(delegate (Callback cb) {
         try {
           FBNativeDialogs.PresentShareDialogModallyFrom(
@@ -77,8 +74,8 @@ namespace everything
 
     public RFuture sendInvite (string message) {
       return withSession(delegate (Callback cb) {
-        dialog("apprequests", "message", message);
-        cb.onSuccess(""); // TODO
+        string title = "Invite Friends!"; // TODO
+        FBWebDialogs.PresentRequestsDialogModally(null, message, title, null, handler(cb));
       });
     }
 
@@ -110,61 +107,24 @@ namespace everything
       return result;
     }
 
-    protected void dialog (string action, params string[] paramz) {
+    protected FBWebDialogHandler handler (Callback cb) {
+      return (result, url, error) => {
+        if (error != null) cb.onFailure(new Exception(error.Description));
+        else if (result == FBWebDialogResult.NotCompleted) cb.onSuccess(null);
+        else if (url.Query == null) cb.onSuccess(null);
+        else cb.onSuccess(HttpUtility.ParseQueryString(url.Query)["post_id"]);
+      };
+    }
+
+    protected static NSMutableDictionary toDict (params string[] paramz) {
       NSMutableDictionary dict = new NSMutableDictionary();
       for (int ii = 0; ii < paramz.Length; ii += 2) {
         if (paramz[ii] != null) {
           dict.Add(new NSString(paramz[ii]), new NSString(paramz[ii+1]));
         }
       }
-      oldFB().Dialog(action, dict, _noopDialogDel);
-    }
-
-    protected OldFacebook oldFB () {
-      if (_oldFB == null) {
-        var session = FBSession.ActiveSession;
-        _oldFB = new OldFacebook(session.AppID, _noopSessDel);
-        // PlayN.log().info("Using old FB with [token=" + session.AccessToken +
-        //                  ", expire=" + session.ExpirationDate + "]");
-        _oldFB.AccessToken = session.AccessToken;
-        _oldFB.ExpirationDate = session.ExpirationDate;
-      }
-      return _oldFB;
-    }
-
-    protected OldFacebook _oldFB;
-    // we need to keep a reference to these to prevent them from being collected
-    protected FBSessionDelegate _noopSessDel = new NoopSessionDelegate();
-    protected FBDialogDelegate _noopDialogDel = new NoopDialogDelegate();
-  }
-
-  class NoopSessionDelegate : FBSessionDelegate {
-    override public void DidLogin () {}
-    override public void DidNotLogin (bool cancelled) {}
-    override public void DidExtendToken(string accessToken, NSDate expiresAt) {}
-    override public void DidLogout () {}
-    override public void SessionInvalidated () {}
-  }
-
-  class NoopDialogDelegate : FBDialogDelegate {
-    override public void Completed (FBDialog dialog) {
-      PlayN.log().info("FBDialog Completed");
-    }
-    override public void CompletedWithUrl (NSUrl url) {
-      PlayN.log().info("FBDialog Completed With: " + url);
-    }
-    override public void NotCompletedWithUrl (NSUrl url) {
-      PlayN.log().info("FBDialog Not Completed With: " + url);
-    }
-    override public void NotCompleted (FBDialog dialog) {
-      PlayN.log().info("FBDialog Not Completed");
-    }
-    override public void Failed (FBDialog dialog, NSError error) {
-      PlayN.log().info("FBDialog Failed: " + error);
-    }
-    override public bool ShouldOpenUrl (FBDialog dialog, NSUrl url) {
-      PlayN.log().info("FBDialog Should open URL? " + url);
-      return false;
+      // dict.Add(new NSString("show_error"), new NSString("true"));
+      return dict;
     }
   }
 }
