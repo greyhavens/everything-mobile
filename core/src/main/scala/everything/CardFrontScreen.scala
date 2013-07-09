@@ -31,22 +31,24 @@ class CardFrontScreen (
     }
   }
 
-  override def createCardUI () {
+  override def createCardUI (group :Group) {
     val image = UI.frameImage(
       cache(card.thing.image), Thing.MAX_IMAGE_WIDTH/2, Thing.MAX_IMAGE_HEIGHT/2)
-    root.add(UI.icon(image).addStyles(Style.ICON_POS.above),
-             UI.stretchShim(),
-             UI.hgroup(likeButton(card.thing.categoryId, false),
-                       UI.shim(30, 5),
-                       UI.subHeaderLabel(s"Rarity: ${card.thing.rarity}"), UI.shim(15, 5),
-                       UI.moneyIcon(card.thing.rarity.value),
-                       UI.shim(30, 5),
-                       likeButton(card.thing.categoryId, true)),
-             UI.stretchShim())
+    group.add(UI.icon(image).addStyles(Style.ICON_POS.above),
+              UI.stretchShim(),
+              UI.hgroup(likeButton(card.thing.categoryId, false),
+                        UI.shim(20, 5),
+                        UI.subHeaderLabel(s"Rarity: ${card.thing.rarity}"), UI.shim(15, 5),
+                        UI.moneyIcon(card.thing.rarity.value),
+                        UI.shim(20, 5),
+                        likeButton(card.thing.categoryId, true)),
+              UI.stretchShim())
+    root.add(UI.stretchShim())
     if (card.giver != null) root.add(new Label(card.giver.name match {
       case null => "A birthday gift from Everything!"
       case name => s"A gift from ${card.giver}"
     }))
+    // TODO: omit this count info if this is a gift and we lack the space for two lines
     counts match {
       case Some((haveCount, thingsRemaining)) => root.add(status(haveCount, thingsRemaining, card))
       case None => // skip it

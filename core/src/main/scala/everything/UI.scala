@@ -109,6 +109,7 @@ object UI {
   lazy val coinsIcon = getImage("money.png")
   lazy val like = (getImage("like/pos.png"), getImage("like/pos_sel.png"))
   lazy val hate = (getImage("like/neg.png"), getImage("like/neg_sel.png"))
+  lazy val megaCard = getImage("megacard/front.png")
 
   val titleFont = machineFont(38)
   val menuFont = machineFont(24)
@@ -121,6 +122,7 @@ object UI {
   val tipFont = writingFont(14)
   val collectFont = writingFont(24)
   val factsFont = graphics.createFont("Georgia", Font.Style.PLAIN, 16)
+  val notesFont = graphics.createFont("Georgia", Font.Style.PLAIN, 14)
 
   def machineFont (size :Float) = graphics.createFont(
     "CopperplateGothic-Bold", Font.Style.PLAIN, size)
@@ -311,6 +313,7 @@ object UI {
 
   def frameImage (image :Image, width :Float, height :Float) = {
     val frame = graphics.createImage(width, height)
+    // frame.canvas.setFillColor(0xFFCC99CC).fillRect(0, 0, width, height)
     image.addCallback(cb { img =>
       val b = 1f
       val scale = math.min((width-2*b)/img.width, (height-2*b)/img.height)

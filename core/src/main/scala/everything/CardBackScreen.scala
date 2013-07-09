@@ -15,18 +15,19 @@ class CardBackScreen (
   game :Everything, cache :UI.ImageCache, card :Card, counts :Option[(Int,Int)], source :CardButton
 ) extends CardScreen(game, cache, card, counts, source) {
 
-  override def createCardUI () {
-    root.add(UI.wrapLabel(card.thing.descrip).addStyles(Style.FONT.is(UI.factsFont)),
-             UI.stretchShim(),
-             new Label("Notes").addStyles(Style.FONT.is(UI.notesHeaderFont)),
-             formatFacts(card.thing.facts.split("\n")),
-             UI.stretchShim(),
-             UI.hgroup(UI.subHeaderLabel("Source:"),
-                       UI.labelButton(nameSource(card.thing.source)) {
-                         PlayN.openURL(card.thing.source)
-                       }),
-             UI.hgroup(UI.subHeaderLabel("Flipped on:"),
-                       new Label(game.device.formatDate(card.received))))
+  override def createCardUI (group :Group) {
+    group.add(UI.wrapLabel(card.thing.descrip).addStyles(Style.FONT.is(UI.factsFont)),
+              UI.stretchShim(),
+              new Label("Notes").addStyles(Style.FONT.is(UI.notesHeaderFont)),
+              formatFacts(card.thing.facts.split("\n")),
+              UI.stretchShim(),
+              UI.hgroup(UI.subHeaderLabel("Source:"),
+                        UI.labelButton(nameSource(card.thing.source)) {
+                          PlayN.openURL(card.thing.source)
+                        }),
+              UI.hgroup(UI.subHeaderLabel("Flipped on:"),
+                        new Label(game.device.formatDate(card.received))),
+              UI.stretchShim())
   }
 
   override def onCardTap () {
@@ -45,13 +46,11 @@ class CardBackScreen (
   }
 
   def formatFacts (facts :Array[String]) = {
-    val ffont = Style.FONT.is(UI.factsFont)
+    val ffont = Style.FONT.is(UI.notesFont)
     val lay = new TableLayout(TableLayout.COL.fixed, TableLayout.COL.stretch).alignTop.gaps(5, 5)
     (new Group(lay) /: facts)((g, f) => g.add(UI.glyphLabel("•").addStyles(ffont),
                                               UI.wrapLabel(f).addStyles(ffont)))
   }
-
-  override protected def background = Background.image(UI.getImage("page_repeat.png"))
 
   override protected def pushTransition = game.screens.flip.duration(300)
 }

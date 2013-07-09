@@ -4,6 +4,7 @@
 
 package everything
 
+import playn.core.PlayN._
 import playn.core._
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
@@ -14,11 +15,25 @@ abstract class CardScreen (
   game :Everything, cache :UI.ImageCache, card :Card, counts :Option[(Int,Int)], source :CardButton
 ) extends EveryScreen(game) {
 
+  val cardXScale = width / UI.card.front.width
+  val cardYScale = cardXScale * 1.1f
+  val cardHeight = UI.card.front.height * cardYScale
+
   override protected def layout () :Layout = AxisLayout.vertical().gap(0).offStretch
+  override protected def background () :Background = {
+    val image = graphics.createImage(width, height)
+    image.canvas.
+      drawImage(_bgImage, 0, 0, width, height).
+      // translate(0, game.device.statusBarHeight-4).
+      // scale(cardXScale, cardYScale).
+      // drawImage(UI.card.front, 0, 0)
+      drawImage(UI.megaCard, 0, game.device.statusBarHeight-4)
+    Background.image(image)
+  }
 
   val buttons = UI.hgroup(
-    UI.stretchShim(),
-    UI.button(if (counts.isDefined) "Keep" else "Back")(pop()),
+    UI.shim(5, 5),
+    back(),
     UI.stretchShim(),
     UI.button("Sell") { maybeSellCard(card.toThingCard) {
       source.queueSell()
@@ -31,13 +46,17 @@ abstract class CardScreen (
     UI.stretchShim())
 
   override def createUI () {
-    root.add(UI.hgroup(back(),
-                       AxisLayout.stretch(UI.headerLabel(card.thing.name)),
-                       UI.shim(UI.backImage.width, 1)).addStyles(Style.HALIGN.left),
-             UI.pathLabel(card.categories.map(_.name)),
-             UI.tipLabel(s"${card.position+1} of ${card.things}"),
-             UI.stretchShim())
-    createCardUI()
+    val cgroup = new Group(AxisLayout.vertical().offStretch.gap(0)).
+      setConstraint(Constraints.fixedSize(width, cardHeight-4-12)).
+      addStyles(Style.BACKGROUND.is(Background.solid(0x22FFCC99).inset(6, 23, 6, 14)))
+    cgroup.add(UI.hgroup(UI.shim(17, 1),
+                         AxisLayout.stretch(UI.headerLabel(card.thing.name)),
+                         UI.shim(17, 1)),
+               UI.pathLabel(card.categories.map(_.name)),
+               UI.tipLabel(s"${card.position+1} of ${card.things}"),
+               UI.stretchShim())
+    root.add(cgroup)
+    createCardUI(cgroup)
     if (!root.childAt(root.childCount-1).isInstanceOf[Shim]) root.add(UI.stretchShim())
     root.add(buttons)
   }
@@ -47,7 +66,7 @@ abstract class CardScreen (
     if (event.localY < buttons.layer.ty) onCardTap()
   }
 
-  protected def createCardUI () :Unit
+  protected def createCardUI (group :Group) :Unit
   protected def onCardTap () :Unit
 
   protected def showShareDialog () {
