@@ -18,7 +18,6 @@ class SeriesScreen (game :Everything, who :PlayerName, path :Seq[String], catId 
     this(game, who, path :+ scard.name, scard.categoryId)
 
   val cbox = UI.stretchBox()
-  val crbox = new Box()
   val getSeries = game.gameSvc.getSeries(who.userId, catId)
   onShown.connect(unitSlot {
     getSeries.onFailure(onFailure).onSuccess(slot { series =>
@@ -30,17 +29,14 @@ class SeriesScreen (game :Everything, who :PlayerName, path :Seq[String], catId 
         cards.add(new CardButton(game, this, cache, UI.bigCard, cardsEnabled).
           update(status, who.userId, tc))
       })
-      cbox.set(UI.vscroll(cards))
-      crbox.set(UI.hgroup(UI.shim(5, 5),
-                          likeButton(catId, false),
-                          UI.shim(5, 5),
-                          likeButton(catId, true),
-                          UI.stretchShim(),
-                          UI.tipLabel("Editor:"),
-                          UI.labelButton(series.creator.toString) {
-                            new CollectionScreen(game, series.creator).push()
-                          },
-                          UI.shim(5, 5)))
+      val footer = UI.hgroup(
+        UI.shim(5, 5), likeButton(catId, false),
+        UI.shim(5, 5), likeButton(catId, true),
+        UI.stretchShim(), UI.tipLabel("Editor:"),
+        UI.labelButton(series.creator.toString) {
+          new CollectionScreen(game, series.creator).push()
+        }, UI.shim(5, 5))
+      cbox.set(UI.vscroll(UI.vsgroup(cards, footer, UI.shim(1, 1))))
     })
   }).once()
 
@@ -48,7 +44,9 @@ class SeriesScreen (game :Everything, who :PlayerName, path :Seq[String], catId 
     root.add(headerPlate(UI.icon(UI.frameImage(UI.friendImage(who), 36, 36)),
                          UI.headerLabel(who.toString), UI.pathLabel(path.dropRight(1))),
              UI.headerLabel(path.last),
-             cbox.set(new Label("Loading...")),
-             crbox)
+             cbox.set(new Label("Loading...")))
   }
+
+  // allow our UI to bump right up against the bottom of the screen
+  override protected def insets () = super.insets().adjust(0, 0, -5, 0)
 }
