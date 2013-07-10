@@ -20,7 +20,13 @@ import tripleplay.ui.layout.TableLayout
 
 class MainMenuScreen (game :Everything) extends EveryScreen(game) {
 
+  final val FreshnessPeriod = 5*24*60*60*1000L // news is stale after 5 days
+
   val bbox = new Box()
+  val newsIsFresh = game.sess.map(rf { sess =>
+    java.lang.Boolean.valueOf(sess != null && sess.news != null &&
+      (System.currentTimeMillis - sess.news.reported.getTime < FreshnessPeriod))
+  })
 
   override def wasAdded () {
     super.wasAdded()
@@ -42,8 +48,10 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
           bindText(game.gifts.sizeView.map(rf { size => s"Gifts: $size!" })).
           bindVisible(game.gifts.sizeView.map(rf { _ > 0 })),
         menuButton("Flip Cards!", entree) { new FlipCardsScreen(game).push() },
-        menuButton("News", entree) { new NewsScreen(game).push() },
+        menuButton("News", entree) { new NewsScreen(game).push() }.
+          bindVisible(newsIsFresh),
         menuButton("Collection", entree) { new CollectionScreen(game, game.self.get).push() },
+        menuButton("Goings On", entree) { new ActivityScreen(game).push() },
         menuButton("Shop", entree) { new ShopScreen(game).push() }))
     }).once()
   }
