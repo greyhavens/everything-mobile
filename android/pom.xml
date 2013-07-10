@@ -109,17 +109,6 @@
             </configuration>
             <goals><goal>run</goal></goals>
           </execution>
-          <!-- prune a few bits of iOS only media to keep the Android build below 50MB -->
-          <execution>
-            <id>prune-ios-only-media</id>
-            <phase>prepare-package</phase>
-            <configuration>
-              <target>
-                <delete file="assets/images/main/bg-568h@2x.jpg"/>
-              </target>
-            </configuration>
-            <goals><goal>run</goal></goals>
-          </execution>
         </executions>
       </plugin>
 
