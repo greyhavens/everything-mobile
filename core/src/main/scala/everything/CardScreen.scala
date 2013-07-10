@@ -114,7 +114,7 @@ class CardScreen (
       root.add(_giftLbl)
     }
     // omit the count info if this is a gift and we lack the space for two lines
-    if (_giftLbl == null || height > 970) counts match {
+    if (_giftLbl == null || height > 485) counts match {
       case Some((haveCount, thingsRemaining)) => root.add(status(haveCount, thingsRemaining, card))
       case None => // skip it
     }
