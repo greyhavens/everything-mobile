@@ -39,7 +39,7 @@ class CardScreen (
           UI.tipLabel(s"${card.position+1} of ${card.things}"))
     }
     def addContents ()
-    addStyles(Style.BACKGROUND.is(background().inset(6, 23, 6, 14)))
+    addStyles(Style.BACKGROUND.is(background().inset(6, 27, 6, 14)))
     add(UI.shim(1, 2),
         UI.hgroup(UI.shim(17, 1), AxisLayout.stretch(UI.headerLabel(card.thing.name)),
                   UI.shim(17, 1)))
@@ -51,12 +51,14 @@ class CardScreen (
     def addContents () {
       val image = UI.frameImage(
         cache(card.thing.image), Thing.MAX_IMAGE_WIDTH/2, Thing.MAX_IMAGE_HEIGHT/2)
-      add(UI.hgroup(likeButton(card.thing.categoryId, false),
-                    UI.shim(20, 5),
+      add(UI.hgroup(UI.shim(10, 5),
+                    likeButton(card.thing.categoryId, false),
+                    UI.stretchShim(),
                     UI.subHeaderLabel(s"Rarity: ${card.thing.rarity}"), UI.shim(15, 5),
                     UI.moneyIcon(card.thing.rarity.value),
-                    UI.shim(20, 5),
-                    likeButton(card.thing.categoryId, true)),
+                    UI.stretchShim(),
+                    likeButton(card.thing.categoryId, true),
+                    UI.shim(10, 5)),
           UI.stretchShim(),
           UI.icon(image).addStyles(Style.ICON_POS.above),
           UI.stretchShim())
