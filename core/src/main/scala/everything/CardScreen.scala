@@ -23,6 +23,7 @@ class CardScreen (
     this
   }
   private var _msg :String = _
+  private var _giftLbl :Label = _
   private var _bubble :ImageLayer = _
 
   val cbox = new Group(new AbsoluteLayout())
@@ -103,12 +104,15 @@ class CardScreen (
   override def createUI () {
     cardBack.layer.setVisible(false)
     root.add(UI.stretchShim(), cbox.add(cardFront, cardBack), UI.stretchShim())
-    if (card.giver != null) root.add(new Label(card.giver.name match {
-      case null => "A birthday gift from Everything!"
-      case name => s"A gift from ${card.giver}"
-    }))
-    // TODO: omit this count info if this is a gift and we lack the space for two lines
-    counts match {
+    if (card.giver != null) {
+      _giftLbl = new Label(card.giver.name match {
+        case null => "A birthday gift from Everything!"
+        case name => s"A gift from ${card.giver}!"
+      })
+      root.add(_giftLbl)
+    }
+    // omit the count info if this is a gift and we lack the space for two lines
+    if (_giftLbl == null || height > 970) counts match {
       case Some((haveCount, thingsRemaining)) => root.add(status(haveCount, thingsRemaining, card))
       case None => // skip it
     }
@@ -130,8 +134,7 @@ class CardScreen (
 
     // if we have a message from this giver, show it here
     if (_msg != null && _bubble == null) {
-      // TODO: position based on position of giver label
-      _bubble = new Bubble(_msg, 210).above().tail(-75, 30).at(width-70, height-90).toLayer(this)
+      _bubble = new Bubble(_msg, 210).above().tail(-75, 30).at(width-70, _giftLbl.y).toLayer(this)
       _bubble.setScale(0.1f)
       iface.animator.tweenScale(_bubble).to(1f).in(200)
       layer.add(_bubble)
@@ -141,6 +144,10 @@ class CardScreen (
   override def onScreenTap (event :Pointer.Event) {
     // if the player taps on the card, flip it!
     if (event.localY > cbox.y && event.localY < cbox.y + cbox.size.height) {
+      if (_bubble != null) {
+        iface.animator.tweenScale(_bubble).to(0f).in(200).`then`.destroy(_bubble)
+        _bubble = null
+      }
       if (cardBack.layer.visible) flip(cardBack.layer, cardFront.layer)
       else flip(cardFront.layer, cardBack.layer)
     }
