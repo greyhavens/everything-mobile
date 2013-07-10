@@ -131,17 +131,17 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
     val dialog = new Dialog() {
       override def layout = AxisLayout.vertical.offStretch.gap(0)
       override def background = Background.blank()
-    }
+    }.autoDismiss
     val itembg = UI.getImage("pupmenu/item.png")
     def item (elems :Element[_]*) = UI.hgroup(2).add(elems :_*).
       addStyles(Style.BACKGROUND.is(Background.image(itembg))).
       setConstraint(Constraints.fixedSize(itembg.width, itembg.height))
     val topimg = UI.getImage("pupmenu/top.png")
-    dialog.add(UI.imageButton(topimg, topimg) { dialog.dispose() })
+    dialog.add(UI.imageButton(topimg, topimg) { dialog.dismiss() })
     val zero = (v :JInteger) => if (v == null) java.lang.Integer.valueOf(0) else v
     for ((pup, name) <- PupInfo) {
       val action = UI.labelButton(name) {
-        dialog.dispose()
+        dialog.dismiss()
         game.gameSvc.usePowerup(gridId, pup).onFailure(onFailure).onSuccess(slot { grid =>
           game.pups.update(pup, game.pups.get(pup)-1)
           val cards = cbox.contents.asInstanceOf[Group]
@@ -166,9 +166,6 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
                       action.setConstraint(Constraints.fixedSize(itembg.width/2, itembg.height-6)),
                       new ValueLabel(have).addStyles(Style.FONT.is(UI.machineFont(10)))))
     }
-    dialog.add(item(UI.labelButton("Cancel") { dialog.dispose() }.
-      addStyles(Style.FONT.is(UI.machineFont(16)), Style.UNDERLINE.off, Style.VALIGN.top).
-      setConstraint(Constraints.fixedHeight(itembg.height-10))))
     dialog.add(UI.icon(UI.getImage("pupmenu/bot.png")))
     val spos = Layer.Util.layerToParent(pupsBtn.layer, layer, 0, 0)
     dialog.displayAt(spos.x, spos.y)
