@@ -33,7 +33,17 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     def addButton (lbl :String, action : =>Unit) :this.type = addButton(UI.button(lbl)(action))
     def addButton (btn :Button) :this.type = {
       if (buttons.childCount == 0) buttons.add(UI.stretchShim())
-      buttons.add(btn.onClick(unitSlot { dispose() }), UI.stretchShim())
+      buttons.add(btn.onClick(unitSlot { dismiss() }), UI.stretchShim())
+      this
+    }
+
+    def autoDismiss :this.type = {
+      root.layer.addListener(new Pointer.Adapter() {
+        override def onPointerStart (event :Pointer.Event) {
+          val (lx, ly) = (event.localX, event.localY)
+          if (lx < 0 || ly < 0 || lx > root.size.width || ly > root.size.height) dismiss()
+        }
+      })
       this
     }
 
@@ -67,7 +77,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
         tweenAlpha(root.layer).to(1).in(500)
     }
 
-    def dispose () {
+    def dismiss () {
       val hide = if (root.layer.originX == 0) iface.animator.tweenAlpha(root.layer).to(0).in(500)
                  // avoid scaling down to zero because that can cause freakoutery on mouse-based
                  // backends as motion events come in and the backend tries to do an inverse
@@ -192,7 +202,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   protected def showLoading (text :String, value :Value[_]) {
     val lid = new Dialog().addTitle(text)
     lid.display()
-    value.connect(unitSlot { lid.dispose() }).once()
+    value.connect(unitSlot { lid.dismiss() }).once()
   }
 
   /** Displays a dialog enabling the sale of `card`. */
