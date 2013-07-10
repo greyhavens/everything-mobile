@@ -184,7 +184,6 @@ class CardScreen (
 
     if (have > 1) new Label(s"You already have $have of these cards.")
     else if (have > 0) new Label("You already have this card.")
-    else if (remain == 1) new Label(s"You need one more card to complete this series!")
     else if (remain == 0) link("You completed ")
     else link(s"You have ${cat.things - remain} of ${cat.things}")
   }
