@@ -101,10 +101,10 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
 
   def push () :Unit = game.screens.push(this, pushTransition)
   def replace () :Unit = game.screens.replace(this, pushTransition)
-  protected def pushTransition :ScreenStack.Transition = game.screens.slide.duration(300)
+  protected def pushTransition :ScreenStack.Transition = game.screens.slide.duration(500)
 
   def pop () :Unit = game.screens.remove(this, popTransition)
-  protected def popTransition :ScreenStack.Transition = game.screens.slide.right.duration(300)
+  protected def popTransition :ScreenStack.Transition = game.screens.slide.right.duration(500)
 
   val root = iface.createRoot(layout(), UI.sheet, layer)
   def createUI () :Unit
