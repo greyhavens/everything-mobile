@@ -6,7 +6,7 @@ package everything
 
 import playn.core.PlayN._
 import playn.core._
-import pythagoras.f.{Dimension, IDimension, FloatMath, Points}
+import pythagoras.f.{Dimension, IDimension, FloatMath, Point}
 import tripleplay.anim.Animation
 import tripleplay.shaders.RotateYShader
 import tripleplay.ui._
@@ -27,7 +27,8 @@ class CardScreen (
   private var _bubble :ImageLayer = _
 
   val cbox = new Group(new AbsoluteLayout())
-  val cardSize = new Dimension(width, UI.megaCard.height-4-12)
+  val cardSize = new Dimension(UI.megaCard.width, UI.megaCard.height-4-12)
+  val cardPos = new Point((width-cardSize.width)/2, 0)
 
   abstract class CardGroup extends Group(AxisLayout.vertical().offStretch.gap(0)) {
     def background () = new Background() {
@@ -64,7 +65,7 @@ class CardScreen (
           UI.stretchShim())
       addCats()
     }
-  }, Points.ZERO, cardSize)
+  }, cardPos, cardSize)
 
   val cardBack = AbsoluteLayout.at(new CardGroup() {
     def addContents () {
@@ -101,7 +102,7 @@ class CardScreen (
       (new Group(lay) /: facts)((g, f) => g.add(UI.glyphLabel("•").addStyles(ffont),
                                                 UI.wrapLabel(f).addStyles(ffont)))
     }
-  }, Points.ZERO, cardSize)
+  }, cardPos, cardSize)
 
   override def createUI () {
     cardBack.layer.setVisible(false)
