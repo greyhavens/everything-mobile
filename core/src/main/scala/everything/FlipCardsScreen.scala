@@ -18,6 +18,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
   val freeFlips = new IntValue(0)
   val nextFlipCost = new IntValue(0)
   val unflipped = RMap.create[Rarity,Int]
+  val haveUnflipped = Value.create(true :JBoolean)
   val cache = new UI.ImageCache(game)
   val selfId = game.self.get.userId
   var gridId = 0
@@ -32,7 +33,14 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
   // start the request for our cards immediately
   val getGrid = game.gameSvc.getGrid(Powerup.NOOP, false)
 
-  val pupsBtn = new ImageButton(UI.getImage("pupbtn_up.png"), UI.getImage("pupbtn_down.png"))
+  val pupsBtn = new ImageButton(UI.getImage("pupbtn_up.png"), UI.getImage("pupbtn_down.png")) {
+    override def setEnabled (enabled :Boolean) = {
+      // fade our layer out when we're disabled
+      if (!enabled && layer.alpha > 0) iface.animator.tweenAlpha(layer).to(0).in(500)
+      else if (enabled && layer.alpha < 1) iface.animator.tweenAlpha(layer).to(1).in(500)
+      super.setEnabled(enabled)
+    }
+  }
 
   // once our show transition is complete, create our cards and animate them into view
   onShown.connect(unitSlot {
@@ -42,6 +50,8 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
       res.grid.unflipped.zipWithIndex.foreach {
         case (count, idx) => unflipped.put(Rarity.values.apply(idx), count)
       }
+      haveUnflipped.update(unflipped.values.sum > 0)
+
       val entree = CardButton.randomEntree()
       val cards = new Group(new TableLayout(cardCols).gaps(cardGap, cardGap))
       for (ii <- 0 until 16) {
@@ -61,8 +71,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
     val haveFree = freeFlips.map(Functions.greaterThan(0))
     val lackFree = freeFlips.map(Functions.lessThanEqual(0))
     val showNextFree = Values.and(lackFree, nextFlipCost.map(Functions.greaterThan(0)))
-    val showNoFlips = Values.and(lackFree, nextFlipCost.map(Functions.lessThanEqual(0)))
-    val haveUnflipped = showNoFlips.map(Functions.NOT)
+    val showNoFlips = haveUnflipped.map(Functions.NOT)
 
     val uflabels = new Group(AxisLayout.horizontal).
       setStylesheet(Stylesheet.builder.add(
@@ -78,13 +87,14 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
     }
 
     val status = UI.hgroup(
-      new Label("Free flips:").bindVisible(haveFree),
-      new ValueLabel(freeFlips).bindVisible(haveFree),
-      new Label("Next flip:").bindVisible(showNextFree),
-      UI.moneyIcon(nextFlipCost, _dbag).bindVisible(showNextFree),
-      new Label("No more flips.").bindVisible(showNoFlips),
-      UI.shim(25, 5).bindVisible(haveUnflipped),
-      pupsBtn.bindVisible(haveUnflipped).onClick(unitSlot { showPupMenu() }))
+      AxisLayout.stretch(UI.hgroup(
+        new Label("Free flips:").bindVisible(haveFree),
+        new ValueLabel(freeFlips).bindVisible(haveFree),
+        new Label("Next flip:").bindVisible(showNextFree),
+        UI.moneyIcon(nextFlipCost, _dbag).bindVisible(showNextFree),
+        new Label("No more flips.").bindVisible(showNoFlips))),
+      AxisLayout.stretch(UI.hgroup(
+        pupsBtn.bindEnabled(haveUnflipped).onClick(unitSlot { showPupMenu() }))))
 
     // fade our extra bits in once we have our cards
     uflabels.layer.setAlpha(0)
@@ -120,6 +130,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
           noteStatus(res.status)
           val r = res.card.thing.rarity
           unflipped.put(r, unflipped.get(r)-1)
+          haveUnflipped.update(unflipped.values.sum > 0)
           reveal(res)
         })
     }
