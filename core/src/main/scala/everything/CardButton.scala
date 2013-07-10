@@ -158,7 +158,7 @@ class CardButton (
   protected def viewCard (card :Card) {
     _cachedCard = card
     enabled.update(true) // reenable card interaction
-    new CardFrontScreen(game, cache, card, _counts, this).setMessage(_msg).push()
+    new CardScreen(game, cache, card, _counts, this).setMessage(_msg).push()
   }
 
   protected def sell () {

@@ -6,68 +6,188 @@ package everything
 
 import playn.core.PlayN._
 import playn.core._
+import pythagoras.f.{Dimension, IDimension, FloatMath, Points}
+import tripleplay.anim.Animation
+import tripleplay.shaders.RotateYShader
 import tripleplay.ui._
-import tripleplay.ui.layout.AxisLayout
+import tripleplay.ui.layout._
 
 import com.threerings.everything.data._
 
-abstract class CardScreen (
+class CardScreen (
   game :Everything, cache :UI.ImageCache, card :Card, counts :Option[(Int,Int)], source :CardButton
 ) extends EveryScreen(game) {
 
-  val cardXScale = width / UI.card.front.width
-  val cardYScale = cardXScale * 1.1f
-  val cardHeight = UI.card.front.height * cardYScale
+  def setMessage (msg :String) = {
+    _msg = msg
+    this
+  }
+  private var _msg :String = _
+  private var _bubble :ImageLayer = _
 
-  override protected def layout () :Layout = AxisLayout.vertical().gap(0).offStretch
-  override protected def background () :Background = {
-    val image = graphics.createImage(width, height)
-    image.canvas.
-      drawImage(_bgImage, 0, 0, width, height).
-      // translate(0, game.device.statusBarHeight-4).
-      // scale(cardXScale, cardYScale).
-      // drawImage(UI.card.front, 0, 0)
-      drawImage(UI.megaCard, 0, game.device.statusBarHeight-4)
-    Background.image(image)
+  val cbox = new Group(new AbsoluteLayout())
+  val cardSize = new Dimension(width, UI.megaCard.height-4-12)
+
+  abstract class CardGroup extends Group(AxisLayout.vertical().offStretch.gap(0)) {
+    def background () = new Background() {
+      override protected def instantiate (size :IDimension) =
+        new LayerInstance(size, graphics.createImageLayer(UI.megaCard).setTranslation(-3, -4))
+    }
+    def addContents ()
+    addStyles(Style.BACKGROUND.is(background().inset(6, 23, 6, 14)))
+    add(UI.shim(1, 2),
+        UI.hgroup(UI.shim(17, 1), AxisLayout.stretch(UI.headerLabel(card.thing.name)),
+                  UI.shim(17, 1)),
+        UI.pathLabel(card.categories.map(_.name)),
+        UI.tipLabel(s"${card.position+1} of ${card.things}"),
+        UI.stretchShim())
+    addContents()
+    add(UI.shim(1, 5))
   }
 
-  val buttons = UI.hgroup(
-    UI.shim(5, 5),
-    back(),
-    UI.stretchShim(),
-    UI.button("Sell") { maybeSellCard(card.toThingCard) {
-      source.queueSell()
-      pop()
-    }},
-    UI.stretchShim(),
-    UI.button("Gift") { new GiftCardScreen(game, cache, card, source).push },
-    UI.stretchShim(),
-    UI.button("Share") { showShareDialog() },
-    UI.stretchShim())
+  val cardFront = AbsoluteLayout.at(new CardGroup() {
+    def addContents () {
+      val image = UI.frameImage(
+        cache(card.thing.image), Thing.MAX_IMAGE_WIDTH/2, Thing.MAX_IMAGE_HEIGHT/2)
+      add(UI.icon(image).addStyles(Style.ICON_POS.above),
+          UI.stretchShim(),
+          UI.hgroup(likeButton(card.thing.categoryId, false),
+                    UI.shim(20, 5),
+                    UI.subHeaderLabel(s"Rarity: ${card.thing.rarity}"), UI.shim(15, 5),
+                    UI.moneyIcon(card.thing.rarity.value),
+                    UI.shim(20, 5),
+                    likeButton(card.thing.categoryId, true)))
+    }
+  }, Points.ZERO, cardSize)
+
+  val cardBack = AbsoluteLayout.at(new CardGroup() {
+    def addContents () {
+      add(UI.wrapLabel(card.thing.descrip).addStyles(Style.FONT.is(UI.factsFont)),
+          UI.stretchShim(),
+          new Label("Notes").addStyles(Style.FONT.is(UI.notesHeaderFont)),
+          formatFacts(card.thing.facts.split("\n")),
+          UI.stretchShim(),
+          UI.hgroup(
+            UI.subHeaderLabel("Source:"),
+            UI.labelButton(nameSource(card.thing.source)) {
+              PlayN.openURL(card.thing.source)
+            }),
+          UI.hgroup(UI.subHeaderLabel("Flipped on:"),
+                    new Label(game.device.formatDate(card.received))))
+    }
+
+    def nameSource (source :String) = {
+      if (source.indexOf("wikipedia.org") != -1) "Wikipedia"
+      else {
+        val ssidx = source.indexOf("//")
+        val eidx = source.indexOf("/", ssidx+2)
+        if (ssidx == -1) source
+        else if (eidx == -1) source.substring(ssidx+2);
+        else source.substring(ssidx+2, eidx);
+      }
+    }
+
+    def formatFacts (facts :Array[String]) = {
+      val ffont = Style.FONT.is(UI.notesFont)
+      val lay = new TableLayout(TableLayout.COL.fixed, TableLayout.COL.stretch).alignTop.gaps(5, 5)
+      (new Group(lay) /: facts)((g, f) => g.add(UI.glyphLabel("•").addStyles(ffont),
+                                                UI.wrapLabel(f).addStyles(ffont)))
+    }
+  }, Points.ZERO, cardSize)
 
   override def createUI () {
-    val cgroup = new Group(AxisLayout.vertical().offStretch.gap(0)).
-      setConstraint(Constraints.fixedSize(width, cardHeight-4-12)).
-      addStyles(Style.BACKGROUND.is(Background.solid(0x22FFCC99).inset(6, 23, 6, 14)))
-    cgroup.add(UI.hgroup(UI.shim(17, 1),
-                         AxisLayout.stretch(UI.headerLabel(card.thing.name)),
-                         UI.shim(17, 1)),
-               UI.pathLabel(card.categories.map(_.name)),
-               UI.tipLabel(s"${card.position+1} of ${card.things}"),
-               UI.stretchShim())
-    root.add(cgroup)
-    createCardUI(cgroup)
+    cardBack.layer.setVisible(false)
+    root.add(UI.stretchShim(), cbox.add(cardFront, cardBack), UI.stretchShim())
+    if (card.giver != null) root.add(new Label(card.giver.name match {
+      case null => "A birthday gift from Everything!"
+      case name => s"A gift from ${card.giver}"
+    }))
+    // TODO: omit this count info if this is a gift and we lack the space for two lines
+    counts match {
+      case Some((haveCount, thingsRemaining)) => root.add(status(haveCount, thingsRemaining, card))
+      case None => // skip it
+    }
     if (!root.childAt(root.childCount-1).isInstanceOf[Shim]) root.add(UI.stretchShim())
-    root.add(buttons)
+    root.add(UI.hgroup(
+      UI.shim(5, 5),
+      back(),
+      UI.stretchShim(),
+      UI.button("Sell") { maybeSellCard(card.toThingCard) { source.queueSell() ; pop() }},
+      UI.stretchShim(),
+      UI.button("Gift") { new GiftCardScreen(game, cache, card, source).push() },
+      UI.stretchShim(),
+      UI.button("Share") { showShareDialog() },
+      UI.stretchShim()))
+  }
+
+  override def showTransitionCompleted () {
+    super.showTransitionCompleted()
+
+    // if we have a message from this giver, show it here
+    if (_msg != null && _bubble == null) {
+      // TODO: position based on position of giver label
+      _bubble = new Bubble(_msg, 210).above().tail(-75, 30).at(width-70, height-90).toLayer(this)
+      _bubble.setScale(0.1f)
+      iface.animator.tweenScale(_bubble).to(1f).in(200)
+      layer.add(_bubble)
+    }
   }
 
   override def onScreenTap (event :Pointer.Event) {
-    // ignore taps down in the action button zone
-    if (event.localY < buttons.layer.ty) onCardTap()
+    // if the player taps on the card, flip it!
+    if (event.localY > cbox.y && event.localY < cbox.y + cbox.size.height) {
+      if (cardBack.layer.visible) flip(cardBack.layer, cardFront.layer)
+      else flip(cardFront.layer, cardBack.layer)
+    }
   }
 
-  protected def createCardUI (group :Group) :Unit
-  protected def onCardTap () :Unit
+  override protected def layout () :Layout = AxisLayout.vertical().gap(0).offStretch
+
+  def flip (from :Layer, to :Layer) {
+    from.setDepth(1).setVisible(true)
+    to.setDepth(-1).setVisible(true)
+
+    // create the rotating shaders
+    val yCtr = 0.5f  // TODO
+    val topShader = new RotateYShader(graphics.ctx, 0.5f, yCtr, 1)
+    from.setShader(topShader)
+    val botShader = new RotateYShader(graphics.ctx, 0.5f, yCtr, 1)
+    to.setShader(botShader)
+
+    // run up our flipping animation
+    iface.animator.tween(new Animation.Value() {
+      def initial = 0
+      def set (pct :Float) = {
+        topShader.angle = FloatMath.PI * pct;
+        botShader.angle = FloatMath.PI * (pct - 1);
+        if (pct >= 0.5f && !_flipped) {
+          from.setDepth(-1);
+          to.setDepth(1)
+          _flipped = true
+        }
+      }
+      var _flipped = false
+    }).to(1).in(300).`then`.action(new Runnable() {
+      def run () {
+        from.setShader(null).setDepth(0).setVisible(false)
+        to.setShader(null).setDepth(0).setVisible(true)
+      }
+    })
+  }
+
+  def status (have :Int, remain :Int, card :Card) :Element[_] = {
+    val cat = card.getSeries
+    def link (text :String) = UI.hgroup(
+      new Label(text), UI.labelButton(cat.name) {
+        new SeriesScreen(game, game.self.get, card.categories.map(_.name), cat.categoryId).push()
+      })
+
+    if (have > 1) new Label(s"You already have $have of these cards.")
+    else if (have > 0) new Label("You already have this card.")
+    else if (remain == 1) new Label(s"You need one more card to complete this series!")
+    else if (remain == 0) link("You completed ")
+    else link(s"You have ${cat.things - remain} of ${cat.things}")
+  }
 
   protected def showShareDialog () {
     val (me, thing, everyURL) = (game.self.get.name, card.thing.name, game.sess.get.everythingURL)
