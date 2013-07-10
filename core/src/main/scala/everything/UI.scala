@@ -110,6 +110,7 @@ object UI {
   lazy val like = (getImage("like/pos.png"), getImage("like/pos_sel.png"))
   lazy val hate = (getImage("like/neg.png"), getImage("like/neg_sel.png"))
   lazy val megaCard = getImage("megacard/front.png")
+  lazy val pageBG = getImage("page_repeat.png")
 
   val titleFont = machineFont(38)
   val menuFont = machineFont(24)

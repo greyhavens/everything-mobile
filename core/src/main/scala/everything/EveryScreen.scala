@@ -220,7 +220,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     cb
   }
 
-  protected def background () :Background = Background.image(_bgImage)
+  protected def background () :Background = Background.image(UI.pageBG)
 
   /** Handles a click on the hardware back button. */
   protected def onHardwareBack () {
@@ -246,9 +246,4 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
 
   protected var _back :Button = _
   protected val _dbag = new DestroyableBag
-  protected val _bgImage = height match {
-    case 568 => assets.getImageSync("../Default-568h.png")
-    case 480 => assets.getImageSync("../Default.png")
-    case _ => UI.getImage("page_repeat.png")
-  }
 }
