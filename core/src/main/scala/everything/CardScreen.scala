@@ -33,14 +33,15 @@ class CardScreen (
       override protected def instantiate (size :IDimension) =
         new LayerInstance(size, graphics.createImageLayer(UI.megaCard).setTranslation(-3, -4))
     }
+    def addCats () {
+      add(UI.pathLabel(card.categories.map(_.name)),
+          UI.tipLabel(s"${card.position+1} of ${card.things}"))
+    }
     def addContents ()
     addStyles(Style.BACKGROUND.is(background().inset(6, 23, 6, 14)))
     add(UI.shim(1, 2),
         UI.hgroup(UI.shim(17, 1), AxisLayout.stretch(UI.headerLabel(card.thing.name)),
-                  UI.shim(17, 1)),
-        UI.pathLabel(card.categories.map(_.name)),
-        UI.tipLabel(s"${card.position+1} of ${card.things}"),
-        UI.stretchShim())
+                  UI.shim(17, 1)))
     addContents()
     add(UI.shim(1, 5))
   }
@@ -49,20 +50,24 @@ class CardScreen (
     def addContents () {
       val image = UI.frameImage(
         cache(card.thing.image), Thing.MAX_IMAGE_WIDTH/2, Thing.MAX_IMAGE_HEIGHT/2)
-      add(UI.icon(image).addStyles(Style.ICON_POS.above),
-          UI.stretchShim(),
-          UI.hgroup(likeButton(card.thing.categoryId, false),
+      add(UI.hgroup(likeButton(card.thing.categoryId, false),
                     UI.shim(20, 5),
                     UI.subHeaderLabel(s"Rarity: ${card.thing.rarity}"), UI.shim(15, 5),
                     UI.moneyIcon(card.thing.rarity.value),
                     UI.shim(20, 5),
-                    likeButton(card.thing.categoryId, true)))
+                    likeButton(card.thing.categoryId, true)),
+          UI.stretchShim(),
+          UI.icon(image).addStyles(Style.ICON_POS.above),
+          UI.stretchShim())
+      addCats()
     }
   }, Points.ZERO, cardSize)
 
   val cardBack = AbsoluteLayout.at(new CardGroup() {
     def addContents () {
-      add(UI.wrapLabel(card.thing.descrip).addStyles(Style.FONT.is(UI.factsFont)),
+      addCats()
+      add(UI.stretchShim(),
+          UI.wrapLabel(card.thing.descrip).addStyles(Style.FONT.is(UI.factsFont)),
           UI.stretchShim(),
           new Label("Notes").addStyles(Style.FONT.is(UI.notesHeaderFont)),
           formatFacts(card.thing.facts.split("\n")),
