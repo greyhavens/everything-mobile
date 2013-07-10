@@ -13,16 +13,30 @@ import react.RFuture
 
 object EverythingJava {
 
+  case class FauxDevice (width :Int, height :Int, scale :Float, statusBar :Float) {
+    def apply (config :JavaPlatform.Config) {
+      config.width  = (width/scale).toInt
+      config.height = (height/scale).toInt
+      config.scaleFactor = scale
+    }
+  }
+
   def main (args :Array[String]) {
     val fbId = if (true) "1008138021" /*testy*/ else "540615819" /*mdb*/
 
     val config = new JavaPlatform.Config
-    config.width = 320
-    config.height = 480
-    config.scaleFactor = 2
     config.storageFileName = "playn" + fbId
 
+    val fdev = args.collect(Map(
+      "ipad"  -> FauxDevice(768, 1024, 2.0f, 10),
+      "i5"    -> FauxDevice(640, 1136, 2.0f, 20),
+      "droid" -> FauxDevice(480,  800, 1.5f, 20/1.5f),
+      "n7"    -> FauxDevice(800, 1205, 2.5f, 20/2.5f)
+    )).headOption.getOrElse(FauxDevice(640, 960, 2, 20))
+    fdev.apply(config)
+
     val pf = JavaPlatform.register(config)
+    pf.assets.setAssetScale(2)
     pf.graphics.registerFont("CopperplateGothic-Bold", "fonts/copper.ttf")
     pf.graphics.registerFont("Treasure Map Deadhand", "fonts/treasure.ttf")
     pf.graphics.registerFont("Josschrift", "fonts/josschrift.ttf")
@@ -33,7 +47,7 @@ object EverythingJava {
       def showDialog (action :String, params :Array[String]) = RFuture.success[String](null)
     }
     val device = new Device {
-      def statusBarHeight = 20
+      def statusBarHeight = fdev.statusBar
       def timeZoneOffset = {
         val tz = TimeZone.getDefault
         // Java returns millis to add to GMT, we want minutes to subtract from GMT
@@ -50,8 +64,7 @@ object EverythingJava {
       }
     }).setDepth(Short.MaxValue))
 
-    val mock = args.headOption.map(_ == "mock").getOrElse(false)
-    PlayN.run(new Everything(mock, device, facebook))
+    PlayN.run(new Everything(args.contains("mock"), device, facebook))
   }
 
   private final val MillisPerMinute = 1000*60
