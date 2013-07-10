@@ -6,12 +6,13 @@ package everything
 
 import playn.core.PlayN._
 import playn.core._
-import pythagoras.f.{MathUtil, Rectangle, Point}
+import pythagoras.f.{IDimension, MathUtil, Rectangle, Point}
 import react.{Value, Signal, UnitSignal}
 
 import tripleplay.game.{ScreenStack, UIScreen}
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
+import tripleplay.ui.util.Insets
 import tripleplay.util.DestroyableBag
 
 import com.threerings.everything.data.ThingCard
@@ -120,7 +121,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   def createUI () :Unit
 
   override def wasAdded () {
-    root.addStyles(Style.BACKGROUND.is(background().inset(game.device.statusBarHeight, 5, 5, 5)))
+    root.addStyles(Style.BACKGROUND.is(background().insets(insets())))
     createUI()
     root.setSize(width, height)
     // wire up the (hardware) back button handler
@@ -230,7 +231,23 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     cb
   }
 
-  protected def background () :Background = Background.image(UI.pageBG)
+  protected def background () :Background = new Background() {
+    override protected def instantiate (size :IDimension) = {
+      val scale = width / UI.pageBG.width
+      new LayerInstance(size, new ImmediateLayer.Renderer() {
+        def render (surf :Surface) {
+          if (alpha != null) surf.setAlpha(alpha)
+          var y = 0f
+          val scaledHeight = UI.pageBG.height*scale
+          while (y < size.height) {
+            surf.drawImage(UI.pageBG, 0, y, width, scaledHeight)
+            y += scaledHeight
+          }
+        }
+      })
+    }
+  }
+  protected def insets () :Insets = new Insets(game.device.statusBarHeight, 5, 5, 5)
 
   /** Handles a click on the hardware back button. */
   protected def onHardwareBack () {
