@@ -15,8 +15,8 @@ import com.threerings.everything.data._
 
 class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends Game.Default(33) {
 
-  // revalidate our session if we're paused for > 10 mins
-  final val RevalidatePeriod = 10*60*60*1000L
+  // revalidate our session if we're paused for > 5 mins
+  final val RevalidatePeriod = 5*60*60*1000L
 
   // propagate events so that our scroller can usurp button clicks
   platform.setPropagateEvents(true)
