@@ -81,6 +81,8 @@ class CollectionScreen (game :Everything, who :PlayerName) extends EveryScreen(g
     cview.paint(clock)
   }
 
+  override protected def layout () = AxisLayout.vertical().offStretch.gap(0)
+
   protected def filteredView (pred :SeriesCard => Boolean, emptyMsg :String) = {
     val group = UI.vgroup0().addStyles(Style.HALIGN.left).
       setStylesheet(Stylesheet.builder.add(classOf[Button], Style.FONT.is(UI.collectFont)).create())
