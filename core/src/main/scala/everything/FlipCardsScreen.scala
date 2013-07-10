@@ -115,6 +115,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
       game.gameSvc.flipCard(gridId, ii, nextFlipCost.get).
         bindComplete(cardsEnabled.slot). // disable cards, while req is in-flight
         onFailure(onFlipFailure).
+        onFailure(unitSlot { shaking.update(false) }).
         onSuccess(slot { res =>
           noteStatus(res.status)
           val r = res.card.thing.rarity
