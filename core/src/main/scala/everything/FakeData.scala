@@ -13,7 +13,7 @@ object FakeData {
 
   val mythology = category(1, "Mythology", 0, mikeB)
   val general = category(2, "General", 1, mikeD)
-  val psychopomps = category(3, "Psychopomps", 2, mikeD)
+  val psychopomps = category(3, "Psychopomps Of the World", 2, mikeD)
 
   val cuisine = category(4, "Cuisine", 0, mikeB)
   val british = category(5, "British", 4, mikeD)
@@ -42,7 +42,7 @@ object FakeData {
   val maltesers = thing(
     id = 2,
     categoryId = chocolates.categoryId,
-    name = "Maltesers",
+    name = "Delicious Maltesers Chocolates",
     rarity = Rarity.I,
     image = "31ea1e7601351b4eacd43b36b674ff823e9e29f4.jpg",
     descrip = "Maltesers are a confectionery product manufactured by Mars, Incorporated.",
