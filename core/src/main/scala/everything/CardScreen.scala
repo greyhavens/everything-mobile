@@ -23,12 +23,13 @@ class CardScreen (
     this
   }
   private var _msg :String = _
-  private var _giftLbl :Label = _
   private var _bubble :ImageLayer = _
+  private val _giftLbl :Label = new Label()
 
   val cbox = new Group(new AbsoluteLayout())
   val cardSize = new Dimension(UI.megaCard.width, UI.megaCard.height-4-12)
   val cardPos = new Point((width-cardSize.width)/2, 0)
+  val info = UI.vgroup0().setConstraint(AxisLayout.stretched(2))
 
   abstract class CardGroup extends Group(AxisLayout.vertical().offStretch.gap(0)) {
     def background () = new Background() {
@@ -106,21 +107,9 @@ class CardScreen (
 
   override def createUI () {
     cardBack.layer.setVisible(false)
-    root.add(UI.stretchShim(), cbox.add(cardFront, cardBack), UI.stretchShim())
-    if (card.giver != null) {
-      _giftLbl = new Label(card.giver.name match {
-        case null => "A birthday gift from Everything!"
-        case name => s"A gift from ${card.giver}!"
-      })
-      root.add(_giftLbl)
-    }
-    // omit the count info if this is a gift and we lack the space for two lines
-    if (_giftLbl == null || height > 485) counts match {
-      case Some((haveCount, thingsRemaining)) => root.add(status(haveCount, thingsRemaining, card))
-      case None => // skip it
-    }
-    if (!root.childAt(root.childCount-1).isInstanceOf[Shim]) root.add(UI.stretchShim())
-    root.add(UI.hgroup(
+
+    if (height > 485) root.add(UI.stretchShim())
+    root.add(cbox.add(cardFront, cardBack), info, UI.hgroup(
       UI.shim(5, 5),
       back(),
       UI.stretchShim(),
@@ -130,6 +119,24 @@ class CardScreen (
       UI.stretchShim(),
       UI.button("Share") { showShareDialog() },
       UI.stretchShim()))
+
+    updateInfo()
+  }
+
+  protected def updateInfo () {
+    info.removeAll()
+    if (card.giver != null) {
+      _giftLbl.text.update(card.giver.name match {
+        case null => "A birthday gift from Everything!"
+        case name => s"A gift from ${card.giver}!"
+      })
+      info.add(_giftLbl)
+    }
+    // omit the count info if this is a gift and we lack the space for two lines
+    if (card.giver == null || height > 485) counts match {
+      case Some((haveCount, thingsRemaining)) => info.add(status(haveCount, thingsRemaining, card))
+      case None => // skip it
+    }
   }
 
   override def showTransitionCompleted () {
