@@ -51,13 +51,13 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     def layout () :Layout = AxisLayout.vertical.offStretch
     def background () :Background = Background.composite(
       Background.solid(UI.textColor).inset(1),
-      Background.croppedImage(UI.getImage("page_repeat.png")).inset(9))
+      Background.croppedImage(UI.getImage("page_repeat.png")).inset(4, 9, 9, 9))
 
     def display () {
       if (buttons.childCount > 0) root.add(buttons)
-      // compute our preferred size, then restrict it to fit inside the screen
+      // compute our preferred size, then confine it to fit inside the screen
       val psize = root.preferredSize(width-20, 0)
-      root.setSize(psize.width, math.min(psize.height, height-20))
+      root.setSize(MathUtil.clamp(psize.width, 200, width-20), math.min(psize.height, height-20))
       root.layer.setOrigin(root.size.width/2, root.size.height/2)
       root.layer.setTranslation(width/2, height/2);
       // animate reveal
@@ -210,7 +210,8 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   protected def maybeSellCard (card :ThingCard)(onSell : =>Unit) {
     val amount = card.rarity.saleValue
     new Dialog().addTitle("Sell Card").
-      add(UI.hgroup(new Label(s"Sell ${card.name} for"), UI.moneyIcon(amount), new Label("?"))).
+      add(UI.hgroup(UI.wrapLabel(s"Sell ${card.name}?"))).
+      add(UI.hgroup(UI.label("Proceeds:", UI.moneyFont), UI.moneyIcon(amount))).
       addButton("No", ()).addButton("Yes", onSell).display()
   }
 
