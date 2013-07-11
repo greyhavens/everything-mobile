@@ -33,13 +33,13 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
 
     // COLS: icon ; name+descrip ; cost+charges
     val pups = new Group(new TableLayout(cd, cl, cd).gaps(5, 5))
-
+    val descFont = UI.writingFont(14)
     PupInfo foreach { case (pup, name, descrip) =>
       val descVal = game.pups.getView(pup).map(rf { (_ :JInteger) match {
         case null  => descrip
-        case count => s"$descrip (Have ${count}.)"
+        case count => s"$descrip\n(Have ${count})"
       }})
-      val descLbl = UI.wrapLabel("")
+      val descLbl = UI.wrapLabel("").addStyles(Style.FONT.is(descFont))
       _dbag.add(descVal.connectNotify(descLbl.text.slot))
       val buy = UI.moneyButton(pup.cost) { btn =>
         game.gameSvc.buyPowerup(pup).
@@ -66,15 +66,18 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
       }
       pups.add(UI.pupIcon(pup),
                new Group(AxisLayout.vertical.gap(0), Style.HALIGN.left).add(
-                 UI.subHeaderLabel(name), descLbl),
+                 UI.label(name, UI.notesHeaderFont), descLbl),
                if (pup.charges > 1) UI.vgroup0(buy, new Label(s"for ${pup.charges}"))
                else buy)
     }
 
     root.add(header("Get Coins", purseLabel, UI.shim(1, 5)),
-             /*UI.headerLabel(""), */ coins,
+             new Label("Get coins and flip every card in your grid!"), coins,
              AxisLayout.stretch(UI.vscroll(UI.vgroup(
-               UI.shim(5, 10), UI.headerLabel("Get Powerups"), pups))))
+               UI.shim(5, 10),
+               UI.headerLabel("Get Powerups"),
+               new Label("Flip smarter with powerups!"),
+               pups))))
   }
 
   val PupInfo = Seq(
