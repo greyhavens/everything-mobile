@@ -76,7 +76,7 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card, source
         // for some reason, iOS (7 beta at least) causes some jerkiness when dismissing the getText
         // popup, which janks up our transition back to the previous screen; so we delay a bit to
         // work around that; meh
-        else iface.animator.delay(100).`then`.action(new Runnable() {
+        else iface.animator.delay(200).`then`.action(new Runnable() {
           def run = giveCard(friend, msg)
         })
       })).
