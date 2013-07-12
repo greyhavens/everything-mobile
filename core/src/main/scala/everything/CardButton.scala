@@ -61,6 +61,14 @@ class CardButton (
     this
   }
 
+  def view (target :CardScreen) {
+    if (_cachedCard != null) viewCard(_cachedCard, target)
+    else game.gameSvc.getCard(new CardIdent(_ownerId, _card.thingId, _card.received)).
+      bindComplete(enabled.slot). // disable cards while req is in-flight
+      onFailure(host.onFailure).
+      onSuccess(slot { c => viewCard(c, target) })
+  }
+
   /** Configures this button's animated entree based on the supplied random seed. */
   def entree (entree :Entree) = { _entree = entree ; this }
 
@@ -90,11 +98,7 @@ class CardButton (
 
   /** Called if an already-flipped card is clicked. */
   protected def onView () {
-    if (_cachedCard != null) viewCard(_cachedCard)
-    else game.gameSvc.getCard(new CardIdent(_ownerId, _card.thingId, _card.received)).
-      bindComplete(enabled.slot). // disable cards while req is in-flight
-      onFailure(host.onFailure).
-      onSuccess(viewCard _)
+    view(null)
   }
 
   protected def reveal (res :GameAPI.GiftResult) {
@@ -109,7 +113,7 @@ class CardButton (
     cache(res.card.thing.image).addCallback(cb { thing =>
       shaking.update(false) // we can stop shaking now
       // flip the card over (use the current image as the old image for the flip)
-      animateFlip(ilayer.image)(viewCard(res.card))
+      animateFlip(ilayer.image)(viewCard(res.card, null))
       // update our image to be the new card (this will be flipped in)
       update(SlotStatus.FLIPPED, res.card.owner.userId, res.card.toThingCard)
       _counts = Some((res.haveCount, res.thingsRemaining))
@@ -155,10 +159,12 @@ class CardButton (
     })
   }
 
-  protected def viewCard (card :Card) {
+  protected def viewCard (card :Card, target :CardScreen) {
     _cachedCard = card
     enabled.update(true) // reenable card interaction
-    new CardScreen(game, cache, card, _counts, this).setMessage(_msg).push()
+    val screen = if (target == null) new CardScreen(game, cache) else target
+    screen.update(card, _counts, this).setMessage(_msg)
+    if (target == null) screen.push()
   }
 
   protected def sell () {

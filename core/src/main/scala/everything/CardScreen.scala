@@ -14,9 +14,7 @@ import tripleplay.ui.layout._
 
 import com.threerings.everything.data._
 
-class CardScreen (
-  game :Everything, cache :UI.ImageCache, card :Card, counts :Option[(Int,Int)], source :CardButton
-) extends EveryScreen(game) {
+class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(game) {
 
   def setMessage (msg :String) = {
     _msg = msg
@@ -26,12 +24,18 @@ class CardScreen (
   private var _bubble :ImageLayer = _
   private val _giftLbl :Label = new Label()
 
+  private var _card :Card = _
+  private var _counts :Option[(Int,Int)] = _
+  private var _source :CardButton = _
+  private var _cardFront :CardGroup = _
+  private var _cardBack :CardGroup = _
+
   val cbox = new Group(new AbsoluteLayout())
   val cardSize = new Dimension(UI.megaCard.width, UI.megaCard.height-4-12)
   val cardPos = new Point((width-cardSize.width)/2, 0)
   val info = UI.vgroup0().setConstraint(AxisLayout.stretched(2))
 
-  abstract class CardGroup extends Group(AxisLayout.vertical().offStretch.gap(0)) {
+  abstract class CardGroup (card :Card) extends Group(AxisLayout.vertical().offStretch.gap(0)) {
     def background () = new Background() {
       override protected def instantiate (size :IDimension) =
         new LayerInstance(size, graphics.createImageLayer(UI.megaCard).setTranslation(-3, -4))
@@ -49,81 +53,81 @@ class CardScreen (
     add(UI.shim(1, 5))
   }
 
-  val cardFront = AbsoluteLayout.at(new CardGroup() {
-    def addContents () {
-      val image = UI.frameImage(
-        cache(card.thing.image), Thing.MAX_IMAGE_WIDTH/2, Thing.MAX_IMAGE_HEIGHT/2)
-      add(UI.hgroup(UI.shim(10, 5),
-                    likeButton(card.thing.categoryId, false),
-                    UI.stretchShim(),
-                    UI.subHeaderLabel(s"Rarity: ${card.thing.rarity}"), UI.shim(15, 5),
-                    UI.moneyIcon(card.thing.rarity.value),
-                    UI.stretchShim(),
-                    likeButton(card.thing.categoryId, true),
-                    UI.shim(10, 5)),
-          UI.stretchShim(),
-          UI.icon(image).addStyles(Style.ICON_POS.above),
-          UI.stretchShim())
-      addCats()
-    }
-  }, cardPos, cardSize)
+  def update (card :Card, counts :Option[(Int,Int)], source :CardButton) :this.type = {
+    _card = card
+    _counts = counts
+    _source = source
 
-  val cardBack = AbsoluteLayout.at(new CardGroup() {
-    def addContents () {
-      addCats()
-      add(UI.stretchShim(),
-          UI.wrapLabel(card.thing.descrip).addStyles(Style.FONT.is(UI.factsFont)),
-          UI.stretchShim(),
-          new Label("Notes").addStyles(Style.FONT.is(UI.notesHeaderFont)),
-          formatFacts(card.thing.facts.split("\n")),
-          UI.stretchShim(),
-          UI.hgroup(
-            UI.subHeaderLabel("Source:"),
-            UI.labelButton(nameSource(card.thing.source)) {
-              PlayN.openURL(card.thing.source)
-            }),
-          UI.hgroup(UI.subHeaderLabel("Flipped on:"),
-                    new Label(game.device.formatDate(card.received))))
-    }
+    // make a note of our old card views
+    val (ofront, oback) = (_cardFront, _cardBack)
 
-    def nameSource (source :String) = {
-      if (source.indexOf("wikipedia.org") != -1) "Wikipedia"
-      else {
-        val ssidx = source.indexOf("//")
-        val eidx = source.indexOf("/", ssidx+2)
-        if (ssidx == -1) source
-        else if (eidx == -1) source.substring(ssidx+2);
-        else source.substring(ssidx+2, eidx);
+    // create and position our new card views
+    _cardFront = AbsoluteLayout.at(new CardGroup(card) {
+      def addContents () {
+        val image = UI.frameImage(
+          cache(card.thing.image), Thing.MAX_IMAGE_WIDTH/2, Thing.MAX_IMAGE_HEIGHT/2)
+        add(UI.hgroup(UI.shim(10, 5),
+                      likeButton(card.thing.categoryId, false),
+                      UI.stretchShim(),
+                      UI.subHeaderLabel(s"Rarity: ${card.thing.rarity}"), UI.shim(15, 5),
+                      UI.moneyIcon(card.thing.rarity.value),
+                      UI.stretchShim(),
+                      likeButton(card.thing.categoryId, true),
+                      UI.shim(10, 5)),
+            UI.stretchShim(),
+            UI.icon(image).addStyles(Style.ICON_POS.above),
+            UI.stretchShim())
+        addCats()
       }
+    }, cardPos, cardSize)
+
+    _cardBack = AbsoluteLayout.at(new CardGroup(card) {
+      def addContents () {
+        addCats()
+        add(UI.stretchShim(),
+            UI.wrapLabel(card.thing.descrip).addStyles(Style.FONT.is(UI.factsFont)),
+            UI.stretchShim(),
+            new Label("Notes").addStyles(Style.FONT.is(UI.notesHeaderFont)),
+            formatFacts(card.thing.facts.split("\n")),
+            UI.stretchShim(),
+            UI.hgroup(
+              UI.subHeaderLabel("Source:"),
+              UI.labelButton(nameSource(card.thing.source)) {
+                PlayN.openURL(card.thing.source)
+              }),
+            UI.hgroup(UI.subHeaderLabel("Flipped on:"),
+                      new Label(game.device.formatDate(card.received))))
+      }
+
+      def nameSource (source :String) = {
+        if (source.indexOf("wikipedia.org") != -1) "Wikipedia"
+        else {
+          val ssidx = source.indexOf("//")
+          val eidx = source.indexOf("/", ssidx+2)
+          if (ssidx == -1) source
+          else if (eidx == -1) source.substring(ssidx+2);
+          else source.substring(ssidx+2, eidx);
+        }
+      }
+
+      def formatFacts (facts :Array[String]) = {
+        val ffont = Style.FONT.is(UI.notesFont)
+        val lay = new TableLayout(TableLayout.COL.fixed, TableLayout.COL.stretch).alignTop.gaps(5, 5)
+        (new Group(lay) /: facts)((g, f) => g.add(UI.glyphLabel("•").addStyles(ffont),
+                                                  UI.wrapLabel(f).addStyles(ffont)))
+      }
+    }, cardPos, cardSize)
+    _cardBack.layer.setVisible(false)
+
+    if (ofront == null) cbox.add(_cardFront, _cardBack)
+    else {
+      // TODO: position the new front view off screen, then slide it into place, slide the old
+      // view off screen (in the direction of the flick)
+      cbox.removeAll()
+      cbox.add(_cardFront, _cardBack)
     }
 
-    def formatFacts (facts :Array[String]) = {
-      val ffont = Style.FONT.is(UI.notesFont)
-      val lay = new TableLayout(TableLayout.COL.fixed, TableLayout.COL.stretch).alignTop.gaps(5, 5)
-      (new Group(lay) /: facts)((g, f) => g.add(UI.glyphLabel("•").addStyles(ffont),
-                                                UI.wrapLabel(f).addStyles(ffont)))
-    }
-  }, cardPos, cardSize)
-
-  override def createUI () {
-    cardBack.layer.setVisible(false)
-
-    if (height > 485) root.add(UI.stretchShim())
-    root.add(cbox.add(cardFront, cardBack), info, UI.hgroup(
-      UI.shim(5, 5),
-      back(),
-      UI.stretchShim(),
-      UI.button("Sell") { maybeSellCard(card.toThingCard) { source.queueSell() ; pop() }},
-      UI.stretchShim(),
-      UI.button("Gift") { new GiftCardScreen(game, cache, card, source).push() },
-      UI.stretchShim(),
-      UI.button("Share") { showShareDialog() },
-      UI.stretchShim()))
-
-    updateInfo()
-  }
-
-  protected def updateInfo () {
+    // update our info displays (TODO: fade the old one out and the new one in?
     info.removeAll()
     if (card.giver != null) {
       _giftLbl.text.update(card.giver.name match {
@@ -137,6 +141,22 @@ class CardScreen (
       case Some((haveCount, thingsRemaining)) => info.add(status(haveCount, thingsRemaining, card))
       case None => // skip it
     }
+
+    this
+  }
+
+  override def createUI () {
+    if (height > 485) root.add(UI.stretchShim())
+    root.add(cbox, info, UI.hgroup(
+      UI.shim(5, 5),
+      back(),
+      UI.stretchShim(),
+      UI.button("Sell") { maybeSellCard(_card.toThingCard) { _source.queueSell() ; pop() }},
+      UI.stretchShim(),
+      UI.button("Gift") { new GiftCardScreen(game, cache, _card, _source).push() },
+      UI.stretchShim(),
+      UI.button("Share") { showShareDialog() },
+      UI.stretchShim()))
   }
 
   override def showTransitionCompleted () {
@@ -158,8 +178,8 @@ class CardScreen (
         iface.animator.tweenScale(_bubble).to(0f).in(200).`then`.destroy(_bubble)
         _bubble = null
       }
-      if (cardBack.layer.visible) flip(cardBack.layer, cardFront.layer)
-      else flip(cardFront.layer, cardBack.layer)
+      if (_cardBack.layer.visible) flip(_cardBack.layer, _cardFront.layer)
+      else flip(_cardFront.layer, _cardBack.layer)
     }
   }
 
@@ -211,23 +231,23 @@ class CardScreen (
   }
 
   protected def showShareDialog () {
-    val (me, thing, everyURL) = (game.self.get.name, card.thing.name, game.sess.get.everythingURL)
+    val (me, thing, everyURL) = (game.self.get.name, _card.thing.name, game.sess.get.everythingURL)
     val (msg, ref, tgtId) =
-      if (counts.map(_._2 == 0).getOrElse(false)) //  series completed
-        (s"$me got the $thing card and completed the ${card.getSeries} series!", "got_comp", null)
-      else if (card.giver == null)
+      if (_counts.map(_._2 == 0).getOrElse(false)) //  series completed
+        (s"$me got the $thing card and completed the ${_card.getSeries} series!", "got_comp", null)
+      else if (_card.giver == null)
         (s"$me got the $thing card", "got_card", null)
-      else if (card.giver.userId == Card.BIRTHDAY_GIVER_ID)
+      else if (_card.giver.userId == Card.BIRTHDAY_GIVER_ID)
         (s"$me got the $thing card as a birthday present!", "got_bgift", null)
       else
-        (s"$me got the $thing from ${card.giver}.", "got_gift", card.giver.facebookId.toString)
+        (s"$me got the $thing from ${_card.giver}.", "got_gift", _card.giver.facebookId.toString)
     val toArgs = if (tgtId != null) Array("to", tgtId) else Array[String]()
     game.fb.showDialog("feed", toArgs ++ Array(
       "name", thing,
       "caption", msg,
-      "description", card.thing.descrip,
+      "description", _card.thing.descrip,
       "link", everyURL,
-      "picture", s"${game.sess.get.backendURL}cardimg?thing=${card.thing.thingId}",
+      "picture", s"${game.sess.get.backendURL}cardimg?thing=${_card.thing.thingId}",
       "actions", s"[ { 'name': 'Collect Everything!', 'link': '${everyURL}' } ]",
       "ref", ref)).onFailure(onFailure).onSuccess(slot { id =>
         PlayN.log.info(s"Shared on FB $id.")

@@ -32,8 +32,8 @@ class SeriesScreen (game :Everything, who :PlayerName, path :Seq[String], catId 
       val footer = UI.hgroup(
         UI.shim(5, 5), likeButton(catId, false),
         UI.shim(5, 5), likeButton(catId, true),
-        UI.stretchShim(), UI.tipLabel("Editor:"),
-        UI.labelButton(series.creator.toString) {
+        UI.stretchShim(),
+        UI.tipLabel("Editor:"), UI.labelButton(series.creator.toString) {
           new CollectionScreen(game, series.creator).push()
         }, UI.shim(5, 5))
       cbox.set(UI.vscroll(UI.vsgroup(cards, footer, UI.shim(1, 1))))
