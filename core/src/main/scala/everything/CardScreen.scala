@@ -214,7 +214,7 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
     val cat = card.getSeries
     def link (text :String) = UI.hgroup(
       new Label(text), UI.labelButton(cat.name) {
-        new SeriesScreen(game, card.owner, card.categories.map(_.name), cat.categoryId).push()
+        new SeriesScreen(game, card.owner, card.categories.map(_.name), cat.categoryId).replace()
       })
     counts match {
       case Some((have, remain)) =>
