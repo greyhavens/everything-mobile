@@ -127,7 +127,7 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
       cbox.add(_cardFront, _cardBack)
     }
 
-    // update our info displays (TODO: fade the old one out and the new one in?
+    // update our info displays (TODO: fade the old one out and the new one in?)
     info.removeAll()
     if (card.giver != null) {
       _giftLbl.text.update(card.giver.name match {
@@ -136,11 +136,22 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
       })
       info.add(_giftLbl)
     }
+
+    val cat = card.getSeries
+    def link (text :String) = UI.hgroup(
+      new Label(text), UI.labelButton(cat.name) {
+        new SeriesScreen(game, card.owner, card.categories.map(_.name), cat.categoryId).push()
+      })
     // omit the count info if this is a gift and we lack the space for two lines
-    if (card.giver == null || height > 485) counts match {
-      case Some((haveCount, thingsRemaining)) => info.add(status(haveCount, thingsRemaining, card))
-      case None => // skip it
-    }
+    if (card.giver == null || height > 485) info.add(counts match {
+      case Some((have, remain)) =>
+        if (have > 1) new Label(s"You already have $have of these cards.")
+        else if (have > 0) new Label("You already have this card.")
+        else if (remain == 0) link("You completed ")
+        else link(s"You have ${cat.things - remain} of ${cat.things}")
+      case None =>
+        link(s"View") // TODO: don't show this if we're viewing a card from the SeriesScreen
+    })
 
     this
   }
@@ -155,7 +166,7 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
       UI.stretchShim(),
       UI.button("Gift") { new GiftCardScreen(game, cache, _card, _source).push() },
       UI.stretchShim(),
-      UI.button("Share") { showShareDialog() },
+      UI.button("Share") { showShareDialog(_card, _counts) },
       UI.stretchShim()))
   }
 
@@ -217,37 +228,24 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
     })
   }
 
-  def status (have :Int, remain :Int, card :Card) :Element[_] = {
-    val cat = card.getSeries
-    def link (text :String) = UI.hgroup(
-      new Label(text), UI.labelButton(cat.name) {
-        new SeriesScreen(game, game.self.get, card.categories.map(_.name), cat.categoryId).push()
-      })
-
-    if (have > 1) new Label(s"You already have $have of these cards.")
-    else if (have > 0) new Label("You already have this card.")
-    else if (remain == 0) link("You completed ")
-    else link(s"You have ${cat.things - remain} of ${cat.things}")
-  }
-
-  protected def showShareDialog () {
-    val (me, thing, everyURL) = (game.self.get.name, _card.thing.name, game.sess.get.everythingURL)
+  protected def showShareDialog (card :Card, counts :Option[(Int,Int)]) {
+    val (me, thing, everyURL) = (game.self.get.name, card.thing.name, game.sess.get.everythingURL)
     val (msg, ref, tgtId) =
-      if (_counts.map(_._2 == 0).getOrElse(false)) //  series completed
-        (s"$me got the $thing card and completed the ${_card.getSeries} series!", "got_comp", null)
-      else if (_card.giver == null)
+      if (counts.map(_._2 == 0).getOrElse(false)) //  series completed
+        (s"$me got the $thing card and completed the ${card.getSeries} series!", "got_comp", null)
+      else if (card.giver == null)
         (s"$me got the $thing card", "got_card", null)
-      else if (_card.giver.userId == Card.BIRTHDAY_GIVER_ID)
+      else if (card.giver.userId == Card.BIRTHDAY_GIVER_ID)
         (s"$me got the $thing card as a birthday present!", "got_bgift", null)
       else
-        (s"$me got the $thing from ${_card.giver}.", "got_gift", _card.giver.facebookId.toString)
+        (s"$me got the $thing from ${card.giver}.", "got_gift", card.giver.facebookId.toString)
     val toArgs = if (tgtId != null) Array("to", tgtId) else Array[String]()
     game.fb.showDialog("feed", toArgs ++ Array(
       "name", thing,
       "caption", msg,
-      "description", _card.thing.descrip,
+      "description", card.thing.descrip,
       "link", everyURL,
-      "picture", s"${game.sess.get.backendURL}cardimg?thing=${_card.thing.thingId}",
+      "picture", s"${game.sess.get.backendURL}cardimg?thing=${card.thing.thingId}",
       "actions", s"[ { 'name': 'Collect Everything!', 'link': '${everyURL}' } ]",
       "ref", ref)).onFailure(onFailure).onSuccess(slot { id =>
         PlayN.log.info(s"Shared on FB $id.")
