@@ -145,11 +145,16 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       override def onPointerEnd (event :Pointer.Event) = {
         val duration = event.time - _lastMove
         val (xdist, ydist) = (math.abs(event.x - _start.x), math.abs(event.y - _start.y))
-        val isRight = event.x > _start.x
-        // if we are clearly swiping left or right, do our swipe action
-        // TODO: be more lenient about y direction as long as we're mostly moving right?
-        if (duration < 500 && xdist > width/3 && ydist < height/8) {
-          if (isRight) onSwipeRight() else onSwipeLeft()
+        // TODO: be more lenient about y direction as long as we're mostly moving horiz?
+        val horizSwipe = xdist > width/3 && ydist < height/8
+        // TODO: be more lenient about x direction as long as we're mostly moving vert?
+        val vertSwipe = ydist > width/3 && xdist < height/8
+
+        // if we seem to be swiping, handle it
+        if (duration < 500 && (horizSwipe || vertSwipe)) {
+          println(s"Swipe! $horizSwipe $vertSwipe")
+          if (horizSwipe) onSwipe(if (event.x > _start.x) Swipe.Right else Swipe.Left)
+          else if (vertSwipe) onSwipe(if (event.y > _start.y) Swipe.Down else Swipe.Up)
         }
         // if we seem to be tapping and didn't start on an existing UI element, do our tap action
         else if (_maxDist < 10 && !_startedOnChild) onScreenTap(event)
@@ -261,11 +266,11 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       _back != null && _back.isEnabled) _back.click()
   }
 
-  /** Called if the user swipes left across the screen. Defaults to NOOP. */
-  protected def onSwipeLeft () {}
-
-  /** Called if the user swipes right across the screen. Defaults to [pop]. */
-  protected def onSwipeRight () { pop() }
+  /** Called if the user swipes up/down/left/right across the screen. */
+  protected def onSwipe (dir :Swipe.Dir) :Unit = dir match {
+    case Swipe.Right => pop()
+    case _           => () // noop!
+  }
 
   /** Called if a tap occurs on the screen where there are no interactive elements. */
   protected def onScreenTap (event :Pointer.Event) {} // noop

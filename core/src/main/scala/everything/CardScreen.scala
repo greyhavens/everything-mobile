@@ -7,6 +7,7 @@ package everything
 import playn.core.PlayN._
 import playn.core._
 import pythagoras.f.{Dimension, IDimension, FloatMath, Point}
+import react.UnitSignal
 import tripleplay.anim.Animation
 import tripleplay.shaders.RotateYShader
 import tripleplay.ui._
@@ -30,7 +31,10 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
   private var _cardFront :CardGroup = _
   private var _cardBack :CardGroup = _
 
-  val cbox = new Group(new AbsoluteLayout())
+  val cbox = new Group(new AbsoluteLayout()) {
+    layer.setDepth(1) // render above everything else; this makes things look better when we slide
+                      // cards on and off the screen
+  }
   val cardSize = new Dimension(UI.megaCard.width, UI.megaCard.height-4-12)
   val cardPos = new Point((width-cardSize.width)/2, 0)
   val info = UI.vgroup0().setConstraint(AxisLayout.stretched(2))
@@ -51,15 +55,23 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
                   UI.shim(17, 1)))
     addContents()
     add(UI.shim(1, 5))
+
+    val onLayout = new UnitSignal()
+    override protected def layout () {
+      super.layout()
+      onLayout.emit()
+    }
   }
 
-  def update (card :Card, counts :Option[(Int,Int)], source :CardButton) :this.type = {
+  def update (card :Card, counts :Option[(Int,Int)], source :CardButton,
+              dir :Swipe.Dir) :this.type = {
     _card = card
     _counts = counts
     _source = source
 
     // make a note of our old card views
-    val (ofront, oback) = (_cardFront, _cardBack)
+    val (oviz, ohid) = if (_cardFront == null || _cardFront.layer.visible) (_cardFront, _cardBack)
+                       else (_cardBack, _cardFront)
 
     // create and position our new card views
     _cardFront = AbsoluteLayout.at(new CardGroup(card) {
@@ -119,12 +131,23 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
     }, cardPos, cardSize)
     _cardBack.layer.setVisible(false)
 
-    if (ofront == null) cbox.add(_cardFront, _cardBack)
+    if (oviz == null) cbox.add(_cardFront, _cardBack)
     else {
-      // TODO: position the new front view off screen, then slide it into place, slide the old
-      // view off screen (in the direction of the flick)
-      cbox.removeAll()
+      // the old hidden card face can be destroyed immediately
+      cbox.destroy(ohid)
+      // add the new cards
       cbox.add(_cardFront, _cardBack)
+      val (oheight, nheight) = if (dir == Swipe.Down) (-height, height) else (height, -height)
+      _cardFront.layer.setOrigin(0, nheight)
+      // start the animation once they're validated (cardBack is validated after cardFront, so
+      // trigger on cardBack's validation completion)
+      _cardBack.onLayout.connect(unitSlot {
+        // slide the old vizible card face off the screen and then destroy it
+        iface.animator.tweenOrigin(oviz.layer).to(0, oheight).in(300).easeInOut.`then`.
+          action(new Runnable { def run () = cbox.destroy(oviz) })
+        // slide the new card front onto the screen
+        iface.animator.tweenOrigin(_cardFront.layer).to(0, 0).in(300).easeOutBack
+      }).once
     }
 
     // update our info displays (TODO: fade the old one out and the new one in?)
@@ -136,22 +159,8 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
       })
       info.add(_giftLbl)
     }
-
-    val cat = card.getSeries
-    def link (text :String) = UI.hgroup(
-      new Label(text), UI.labelButton(cat.name) {
-        new SeriesScreen(game, card.owner, card.categories.map(_.name), cat.categoryId).push()
-      })
     // omit the count info if this is a gift and we lack the space for two lines
-    if (card.giver == null || height > 485) info.add(counts match {
-      case Some((have, remain)) =>
-        if (have > 1) new Label(s"You already have $have of these cards.")
-        else if (have > 0) new Label("You already have this card.")
-        else if (remain == 0) link("You completed ")
-        else link(s"You have ${cat.things - remain} of ${cat.things}")
-      case None =>
-        link(s"View") // TODO: don't show this if we're viewing a card from the SeriesScreen
-    })
+    if (card.giver == null || height > 485) info.add(countLabel(card, counts))
 
     this
   }
@@ -182,7 +191,9 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
     }
   }
 
-  override def onScreenTap (event :Pointer.Event) {
+  override protected def layout () :Layout = AxisLayout.vertical().gap(0).offStretch
+
+  override protected def onScreenTap (event :Pointer.Event) {
     // if the player taps on the card, flip it!
     if (event.localY > cbox.y && event.localY < cbox.y + cbox.size.height) {
       if (_bubble != null) {
@@ -194,14 +205,31 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
     }
   }
 
-  override protected def layout () :Layout = AxisLayout.vertical().gap(0).offStretch
+  override protected def onSwipe (dir :Swipe.Dir) = dir match {
+    case Swipe.Up|Swipe.Down => _source.viewNext(this, dir)
+    case _                   => super.onSwipe(dir)
+  }
 
-  def flip (from :Layer, to :Layer) {
-    from.setDepth(1).setVisible(true)
-    to.setDepth(-1).setVisible(true)
+  protected def countLabel (card :Card, counts :Option[(Int,Int)]) :Element[_] = {
+    val cat = card.getSeries
+    def link (text :String) = UI.hgroup(
+      new Label(text), UI.labelButton(cat.name) {
+        new SeriesScreen(game, card.owner, card.categories.map(_.name), cat.categoryId).push()
+      })
+    counts match {
+      case Some((have, remain)) =>
+        if (have > 1) new Label(s"You already have $have of these cards.")
+        else if (have > 0) new Label("You already have this card.")
+        else if (remain == 0) link("You completed ")
+        else link(s"You have ${cat.things - remain} of ${cat.things}")
+      case None =>
+        if (_source.showSeriesLink) link(s"View") else new Label("")
+    }
+  }
 
+  protected def flip (from :Layer, to :Layer) {
     // create the rotating shaders
-    val yCtr = 0.5f  // TODO
+    val yCtr = 0.5f // TODO
     val topShader = new RotateYShader(graphics.ctx, 0.5f, yCtr, 1)
     from.setShader(topShader)
     val botShader = new RotateYShader(graphics.ctx, 0.5f, yCtr, 1)
@@ -214,16 +242,16 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
         topShader.angle = FloatMath.PI * pct;
         botShader.angle = FloatMath.PI * (pct - 1);
         if (pct >= 0.5f && !_flipped) {
-          from.setDepth(-1);
-          to.setDepth(1)
+          from.setVisible(false)
+          to.setVisible(true)
           _flipped = true
         }
       }
       var _flipped = false
     }).to(1).in(300).`then`.action(new Runnable() {
       def run () {
-        from.setShader(null).setDepth(0).setVisible(false)
-        to.setShader(null).setDepth(0).setVisible(true)
+        from.setShader(null)
+        to.setShader(null)
       }
     })
   }

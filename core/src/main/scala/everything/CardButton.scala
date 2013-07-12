@@ -54,6 +54,9 @@ class CardButton (
   protected var _shaker :Animation.Handle = _
   protected var _entree :Entree = CardButton.fadeIn
 
+  /** Whether or not to show a link to the series page. */
+  def showSeriesLink = true
+
   def update (status :SlotStatus, ownerId :Int, card :ThingCard) = {
     _ownerId = ownerId
     _card = card
@@ -61,13 +64,16 @@ class CardButton (
     this
   }
 
-  def view (target :CardScreen) {
-    if (_cachedCard != null) viewCard(_cachedCard, target)
+  def view (target :CardScreen, dir :Swipe.Dir) {
+    if (_cachedCard != null) viewCard(_cachedCard, target, dir)
     else game.gameSvc.getCard(new CardIdent(_ownerId, _card.thingId, _card.received)).
       bindComplete(enabled.slot). // disable cards while req is in-flight
       onFailure(host.onFailure).
-      onSuccess(slot { c => viewCard(c, target) })
+      onSuccess(slot { c => viewCard(c, target, dir) })
   }
+
+  /** Requests that the next (or previous depending on `dir`) card in the series be shown. */
+  def viewNext (target :CardScreen, dir :Swipe.Dir) {} // noop!
 
   /** Configures this button's animated entree based on the supplied random seed. */
   def entree (entree :Entree) = { _entree = entree ; this }
@@ -98,7 +104,7 @@ class CardButton (
 
   /** Called if an already-flipped card is clicked. */
   protected def onView () {
-    view(null)
+    view(null, null)
   }
 
   protected def reveal (res :GameAPI.GiftResult) {
@@ -113,7 +119,7 @@ class CardButton (
     cache(res.card.thing.image).addCallback(cb { thing =>
       shaking.update(false) // we can stop shaking now
       // flip the card over (use the current image as the old image for the flip)
-      animateFlip(ilayer.image)(viewCard(res.card, null))
+      animateFlip(ilayer.image)(viewCard(res.card, null, null))
       // update our image to be the new card (this will be flipped in)
       update(SlotStatus.FLIPPED, res.card.owner.userId, res.card.toThingCard)
       _counts = Some((res.haveCount, res.thingsRemaining))
@@ -159,11 +165,11 @@ class CardButton (
     })
   }
 
-  protected def viewCard (card :Card, target :CardScreen) {
+  protected def viewCard (card :Card, target :CardScreen, dir :Swipe.Dir) {
     _cachedCard = card
     enabled.update(true) // reenable card interaction
     val screen = if (target == null) new CardScreen(game, cache) else target
-    screen.update(card, _counts, this).setMessage(_msg)
+    screen.update(card, _counts, this, dir).setMessage(_msg)
     if (target == null) screen.push()
   }
 

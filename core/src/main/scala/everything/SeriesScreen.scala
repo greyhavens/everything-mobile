@@ -24,11 +24,26 @@ class SeriesScreen (game :Everything, who :PlayerName, path :Seq[String], catId 
       val cache = new UI.ImageCache(game)
       val cardsEnabled = Value.create(true :JBoolean)
       val cards = new Group(new TableLayout(3).gaps(2, 2), Style.VALIGN.top)
-      series.things.foreach(tc => {
-        val status = if (tc == null) SlotStatus.UNFLIPPED else SlotStatus.FLIPPED
-        cards.add(new CardButton(game, this, cache, UI.bigCard, cardsEnabled).
-          update(status, who.userId, tc))
-      })
+      series.things.zipWithIndex.foreach {
+        case (tc, idx) =>
+          val status = if (tc == null) SlotStatus.UNFLIPPED else SlotStatus.FLIPPED
+          cards.add(new CardButton(game, this, cache, UI.bigCard, cardsEnabled) {
+            override def showSeriesLink = false
+            override def viewNext (target :CardScreen, dir :Swipe.Dir) {
+              val dc = if (dir == Swipe.Up) 1 else -1
+              def next (ii :Int, dc :Int) = {
+                val count = series.things.length
+                (ii+count+dc)%count
+              }
+              def findAndView (ii :Int) {
+                if (series.things(ii) == null) findAndView(next(ii, dc))
+                else cards.childAt(ii).asInstanceOf[CardButton].view(target, dir)
+              }
+              findAndView(next(idx, dc))
+            }
+          }.update(status, who.userId, tc))
+      }
+
       val footer = UI.hgroup(
         UI.shim(5, 5), likeButton(catId, false),
         UI.shim(5, 5), likeButton(catId, true),
