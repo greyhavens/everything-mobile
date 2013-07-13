@@ -29,6 +29,7 @@ class SeriesScreen (game :Everything, who :PlayerName, path :Seq[String], catId 
           val status = if (tc == null) SlotStatus.UNFLIPPED else SlotStatus.FLIPPED
           cards.add(new CardButton(game, this, cache, UI.bigCard, cardsEnabled) {
             override def showSeriesLink = false
+            override def canViewNext = true
             override def viewNext (target :CardScreen, dir :Swipe.Dir) {
               val dc = if (dir == Swipe.Up) 1 else -1
               def next (ii :Int, dc :Int) = {

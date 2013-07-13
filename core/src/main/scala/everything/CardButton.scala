@@ -57,6 +57,9 @@ class CardButton (
   /** Whether or not to show a link to the series page. */
   def showSeriesLink = true
 
+  /** Whether or not we'll respond to a [viewNext] call. */
+  def canViewNext = false
+
   def update (status :SlotStatus, ownerId :Int, card :ThingCard) = {
     _ownerId = ownerId
     _card = card
