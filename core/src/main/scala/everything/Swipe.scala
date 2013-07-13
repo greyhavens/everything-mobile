@@ -10,4 +10,7 @@ object Swipe {
   object Down  extends Dir
   object Left  extends Dir
   object Right extends Dir
+
+  final val MaxTapDist = 10
+  final val MaxSwipeTime = 300
 }

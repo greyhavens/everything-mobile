@@ -6,7 +6,7 @@ package everything
 
 import playn.core.PlayN._
 import playn.core._
-import pythagoras.f.{IDimension, MathUtil, Rectangle, Point}
+import pythagoras.f.{IDimension, IPoint, MathUtil, Rectangle, Point}
 import react.{Value, Signal, UnitSignal}
 
 import tripleplay.game.{ScreenStack, UIScreen}
@@ -90,6 +90,58 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     }
   }
 
+  // handles custom gesture stuffs
+  class Interaction (startedOnChild :Boolean) {
+    def onStart (event :Pointer.Event) {
+      _start.set(event.x, event.y)
+      _lastMove = event.time
+      _maxDist = 0
+    }
+
+    def onDrag (event :Pointer.Event) {
+      // TODO: if we stop for a while and then start dragging again, reset _start?
+      _lastMove = event.time
+      _maxDist = math.max(_maxDist, _start.distance(event.x, event.y))
+    }
+
+    def onEnd (event :Pointer.Event) {
+      val duration = event.time - _lastMove
+      val (xdist, ydist) = (math.abs(event.x - _start.x), math.abs(event.y - _start.y))
+      // TODO: be more lenient about y direction as long as we're mostly moving horiz?
+      val horizSwipe = xdist > width/3 && ydist < height/8
+      // TODO: be more lenient about x direction as long as we're mostly moving vert?
+      val vertSwipe = ydist > width/3 && xdist < height/8
+      // if we seem to be swiping, handle it
+      if (duration < Swipe.MaxSwipeTime && (horizSwipe || vertSwipe)) {
+        if (horizSwipe) onSwipe(if (event.x > _start.x) Swipe.Right else Swipe.Left)
+        else if (vertSwipe) onSwipe(if (event.y > _start.y) Swipe.Down else Swipe.Up)
+      }
+      // if we seem to be tapping and didn't start on an existing UI element, do our tap action
+      else if (_maxDist < Swipe.MaxTapDist && !startedOnChild) onTap(event)
+      else onFizzle(event)
+    }
+
+    // TODO: move all the interaction tracking in here, base swipe detection on velocity vectory,
+    // add flick animation which moves a layer based on velocity (and friction?) and stops after it
+    // reachs zero velocity or passes a predefined point
+
+    /** Called if we recognize a swipe gesture in the specified direction. */
+    def onSwipe (dir :Swipe.Dir) :Unit = dir match {
+      case Swipe.Right => pop()
+      case _ => // nada
+    }
+
+    /** Called if we recognize a tap gesture. */
+    def onTap (event :Pointer.Event) {} // noop!
+
+    /** Called if we recognize no particular gesture. */
+    def onFizzle (event :Pointer.Event) {} // noop!
+
+    val _start = new Point()
+    var _lastMove = 0d
+    var _maxDist = 0f
+  }
+
   /** A value updated in `wasHidden`/`wasShown`. */
   val isVisible = Value.create(false)
 
@@ -128,42 +180,20 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     _dbag.add(game.keyDown.connect(slot { k =>
       if (k == Key.BACK) onHardwareBack()
     }))
-    // create a swipe right gesture which means "go back"
+    // react to pointer events to detect swipes
     root.layer.setHitTester(UI.absorber)
     root.layer.addListener(new Pointer.Adapter {
       override def onPointerStart (event :Pointer.Event) = {
-        _start.set(event.x, event.y)
-        _lastMove = event.time
-        _maxDist = 0
-        _startedOnChild = (event.hit != root.layer)
+        _interact = onGestureStart(event.hit != root.layer)
+        _interact.onStart(event)
       }
       override def onPointerDrag (event :Pointer.Event) {
-        // TODO: if we stop for a while and then start dragging again, reset _start?
-        _lastMove = event.time
-        _maxDist = math.max(_maxDist, _start.distance(event.x, event.y))
+        _interact.onDrag(event)
       }
       override def onPointerEnd (event :Pointer.Event) = {
-        val duration = event.time - _lastMove
-        val (xdist, ydist) = (math.abs(event.x - _start.x), math.abs(event.y - _start.y))
-        // TODO: be more lenient about y direction as long as we're mostly moving horiz?
-        val horizSwipe = xdist > width/3 && ydist < height/8
-        // TODO: be more lenient about x direction as long as we're mostly moving vert?
-        val vertSwipe = ydist > width/3 && xdist < height/8
-
-        // if we seem to be swiping, handle it
-        if (duration < 500 && (horizSwipe || vertSwipe)) {
-          println(s"Swipe! $horizSwipe $vertSwipe")
-          if (horizSwipe) onSwipe(if (event.x > _start.x) Swipe.Right else Swipe.Left)
-          else if (vertSwipe) onSwipe(if (event.y > _start.y) Swipe.Down else Swipe.Up)
-        }
-        // if we seem to be tapping and didn't start on an existing UI element, do our tap action
-        else if (_maxDist < 10 && !_startedOnChild) onScreenTap(event)
-        else log.info(s"Nah $duration $xdist $ydist ${_maxDist}")
+        _interact.onEnd(event)
       }
-      val _start = new Point()
-      var _startedOnChild = false
-      var _lastMove = 0d
-      var _maxDist = 0f
+      var _interact :Interaction = _
     })
   }
 
@@ -266,17 +296,14 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       _back != null && _back.isEnabled) _back.click()
   }
 
-  /** Called if the user swipes up/down/left/right across the screen. */
-  protected def onSwipe (dir :Swipe.Dir) :Unit = dir match {
-    case Swipe.Right => pop()
-    case _           => () // noop!
-  }
-
-  /** Called if a tap occurs on the screen where there are no interactive elements. */
-  protected def onScreenTap (event :Pointer.Event) {} // noop
+  /** Called when a pointer interaction begins. A screen can return an [Interaction] instance if it
+    * wishes to participate in the gesture. */
+  protected def onGestureStart (startedOnChild :Boolean) :Interaction = DefaultInteraction
 
   protected def todo () = new Dialog().addTitle("TODO").addButton("OK", ()).display()
 
   protected var _back :Button = _
   protected val _dbag = new DestroyableBag
+
+  protected final val DefaultInteraction = new Interaction(false)
 }

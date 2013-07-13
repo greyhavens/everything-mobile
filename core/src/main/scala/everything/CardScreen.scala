@@ -6,12 +6,13 @@ package everything
 
 import playn.core.PlayN._
 import playn.core._
-import pythagoras.f.{Dimension, IDimension, FloatMath, Point}
+import pythagoras.f.{Dimension, IDimension, IPoint, FloatMath, Point}
 import react.UnitSignal
 import tripleplay.anim.Animation
 import tripleplay.shaders.RotateYShader
 import tripleplay.ui._
 import tripleplay.ui.layout._
+import tripleplay.util.Interpolator
 
 import com.threerings.everything.data._
 
@@ -69,10 +70,6 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
     _counts = counts
     _source = source
 
-    // make a note of our old card views
-    val (oviz, ohid) = if (_cardFront == null || _cardFront.layer.visible) (_cardFront, _cardBack)
-                       else (_cardBack, _cardFront)
-
     // create and position our new card views
     _cardFront = AbsoluteLayout.at(new CardGroup(card) {
       def addContents () {
@@ -129,22 +126,19 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
                                                   UI.wrapLabel(f).addStyles(ffont)))
       }
     }, cardPos, cardSize)
+    // TODO: make the whole back card invisible (avoid layout); then layout, validate and then
+    // animate on flip
     _cardBack.layer.setVisible(false)
 
-    if (oviz == null) cbox.add(_cardFront, _cardBack)
-    else {
-      // the old hidden card face can be destroyed immediately
-      cbox.destroy(ohid)
-      // add the new cards
-      cbox.add(_cardFront, _cardBack)
-      val (oheight, nheight) = if (dir == Swipe.Down) (-height, height) else (height, -height)
-      _cardFront.layer.setOrigin(0, nheight)
-      // start the animation once they're validated (cardBack is validated after cardFront, so
-      // trigger on cardBack's validation completion)
-      _cardBack.onLayout.connect(unitSlot {
-        // slide the old vizible card face off the screen and then destroy it
-        iface.animator.tweenOrigin(oviz.layer).to(0, oheight).in(300).easeInOut.`then`.
-          action(new Runnable { def run () = cbox.destroy(oviz) })
+    // add the new cards to the UI
+    cbox.add(_cardFront, _cardBack)
+
+    // if this update originated from a swipe, slide the card in, otherwise just add it
+    if (dir != null) {
+      // position the top card off the screen (the bottom card is already invisible)
+      _cardFront.layer.setOrigin(0, if (dir == Swipe.Down) height else -height)
+      // start the animation once the top card is validated
+      _cardFront.onLayout.connect(unitSlot {
         // slide the new card front onto the screen
         iface.animator.tweenOrigin(_cardFront.layer).to(0, 0).in(300).easeOutBack
       }).once
@@ -167,16 +161,17 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
 
   override def createUI () {
     if (height > 485) root.add(UI.stretchShim())
-    root.add(cbox, info, UI.hgroup(
-      UI.shim(5, 5),
-      back(),
-      UI.stretchShim(),
-      UI.button("Sell") { maybeSellCard(_card.toThingCard) { _source.queueSell() ; pop() }},
-      UI.stretchShim(),
-      UI.button("Gift") { new GiftCardScreen(game, cache, _card, _source).push() },
-      UI.stretchShim(),
-      UI.button("Share") { showShareDialog(_card, _counts) },
-      UI.stretchShim()))
+    root.add(cbox.setConstraint(Constraints.fixedSize(cardSize.width, cardSize.height)), info,
+             UI.hgroup(
+               UI.shim(5, 5),
+               back(),
+               UI.stretchShim(),
+               UI.button("Sell") { maybeSellCard(_card.toThingCard) { _source.queueSell() ; pop() }},
+               UI.stretchShim(),
+               UI.button("Gift") { new GiftCardScreen(game, cache, _card, _source).push() },
+               UI.stretchShim(),
+               UI.button("Share") { showShareDialog(_card, _counts) },
+               UI.stretchShim()))
   }
 
   override def showTransitionCompleted () {
@@ -193,21 +188,38 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
 
   override protected def layout () :Layout = AxisLayout.vertical().gap(0).offStretch
 
-  override protected def onScreenTap (event :Pointer.Event) {
-    // if the player taps on the card, flip it!
-    if (event.localY > cbox.y && event.localY < cbox.y + cbox.size.height) {
-      if (_bubble != null) {
-        iface.animator.tweenScale(_bubble).to(0f).in(200).`then`.destroy(_bubble)
-        _bubble = null
+  override protected def onGestureStart (startedOnChild :Boolean) = new Interaction(startedOnChild) {
+    override def onDrag (event :Pointer.Event) {
+      super.onDrag(event)
+      if (_maxDist > Swipe.MaxTapDist && _source.canViewNext) {
+        val dy = _start.y - event.y
+        val layer = if (_cardFront.layer.visible) _cardFront.layer else _cardBack.layer
+        layer.setOrigin(layer.originX, dy)
       }
-      if (_cardBack.layer.visible) flip(_cardBack.layer, _cardFront.layer)
-      else flip(_cardFront.layer, _cardBack.layer)
     }
-  }
-
-  override protected def onSwipe (dir :Swipe.Dir) = dir match {
-    case Swipe.Up|Swipe.Down => _source.viewNext(this, dir)
-    case _                   => super.onSwipe(dir)
+    override def onSwipe (dir :Swipe.Dir) = dir match {
+      case Swipe.Up|Swipe.Down => swipe(dir, true)
+      case _                   => super.onSwipe(dir)
+    }
+    override def onFizzle (event :Pointer.Event) {
+      val top = if (_cardFront.layer.visible) _cardFront else _cardBack
+      // if we moved more than half the card distance, then just call it a swipe
+      val dy = _start.y - event.y
+      if (math.abs(dy) > top.size.height/3) swipe(if (dy < 0) Swipe.Down else Swipe.Up, false)
+      // otherwise ease the card back into position
+      else iface.animator.tweenOrigin(top.layer).to(top.layer.originX, 0).in(300).easeInOut
+    }
+    override def onTap (event :Pointer.Event) {
+      // if the player taps on the card, flip it!
+      if (event.localY > cbox.y && event.localY < cbox.y + cbox.size.height) {
+        if (_bubble != null) {
+          iface.animator.tweenScale(_bubble).to(0f).in(200).`then`.destroy(_bubble)
+          _bubble = null
+        }
+        if (_cardBack.layer.visible) flip(_cardBack.layer, _cardFront.layer)
+        else flip(_cardFront.layer, _cardBack.layer)
+      }
+    }
   }
 
   protected def countLabel (card :Card, counts :Option[(Int,Int)]) :Element[_] = {
@@ -224,6 +236,24 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
         else link(s"You have ${cat.things - remain} of ${cat.things}")
       case None =>
         if (_source.showSeriesLink) link(s"View") else new Label("")
+    }
+  }
+
+  protected def swipe (dir :Swipe.Dir, fast :Boolean) {
+    if (_source.canViewNext) {
+      val (oviz, ohid) = if (_cardFront.layer.visible) (_cardFront, _cardBack)
+      else (_cardBack, _cardFront)
+      // the old hidden card face can be destroyed immediately
+      cbox.destroy(ohid)
+
+      // slide the old vizible card face off the screen and then destroy it
+      val oheight = if (dir == Swipe.Down) -height else height
+      val interp = if (fast) Interpolator.EASE_OUT else Interpolator.EASE_INOUT
+      iface.animator.tweenOrigin(oviz.layer).to(0, oheight).in(300).using(interp).`then`.
+        action(new Runnable { def run () = { cbox.destroy(oviz) }})
+
+      // trigger the download and display of the next card
+      _source.viewNext(CardScreen.this, dir)
     }
   }
 
