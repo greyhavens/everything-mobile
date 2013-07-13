@@ -14,20 +14,21 @@ import tripleplay.ui.layout.{AxisLayout, TableLayout}
 
 import com.threerings.everything.data._
 
-class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card, source :CardButton)
-    extends EveryScreen(game) {
+class GiftCardScreen (
+  game :Everything, cache :UI.ImageCache, cardp :ThingCardPlus, source :CardButton
+) extends EveryScreen(game) {
 
   // start our data request immediately
-  val giftInfo = game.gameSvc.getGiftCardInfo(card.thing.thingId, card.received)
+  val giftInfo = game.gameSvc.getGiftCardInfo(cardp.thingId, cardp.received)
   val fbox = UI.stretchBox()
 
   override def createUI () {
     val header = UI.plate(
-      UI.icon(UI.card.image(cache, card.toThingCard)),
-      UI.headerLabel(card.thing.name),
-      UI.pathLabel(card.categories.map(_.name), 12),
-      UI.tipLabel(s"Rarity: ${card.thing.rarity} - E${card.thing.rarity.value}"))
-    val sell = UI.button("Sell") { maybeSellCard(card.toThingCard) {
+      UI.icon(UI.card.image(cache, cardp.thing)),
+      UI.headerLabel(cardp.name),
+      UI.pathLabel(cardp.path, 12),
+      UI.tipLabel(s"Rarity: ${cardp.rarity} - E${cardp.rarity.value}"))
+    val sell = UI.button("Sell") { maybeSellCard(cardp.thing) {
       source.queueSell()
       clearParent() // remove our parent (card) screen from the stack as well
       pop()
@@ -65,7 +66,7 @@ class GiftCardScreen (game :Everything, cache :UI.ImageCache, card :Card, source
   def showGivePopup (friend :PlayerName) :Unit = new Dialog().
     add(UI.hgroup(UI.icon(UI.frameImage(UI.friendImage(friend), 50, 50)),
                   UI.vgroup(UI.headerLabel("Gift Card"),
-                            UI.wrapLabel(s"Give ${card.thing.name} to ${friend.name}?")).
+                            UI.wrapLabel(s"Give ${cardp.name} to ${friend.name}?")).
                     setConstraint(AxisLayout.stretched))).
     addButton("Cancel", ()).
     addButton("Give", giveCard(friend, "")).

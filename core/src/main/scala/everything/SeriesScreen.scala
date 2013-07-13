@@ -42,7 +42,8 @@ class SeriesScreen (game :Everything, who :PlayerName, path :Seq[String], catId 
               }
               findAndView(next(idx, dc))
             }
-          }.update(status, who.userId, tc))
+            // TODO: proper giver info?
+          }.update(status, who.userId, ThingCardPlus(tc, path, idx, series.things.size, who, null)))
       }
 
       val footer = UI.hgroup(

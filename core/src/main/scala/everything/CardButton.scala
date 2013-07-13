@@ -55,10 +55,12 @@ class CardButton (
   bindEnabled(enabled)
   upStatus(SlotStatus.UNFLIPPED)
 
+  var counts :Option[(Int,Int)] = None
+
   protected var _ownerId = 0
   protected var _card :ThingCard = _
+  protected var _cardp :ThingCardPlus = _
   protected var _msg :String = null
-  protected var _counts :Option[(Int,Int)] = None
   protected var _entree :Entree = CardButton.fadeIn
 
   /** Whether or not to show a link to the series page. */
@@ -66,6 +68,11 @@ class CardButton (
 
   /** Whether or not we'll respond to a [viewNext] call. */
   def canViewNext = false
+
+  def update (status :SlotStatus, ownerId :Int, cardp :ThingCardPlus) :this.type = {
+    _cardp = cardp
+    update(status, ownerId, cardp.thing)
+  }
 
   def update (status :SlotStatus, ownerId :Int, card :ThingCard) :this.type = {
     _ownerId = ownerId
@@ -75,7 +82,8 @@ class CardButton (
   }
 
   def view (target :CardScreen, dir :Swipe.Dir) {
-    cardF.onSuccess(slot { c => viewCard(c, target, dir) })
+    if (_cardp != null) viewCard(target, dir)
+    else cardF.onSuccess(slot { c => viewCard(c, target, dir) })
   }
 
   /** Requests that the next (or previous depending on `dir`) card in the series be shown. */
@@ -125,7 +133,7 @@ class CardButton (
       animateFlip(ilayer.image)(viewCard(res.card, null, null))
       // update our image to be the new card (this will be flipped in)
       update(SlotStatus.FLIPPED, res.card.owner.userId, new ThingCardPlus(res.card))
-      _counts = Some((res.haveCount, res.thingsRemaining))
+      this.counts = Some((res.haveCount, res.thingsRemaining))
       // once the flip animation completes, viewCard will be called
     })
   }
@@ -169,9 +177,14 @@ class CardButton (
   }
 
   protected def viewCard (card :Card, target :CardScreen, dir :Swipe.Dir) {
+    _cardp = new ThingCardPlus(card)
+    viewCard(target, dir)
+  }
+
+  protected def viewCard (target :CardScreen, dir :Swipe.Dir) {
     enabled.update(true) // reenable card interaction
     val screen = if (target == null) new CardScreen(game, cache) else target
-    screen.update(card, _counts, this, dir).setMessage(_msg)
+    screen.update(_cardp, this, dir).setMessage(_msg)
     if (target == null) screen.push()
   }
 

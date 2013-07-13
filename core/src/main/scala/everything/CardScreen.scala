@@ -7,7 +7,7 @@ package everything
 import playn.core.PlayN._
 import playn.core._
 import pythagoras.f.{Dimension, IDimension, IPoint, FloatMath, Point}
-import react.UnitSignal
+import react.{Value, UnitSignal}
 import tripleplay.anim.Animation
 import tripleplay.shaders.RotateYShader
 import tripleplay.ui._
@@ -26,11 +26,9 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
   private var _bubble :ImageLayer = _
   private val _giftLbl :Label = new Label()
 
-  private var _card :Card = _
-  private var _counts :Option[(Int,Int)] = _
+  private var _cardp :ThingCardPlus = _
   private var _source :CardButton = _
-  private var _cardFront :CardGroup = _
-  private var _cardBack :CardGroup = _
+  private var _cardViz :CardViz = _
 
   val cbox = new Group(new AbsoluteLayout()) {
     layer.setDepth(1) // render above everything else; this makes things look better when we slide
@@ -40,19 +38,19 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
   val cardPos = new Point((width-cardSize.width)/2, 0)
   val info = UI.vgroup0().setConstraint(AxisLayout.stretched(2))
 
-  abstract class CardGroup (card :Card) extends Group(AxisLayout.vertical().offStretch.gap(0)) {
+  abstract class CardGroup (cardp :ThingCardPlus)
+      extends Group(AxisLayout.vertical().offStretch.gap(0)) {
     def background () = new Background() {
       override protected def instantiate (size :IDimension) =
         new LayerInstance(size, graphics.createImageLayer(UI.megaCard).setTranslation(-3, -4))
     }
     def addCats () {
-      add(UI.pathLabel(card.categories.map(_.name)),
-          UI.tipLabel(s"${card.position+1} of ${card.things}"))
+      add(UI.pathLabel(cardp.path), UI.tipLabel(s"${cardp.pos+1} of ${cardp.things}"))
     }
     def addContents ()
     addStyles(Style.BACKGROUND.is(background().inset(6, 27, 6, 14)))
     add(UI.shim(1, 2),
-        UI.hgroup(UI.shim(17, 1), AxisLayout.stretch(UI.headerLabel(card.thing.name)),
+        UI.hgroup(UI.shim(17, 1), AxisLayout.stretch(UI.headerLabel(cardp.name)),
                   UI.shim(17, 1)))
     addContents()
     add(UI.shim(1, 5))
@@ -64,97 +62,175 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
     }
   }
 
-  def update (card :Card, counts :Option[(Int,Int)], source :CardButton,
-              dir :Swipe.Dir) :this.type = {
-    _card = card
-    _counts = counts
-    _source = source
+  class CardViz (cardp :ThingCardPlus, source :CardButton) {
+    def viz = if (front.layer.visible) front.layer else back.layer
 
-    // create and position our new card views
-    _cardFront = AbsoluteLayout.at(new CardGroup(card) {
+    val front = new CardGroup(cardp) {
       def addContents () {
-        val image = UI.frameImage(
-          cache(card.thing.image), Thing.MAX_IMAGE_WIDTH/2, Thing.MAX_IMAGE_HEIGHT/2)
+        val image = UI.frameImage(cache(cardp.image),
+                                  Thing.MAX_IMAGE_WIDTH/2, Thing.MAX_IMAGE_HEIGHT/2)
         add(UI.hgroup(UI.shim(10, 5),
-                      likeButton(card.thing.categoryId, false),
+                      likeButton(cardp.categoryId, false),
                       UI.stretchShim(),
-                      UI.subHeaderLabel(s"Rarity: ${card.thing.rarity}"), UI.shim(15, 5),
-                      UI.moneyIcon(card.thing.rarity.value),
+                      UI.subHeaderLabel(s"Rarity: ${cardp.rarity}"), UI.shim(15, 5),
+                      UI.moneyIcon(cardp.rarity.value),
                       UI.stretchShim(),
-                      likeButton(card.thing.categoryId, true),
+                      likeButton(cardp.categoryId, true),
                       UI.shim(10, 5)),
             UI.stretchShim(),
             UI.icon(image).addStyles(Style.ICON_POS.above),
             UI.stretchShim())
         addCats()
       }
-    }, cardPos, cardSize)
+    }
+    cbox.add(AbsoluteLayout.at(front, cardPos, cardSize))
 
-    _cardBack = AbsoluteLayout.at(new CardGroup(card) {
+    var back :CardGroup = _
+    def mkBack (thing :Thing) = new CardGroup(cardp) {
       def addContents () {
         addCats()
         add(UI.stretchShim(),
-            UI.wrapLabel(card.thing.descrip).addStyles(Style.FONT.is(UI.factsFont)),
+            UI.wrapLabel(thing.descrip).addStyles(Style.FONT.is(UI.factsFont)),
             UI.stretchShim(),
             new Label("Notes").addStyles(Style.FONT.is(UI.notesHeaderFont)),
-            formatFacts(card.thing.facts.split("\n")),
+            formatFacts(thing.facts.split("\n")),
             UI.stretchShim(),
             UI.hgroup(
               UI.subHeaderLabel("Source:"),
-              UI.labelButton(nameSource(card.thing.source)) {
-                PlayN.openURL(card.thing.source)
+              UI.labelButton(nameSource(thing.source)) {
+                PlayN.openURL(thing.source)
               }),
             UI.hgroup(UI.subHeaderLabel("Flipped on:"),
-                      new Label(game.device.formatDate(card.received))))
+                      new Label(game.device.formatDate(cardp.received))))
       }
-
-      def nameSource (source :String) = {
-        if (source.indexOf("wikipedia.org") != -1) "Wikipedia"
-        else {
-          val ssidx = source.indexOf("//")
-          val eidx = source.indexOf("/", ssidx+2)
-          if (ssidx == -1) source
-          else if (eidx == -1) source.substring(ssidx+2);
-          else source.substring(ssidx+2, eidx);
-        }
+      override protected def wasAdded () {
+        super.wasAdded()
+        // set ourself to the proper size immediately upon being added, then force a validation;
+        // this ensures that we're fully laid out (and all of our grindy grindy is done) before we
+        // start the flip animation (for great smoothness)
+        setSize(cardSize.width, cardSize.height)
+        validate()
       }
+    }
 
-      def formatFacts (facts :Array[String]) = {
-        val ffont = Style.FONT.is(UI.notesFont)
-        val lay = new TableLayout(TableLayout.COL.fixed, TableLayout.COL.stretch).alignTop.gaps(5, 5)
-        (new Group(lay) /: facts)((g, f) => g.add(UI.glyphLabel("•").addStyles(ffont),
-                                                  UI.wrapLabel(f).addStyles(ffont)))
-      }
-    }, cardPos, cardSize)
-    // TODO: make the whole back card invisible (avoid layout); then layout, validate and then
-    // animate on flip
-    _cardBack.layer.setVisible(false)
+    // used to debounce clicks when loading/flipping
+    val flipping = Value.create(false)
 
-    // add the new cards to the UI
-    cbox.add(_cardFront, _cardBack)
-
-    // if this update originated from a swipe, slide the card in, otherwise just add it
-    if (dir != null) {
-      // position the top card off the screen (the bottom card is already invisible)
-      _cardFront.layer.setOrigin(0, if (dir == Swipe.Down) height else -height)
-      // start the animation once the top card is validated
-      _cardFront.onLayout.connect(unitSlot {
-        // slide the new card front onto the screen
-        iface.animator.tweenOrigin(_cardFront.layer).to(0, 0).in(300).easeOutBack
+    def slideIn (dir :Swipe.Dir) {
+      // position the card front off the screen (the bottom card is already invisible)
+      front.layer.setOrigin(0, if (dir == Swipe.Down) height else -height)
+      // start the slide in animation once the card front is validated
+      front.onLayout.connect(unitSlot {
+        iface.animator.tweenOrigin(front.layer).to(0, 0).in(300).easeOutBack
       }).once
     }
 
+    def flip () {
+      // debounce, in case player tap tap taps while we're loading or animating
+      if (!flipping.get) {
+        flipping.update(true)
+        // TODO: shake, since this may require a server call?
+        source.cardF.onSuccess(slot { card =>
+          if (back == null) {
+            back = mkBack(card.thing)
+            back.layer.setVisible(false) // we'll be made visible by flip()
+            cbox.add(AbsoluteLayout.at(back, cardPos, cardSize))
+          }
+          if (front.layer.visible) flip(front.layer, back.layer)
+          else flip(back.layer, front.layer)
+        })
+      }
+    }
+
+    def slideOut (dir :Swipe.Dir, fast :Boolean) {
+      val (oviz, ohid) = if (front.layer.visible) (front, back)
+      else (back, front)
+      // the old hidden card face can be destroyed immediately
+      if (ohid != null) cbox.destroy(ohid)
+
+      // slide the old vizible card face off the screen and then destroy it
+      val oheight = if (dir == Swipe.Down) -height else height
+      val interp = if (fast) Interpolator.EASE_OUT else Interpolator.EASE_INOUT
+      iface.animator.tweenOrigin(oviz.layer).to(0, oheight).in(300).using(interp).`then`.
+        action(new Runnable { def run () = { cbox.destroy(oviz) }})
+    }
+
+    protected def flip (from :Layer, to :Layer) {
+      // create the rotating shaders
+      val yCtr = 0.5f // TODO
+      val topShader = new RotateYShader(graphics.ctx, 0.5f, yCtr, 1)
+      from.setShader(topShader)
+      val botShader = new RotateYShader(graphics.ctx, 0.5f, yCtr, 1)
+      to.setShader(botShader)
+
+      // run up our flipping animation
+      iface.animator.setValue(flipping, true).
+        `then`.tween(new Animation.Value() {
+          def initial = 0
+          def set (pct :Float) = {
+            topShader.angle = FloatMath.PI * pct;
+            botShader.angle = FloatMath.PI * (pct - 1);
+            if (pct >= 0.5f && !_flipped) {
+              from.setVisible(false)
+              to.setVisible(true)
+              _flipped = true
+            }
+          }
+          var _flipped = false
+        }).to(1).in(300).
+        `then`.action(new Runnable() {
+          def run () {
+            from.setShader(null)
+            to.setShader(null)
+          }
+        }).
+        `then`.setValue(flipping, false)
+    }
+
+    def nameSource (source :String) = {
+      if (source.indexOf("wikipedia.org") != -1) "Wikipedia"
+      else {
+        val ssidx = source.indexOf("//")
+        val eidx = source.indexOf("/", ssidx+2)
+        if (ssidx == -1) source
+        else if (eidx == -1) source.substring(ssidx+2);
+        else source.substring(ssidx+2, eidx);
+      }
+    }
+
+    def formatFacts (facts :Array[String]) = {
+      val ffont = Style.FONT.is(UI.notesFont)
+      val lay = new TableLayout(TableLayout.COL.fixed, TableLayout.COL.stretch).alignTop.gaps(5, 5)
+      (new Group(lay) /: facts)((g, f) => g.add(UI.glyphLabel("•").addStyles(ffont),
+                                                UI.wrapLabel(f).addStyles(ffont)))
+    }
+  }
+
+  def update (cardp :ThingCardPlus, source :CardButton, dir :Swipe.Dir) :this.type = {
+    _cardp = cardp
+    _source = source
+
+    // create our card visualization (this will add the front viz to the UI)
+    _cardViz = new CardViz(cardp, source)
+
+    // if this update originated from a swipe, slide the card in, otherwise just add it
+    if (dir != null) _cardViz.slideIn(dir)
+
     // update our info displays (TODO: fade the old one out and the new one in?)
     info.removeAll()
-    if (card.giver != null) {
-      _giftLbl.text.update(card.giver.name match {
-        case null => "A birthday gift from Everything!"
-        case name => s"A gift from ${card.giver}!"
-      })
-      info.add(_giftLbl)
-    }
+    // TODO: should we request this immediately?
+    // if (cardp.giver != null) {
+    //   _giftLbl.text.update(card.giver.name match {
+    //     case null => "A birthday gift from Everything!"
+    //     case name => s"A gift from ${card.giver}!"
+    //   })
+    //   info.add(_giftLbl)
+    // }
+
     // omit the count info if this is a gift and we lack the space for two lines
-    if (card.giver == null || height > 485) info.add(countLabel(card, counts))
+    // if (cardp.giver == null || height > 485) { // TODO
+    info.add(countLabel(cardp, source.counts))
+    // }
 
     this
   }
@@ -166,11 +242,14 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
                UI.shim(5, 5),
                back(),
                UI.stretchShim(),
-               UI.button("Sell") { maybeSellCard(_card.toThingCard) { _source.queueSell() ; pop() }},
+               UI.button("Sell") { maybeSellCard(_cardp.thing) { _source.queueSell() ; pop() }},
                UI.stretchShim(),
-               UI.button("Gift") { new GiftCardScreen(game, cache, _card, _source).push() },
+               UI.button("Gift") { new GiftCardScreen(game, cache, _cardp, _source).push() },
                UI.stretchShim(),
-               UI.button("Share") { showShareDialog(_card, _counts) },
+               UI.button("Share") {
+                 // TODO: shake the button or something if we have to wait...
+                 _source.cardF.onSuccess(slot { card => showShareDialog(card, _source.counts) })
+               },
                UI.stretchShim()))
   }
 
@@ -193,8 +272,8 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
       super.onDrag(event)
       if (_maxDist > Swipe.MaxTapDist && _source.canViewNext) {
         val dy = _start.y - event.y
-        val layer = if (_cardFront.layer.visible) _cardFront.layer else _cardBack.layer
-        layer.setOrigin(layer.originX, dy)
+        val viz = _cardViz.viz
+        viz.setOrigin(viz.originX, dy)
       }
     }
     override def onSwipe (dir :Swipe.Dir) = dir match {
@@ -202,12 +281,12 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
       case _                   => super.onSwipe(dir)
     }
     override def onFizzle (event :Pointer.Event) {
-      val top = if (_cardFront.layer.visible) _cardFront else _cardBack
+      val viz = _cardViz.viz
       // if we moved more than half the card distance, then just call it a swipe
       val dy = _start.y - event.y
-      if (math.abs(dy) > top.size.height/3) swipe(if (dy < 0) Swipe.Down else Swipe.Up, false)
+      if (math.abs(dy) > cardSize.height/3) swipe(if (dy < 0) Swipe.Down else Swipe.Up, false)
       // otherwise ease the card back into position
-      else iface.animator.tweenOrigin(top.layer).to(top.layer.originX, 0).in(300).easeInOut
+      else iface.animator.tweenOrigin(viz).to(viz.originX, 0).in(300).easeInOut
     }
     override def onTap (event :Pointer.Event) {
       // if the player taps on the card, flip it!
@@ -216,24 +295,22 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
           iface.animator.tweenScale(_bubble).to(0f).in(200).`then`.destroy(_bubble)
           _bubble = null
         }
-        if (_cardBack.layer.visible) flip(_cardBack.layer, _cardFront.layer)
-        else flip(_cardFront.layer, _cardBack.layer)
+        _cardViz.flip()
       }
     }
   }
 
-  protected def countLabel (card :Card, counts :Option[(Int,Int)]) :Element[_] = {
-    val cat = card.getSeries
+  protected def countLabel (card :ThingCardPlus, counts :Option[(Int,Int)]) :Element[_] = {
     def link (text :String) = UI.hgroup(
-      new Label(text), UI.labelButton(cat.name) {
-        new SeriesScreen(game, card.owner, card.categories.map(_.name), cat.categoryId).replace()
+      new Label(text), UI.labelButton(card.categoryName) {
+        new SeriesScreen(game, card.owner, card.path, card.categoryId).replace()
       })
     counts match {
       case Some((have, remain)) =>
         if (have > 1) new Label(s"You already have $have of these cards.")
         else if (have > 0) new Label("You already have this card.")
         else if (remain == 0) link("You completed ")
-        else link(s"You have ${cat.things - remain} of ${cat.things}")
+        else link(s"You have ${card.things - remain} of ${card.things}")
       case None =>
         if (_source.showSeriesLink) link(s"View") else new Label("")
     }
@@ -241,49 +318,11 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
 
   protected def swipe (dir :Swipe.Dir, fast :Boolean) {
     if (_source.canViewNext) {
-      val (oviz, ohid) = if (_cardFront.layer.visible) (_cardFront, _cardBack)
-      else (_cardBack, _cardFront)
-      // the old hidden card face can be destroyed immediately
-      cbox.destroy(ohid)
-
-      // slide the old vizible card face off the screen and then destroy it
-      val oheight = if (dir == Swipe.Down) -height else height
-      val interp = if (fast) Interpolator.EASE_OUT else Interpolator.EASE_INOUT
-      iface.animator.tweenOrigin(oviz.layer).to(0, oheight).in(300).using(interp).`then`.
-        action(new Runnable { def run () = { cbox.destroy(oviz) }})
-
+      // slide the current card off the screen
+      _cardViz.slideOut(dir, false)
       // trigger the download and display of the next card
       _source.viewNext(CardScreen.this, dir)
     }
-  }
-
-  protected def flip (from :Layer, to :Layer) {
-    // create the rotating shaders
-    val yCtr = 0.5f // TODO
-    val topShader = new RotateYShader(graphics.ctx, 0.5f, yCtr, 1)
-    from.setShader(topShader)
-    val botShader = new RotateYShader(graphics.ctx, 0.5f, yCtr, 1)
-    to.setShader(botShader)
-
-    // run up our flipping animation
-    iface.animator.tween(new Animation.Value() {
-      def initial = 0
-      def set (pct :Float) = {
-        topShader.angle = FloatMath.PI * pct;
-        botShader.angle = FloatMath.PI * (pct - 1);
-        if (pct >= 0.5f && !_flipped) {
-          from.setVisible(false)
-          to.setVisible(true)
-          _flipped = true
-        }
-      }
-      var _flipped = false
-    }).to(1).in(300).`then`.action(new Runnable() {
-      def run () {
-        from.setShader(null)
-        to.setShader(null)
-      }
-    })
   }
 
   protected def showShareDialog (card :Card, counts :Option[(Int,Int)]) {
