@@ -7,7 +7,7 @@ package everything
 import playn.core.PlayN._
 import playn.core._
 import pythagoras.f.{FloatMath, Point}
-import react.{RFuture, Value}
+import react.{RFuture, Value, Slot}
 import scala.util.Random
 import tripleplay.anim.Animation
 import tripleplay.shaders.RotateYShader
@@ -31,27 +31,34 @@ class CardButton (
   /** Whether or not this card is currently jiggling. We jiggle the card while waiting for data after
     * the user has requested to flip it. */
   val shaking = Value.create(false)
-  shaking.connect(slot { isShaking =>
-    if (isShaking && _shaker == null) {
-      _shaker = host.iface.animator.
-        shake(ilayer).bounds(-1, 1, -1, 1).cycleTime(50).in(60000).handle
-    } else if (!isShaking && _shaker != null) {
-      ilayer.setTranslation(rendo.ctr.x, rendo.ctr.y)
-      _shaker.cancel()
-      _shaker = null
+  shaking.connect(new Slot[Boolean]() {
+    def onEmit (isShaking :Boolean) {
+      if (isShaking && _shaker == null) {
+        _shaker = host.iface.animator.
+          shake(ilayer).bounds(-1, 1, -1, 1).cycleTime(50).in(60000).handle
+      } else if (!isShaking && _shaker != null) {
+        ilayer.setTranslation(rendo.ctr.x, rendo.ctr.y)
+        _shaker.cancel()
+        _shaker = null
+      }
     }
+    var _shaker :Animation.Handle = _
   })
+
+  /** Provides access to our card. */
+  lazy val cardF :RFuture[Card] = game.gameSvc.getCard(
+    new CardIdent(_ownerId, _card.thingId, _card.received)).
+    bindComplete(enabled.slot). // disable cards while req is in-flight
+    onFailure(host.onFailure)
 
   enableInteraction()
   bindEnabled(enabled)
-  update(SlotStatus.UNFLIPPED, 0, null)
+  upStatus(SlotStatus.UNFLIPPED)
 
   protected var _ownerId = 0
   protected var _card :ThingCard = _
   protected var _msg :String = null
   protected var _counts :Option[(Int,Int)] = None
-  protected var _cachedCard :Card = _
-  protected var _shaker :Animation.Handle = _
   protected var _entree :Entree = CardButton.fadeIn
 
   /** Whether or not to show a link to the series page. */
@@ -60,7 +67,7 @@ class CardButton (
   /** Whether or not we'll respond to a [viewNext] call. */
   def canViewNext = false
 
-  def update (status :SlotStatus, ownerId :Int, card :ThingCard) = {
+  def update (status :SlotStatus, ownerId :Int, card :ThingCard) :this.type = {
     _ownerId = ownerId
     _card = card
     upStatus(status)
@@ -68,11 +75,7 @@ class CardButton (
   }
 
   def view (target :CardScreen, dir :Swipe.Dir) {
-    if (_cachedCard != null) viewCard(_cachedCard, target, dir)
-    else game.gameSvc.getCard(new CardIdent(_ownerId, _card.thingId, _card.received)).
-      bindComplete(enabled.slot). // disable cards while req is in-flight
-      onFailure(host.onFailure).
-      onSuccess(slot { c => viewCard(c, target, dir) })
+    cardF.onSuccess(slot { c => viewCard(c, target, dir) })
   }
 
   /** Requests that the next (or previous depending on `dir`) card in the series be shown. */
@@ -93,9 +96,6 @@ class CardButton (
     if (host.isVisible.get) gift(friend, msg)
     else host.onShown.connect(unitSlot { gift(friend, msg) }).once()
   }
-
-  /** Whether or not this card has been revealed. */
-  protected def isRevealed (card :ThingCard) = card != null && card.image != null
 
   /** Whether or not to use the gift card background. */
   protected def isGift = false
@@ -124,7 +124,7 @@ class CardButton (
       // flip the card over (use the current image as the old image for the flip)
       animateFlip(ilayer.image)(viewCard(res.card, null, null))
       // update our image to be the new card (this will be flipped in)
-      update(SlotStatus.FLIPPED, res.card.owner.userId, res.card.toThingCard)
+      update(SlotStatus.FLIPPED, res.card.owner.userId, new ThingCardPlus(res.card))
       _counts = Some((res.haveCount, res.thingsRemaining))
       // once the flip animation completes, viewCard will be called
     })
@@ -169,7 +169,6 @@ class CardButton (
   }
 
   protected def viewCard (card :Card, target :CardScreen, dir :Swipe.Dir) {
-    _cachedCard = card
     enabled.update(true) // reenable card interaction
     val screen = if (target == null) new CardScreen(game, cache) else target
     screen.update(card, _counts, this, dir).setMessage(_msg)
@@ -300,7 +299,7 @@ class CardButton (
   }
 
   override protected def onClick (event :Pointer.Event) {
-    if (isRevealed(_card)) onView()
+    if (_card != null && _card.image != null) onView()
     else if (_card != DISPENSED) onReveal()
   }
 }
