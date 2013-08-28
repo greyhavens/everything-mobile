@@ -108,12 +108,15 @@
     <Folder Include="Resources\" />
   </ItemGroup>
   <ItemGroup>
-    <BundleResource Include="Resources\touch-icon-57x57.png" />
-    <BundleResource Include="Resources\touch-icon-72x72.png" />
-    <BundleResource Include="Resources\Default-568h%402x.png" />
     <BundleResource Include="Resources\Default%402x.png" />
+    <BundleResource Include="Resources\Default-568h%402x.png" />
+    <BundleResource Include="Resources\Default-Portrait.png" />
+    <BundleResource Include="Resources\FacebookSDKResources.bundle\FBDialog\images\close%402x.png" />
     <BundleResource Include="Resources\FacebookSDKResources.bundle\FBDialog\images\close.png" />
     <BundleResource Include="Resources\FacebookSDKResources.bundle\FBDialog\images\fbicon.png" />
-    <BundleResource Include="Resources\FacebookSDKResources.bundle\FBDialog\images\close%402x.png" />
+    <BundleResource Include="Resources\Icon%402x.png" />
+    <BundleResource Include="Resources\Icon-72%402x.png" />
+    <BundleResource Include="Resources\Icon-72.png" />
+    <BundleResource Include="Resources\Icon.png" />
   </ItemGroup>
 </Project>
