@@ -28,8 +28,8 @@ namespace everything
       if (session == null) return null;
       var data = session.AccessTokenData;
       if (data == null) return null;
-      if (data.ExpirationDate.SecondsSinceReferenceDate <
-          NSDate.Now.SecondsSinceReferenceDate) return null;
+      DateTime expire = data.ExpirationDate;
+      if (expire < DateTime.Now) return null;
       return data.AccessToken;
     }
 
@@ -40,8 +40,7 @@ namespace everything
 
     // from Facebook interface
     public RFuture authenticate () {
-      PlayN.log().info("Authenticating with Facebook...");
-      return withSession(delegate (Callback cb) { cb.onSuccess(accessToken()); });
+      return withSession(true, delegate (Callback cb) { cb.onSuccess(accessToken()); });
     }
 
     public void deauthorize () {
@@ -51,14 +50,14 @@ namespace everything
 
     // from Facebook interface
     public RFuture showDialog (string action, string[] paramz) {
-      return withSession(delegate (Callback cb) {
+      return withSession(false, delegate (Callback cb) {
         FBWebDialogs.PresentFeedDialogModally(null, toDict(paramz), handler(cb));
       });
     }
 
     public RFuture nativeDialog (UIViewController rctrl, string name, string caption,
                                  string descrip, string link, UIImage photo) {
-      return withSession(delegate (Callback cb) {
+      return withSession(false, delegate (Callback cb) {
         try {
           FBNativeDialogs.PresentShareDialogModallyFrom(
             rctrl, name, photo, new NSUrl(link),
@@ -73,7 +72,7 @@ namespace everything
     }
 
     public RFuture sendInvite (string message) {
-      return withSession(delegate (Callback cb) {
+      return withSession(false, delegate (Callback cb) {
         string title = "Invite Friends!"; // TODO
         FBWebDialogs.PresentRequestsDialogModally(null, message, title, null, handler(cb));
       });
@@ -81,10 +80,11 @@ namespace everything
 
     protected delegate void SessionAction (Callback cb);
 
-    protected RFuture withSession (SessionAction action) {
+    protected RFuture withSession (bool forceAuth, SessionAction action) {
       var result = new DeferredPromise();
-      if (accessToken() != null) action(result);
+      if (!forceAuth && accessToken() != null) action(result);
       else {
+        PlayN.log().info("Authenticating with Facebook...");
         FBSession.OpenActiveSession(new string[] { "email" }, true,
           delegate (FBSession session, FBSessionState state, NSError nserr) {
             PlayN.log().info("Facebook state change [state=" + state + ", error=" + nserr + "]");
