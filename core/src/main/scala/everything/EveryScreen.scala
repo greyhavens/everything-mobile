@@ -11,6 +11,7 @@ import react.{Value, Signal, UnitSignal}
 
 import tripleplay.game.{ScreenStack, UIScreen}
 import tripleplay.ui._
+import tripleplay.ui.bgs.BlankBackground
 import tripleplay.ui.layout.AxisLayout
 import tripleplay.ui.util.Insets
 import tripleplay.util.DestroyableBag
@@ -51,7 +52,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     def layout () :Layout = AxisLayout.vertical.offStretch
     def background () :Background = Background.composite(
       Background.solid(UI.textColor).inset(1),
-      Background.croppedImage(UI.getImage("page_repeat.png")).inset(4, 9, 9, 9))
+      Background.croppedImage(UI.pageBG).inset(4, 9, 9, 9))
 
     def display () {
       if (buttons.childCount > 0) root.add(buttons)
@@ -173,7 +174,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   def createUI () :Unit
 
   override def wasAdded () {
-    root.addStyles(Style.BACKGROUND.is(background().insets(insets())))
+    root.addStyles(Style.BACKGROUND.is(_background.insets(insets())))
     createUI()
     root.setSize(width, height)
     // wire up the (hardware) back button handler
@@ -202,9 +203,15 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     isVisible.update(true)
   }
 
+  override def hideTransitionStarted () {
+    super.hideTransitionStarted()
+    if (haveBackground) game.notebook.setVisible(true)
+  }
+
   override def showTransitionCompleted () {
     super.showTransitionCompleted()
     onShown.emit(this)
+    if (haveBackground) game.notebook.setVisible(false)
   }
 
   override def wasHidden () {
@@ -267,7 +274,11 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
     cb
   }
 
-  protected def background () :Background = new Background() {
+  protected def background () :Background = Background.blank()
+  protected def haveBackground = !_background.isInstanceOf[BlankBackground]
+  protected def insets () :Insets = new Insets(game.device.statusBarHeight, 5, 5, 5)
+
+  protected def parchmentBG () :Background = new Background() {
     override protected def instantiate (size :IDimension) = {
       val scale = width / UI.pageBG.width
       new LayerInstance(size, new ImmediateLayer.Renderer() {
@@ -283,7 +294,6 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
       })
     }
   }
-  protected def insets () :Insets = new Insets(game.device.statusBarHeight, 5, 5, 5)
 
   /** Handles a click on the hardware back button. */
   protected def onHardwareBack () {
@@ -302,6 +312,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
 
   protected def todo () = new Dialog().addTitle("TODO").addButton("OK", ()).display()
 
+  protected lazy val _background = background()
   protected var _back :Button = _
   protected val _dbag = new DestroyableBag
 

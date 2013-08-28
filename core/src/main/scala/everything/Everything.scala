@@ -6,7 +6,7 @@ package everything
 
 import playn.core.PlayN._
 import playn.core._
-import playn.core.util.Clock
+import playn.core.util.{Callback, Clock}
 import react.{IntValue, Signal, RList, RMap, Value}
 import scala.collection.JavaConversions._
 import tripleplay.game.ScreenStack
@@ -53,6 +53,7 @@ class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends G
   val gifts   = RList.create[ThingCard]
 
   val main = new MainMenuScreen(this);
+  val notebook = graphics.createImageLayer()
 
   /** Returns our current auth token, or `None`. */
   def authToken = Option(storage.getItem("authtok"))
@@ -85,6 +86,15 @@ class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends G
     keyboard.setListener(new Keyboard.Adapter {
       override def onKeyDown (event :Keyboard.Event) = keyDown.emit(event.key)
     })
+    // display our notebook background behind everything
+    val (swidth, sheight) = (graphics.width, graphics.height)
+    val cropped = graphics.createImage(swidth, sheight)
+    UI.getImage("notebook.jpg").addCallback(new Callback[Image]() {
+      def onSuccess (image :Image) =
+        cropped.canvas.drawImage(image, (swidth-image.width)/2, (sheight-image.height)/2)
+      def onFailure (cause :Throwable) {} // not happening
+    })
+    graphics.rootLayer.add(notebook.setImage(cropped).setDepth(-Short.MaxValue))
     // if we've not authed (aka, we've never played); push the intro screen
     if (!authToken.isDefined) new IntroScreen(this).push()
     // otherwise head straight to the main menu

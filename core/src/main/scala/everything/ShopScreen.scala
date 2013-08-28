@@ -80,6 +80,8 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
                pups))))
   }
 
+  override protected def background () = parchmentBG()
+
   val PupInfo = Seq(
     (Powerup.SHOW_CATEGORY, "Reveal Category",
      "Reveals the category of all unflipped cards in your grid."),

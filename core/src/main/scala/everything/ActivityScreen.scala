@@ -33,6 +33,8 @@ class ActivityScreen (game :Everything) extends EveryScreen(game) {
     })
   }
 
+  override protected def background () = parchmentBG()
+
   protected def itemWidget (items :Array[FeedItem], ii :Int) :Element[_] = {
     UI.plate(UI.icon(UI.frameImage(UI.friendImage(items(ii).actor), 50, 50)),
              UI.wrapLabel(formatItem(items, ii)),
