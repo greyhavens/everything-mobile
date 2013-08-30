@@ -7,7 +7,7 @@ package everything
 import playn.core.PlayN._
 import playn.core._
 import playn.core.util.{Callback, Clock}
-import react.{IntValue, Signal, RList, RMap, Value}
+import react.{IntValue, Signal, RList, RMap, RSet, Value}
 import scala.collection.JavaConversions._
 import tripleplay.game.ScreenStack
 
@@ -49,6 +49,7 @@ class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends G
   val sess    = Value.create[SessionData](null)
   val coins   = new IntValue(0)
   val likes   = RMap.create[Int,JBoolean]
+  val wants   = RSet.create[Int]
   val pups    = RMap.create[Powerup,JInteger]
   val gifts   = RList.create[ThingCard]
 

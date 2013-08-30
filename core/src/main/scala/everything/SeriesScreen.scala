@@ -47,8 +47,8 @@ class SeriesScreen (game :Everything, who :PlayerName, path :Seq[String], catId 
       }
 
       val footer = UI.hgroup(
-        UI.shim(5, 5), likeButton(catId, false),
         UI.shim(5, 5), likeButton(catId, true),
+        UI.shim(5, 5), tradeButton(catId),
         UI.stretchShim(),
         UI.tipLabel("Editor:"), UI.labelButton(series.creator.toString) {
           new CollectionScreen(game, series.creator).push()

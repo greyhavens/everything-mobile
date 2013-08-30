@@ -136,6 +136,10 @@ object MockGameService extends GameService with Mockery {
     failure("TODO")
   }
 
+  def setWant (catId :Int, want :Boolean) = {
+    failure("TODO")
+  }
+
   def openGift (thingId :Int, created :Long) = {
     failure("TODO")
   }

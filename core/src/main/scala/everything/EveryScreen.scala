@@ -258,20 +258,31 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   }
 
   protected def likeButton (catId :Int, like :Boolean) = {
-    val which = if (like) UI.like else UI.hate
-    val state = game.likes.getView(catId)
-    val cb = new CheckBox(Icons.image(which._2)) {
-      override def select (selected :Boolean) {
-        val newLike = if (selected) new JBoolean(like) else null
-        game.gameSvc.setLike(catId, newLike).onFailure(onFailure).onSuccess(unitSlot {
-          game.likes.put(catId, newLike)
-        })
-      }
-    }.addStyles(Style.BACKGROUND.is(Background.image(which._1)))
-    _dbag.add(state.map(rf {
-      lk => java.lang.Boolean.valueOf(lk != null && lk.booleanValue == like)
-    }).connectNotify(cb.checked.slot))
-    cb
+    val btn = new TwoStateButton(UI.likeImage(0), UI.likeImage(1), UI.likeImage(2), UI.likeImage(3))
+    btn.state.connect(slot { like =>
+      val jlike = if (like) new JBoolean(true) else null
+      game.gameSvc.setLike(catId, jlike).onFailure(onFailure).onSuccess(unitSlot {
+        game.likes.put(catId, jlike)
+      })
+    })
+    _dbag.add(game.likes.getView(catId).map(rf { lk => lk != null && lk.booleanValue == like }).
+      connectNotify(btn.state.slot))
+    btn
+  }
+
+  protected def tradeButton (catId :Int) = {
+    UI.shim(UI.tradeImage(0).width, UI.tradeImage(0).height)
+    // val btn = new TwoStateButton(UI.tradeImage(2), UI.tradeImage(3),
+    //                              UI.tradeImage(0), UI.tradeImage(1))
+    // btn.state.connect(slot { want =>
+    //   game.gameSvc.setWant(catId, want).onFailure(onFailure).onSuccess(unitSlot {
+    //     if (want) game.wants.add(catId)
+    //     else game.wants.remove(catId)
+    //   })
+    // })
+    // _dbag.add(game.wants.containsView(catId).map(rf { _.booleanValue } ).
+    //   connectNotify(btn.state.slot))
+    // btn
   }
 
   protected def background () :Background = Background.blank()

@@ -39,6 +39,9 @@ class GameServiceClient (game :Everything, url :String) extends GsonService(game
   def setLike (catId :Int, like :JBoolean) = invoke(
     "setLike", new SetLike(catId, like))
 
+  def setWant (catId :Int, want :Boolean) = invoke(
+    "setWant", new SetWant(catId, want))
+
   def openGift (thingId :Int, created :Long) = request(
     "openGift", new CardInfo(thingId, created), classOf[GiftResult])
 

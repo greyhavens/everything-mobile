@@ -107,8 +107,7 @@ object UI {
 
   val textColor = 0xFF442D17
   lazy val coinsIcon = getImage("money.png")
-  lazy val like = (getImage("like/pos.png"), getImage("like/pos_sel.png"))
-  lazy val hate = (getImage("like/neg.png"), getImage("like/neg_sel.png"))
+  lazy val tradeLike = getImage("tradelike.png")
   lazy val megaCard = getImage("megacard/front.png")
   lazy val pageBG = getImage("page_repeat.png")
 
@@ -304,6 +303,14 @@ object UI {
 
   def getImage (path :String) = assets.getImageSync(s"images/$path")
   def pupImage (pup :Powerup) = getImage(s"pup/${pup.name.toLowerCase}.png")
+
+  def tradeImage (idx :Int) = tradeLikeImage(0, idx)
+  def likeImage (idx :Int) = tradeLikeImage(1, idx)
+  protected def tradeLikeImage (row :Int, col :Int) = {
+    val size = 24
+    val (x, y) = (col * size, row * size)
+    tradeLike.subImage(x, y, size, size)
+  }
 
   def friendImage (name :PlayerName) :Image = friendImage(name.facebookId)
   def friendImage (fbId :Long) :Image = {

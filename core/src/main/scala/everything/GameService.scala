@@ -39,6 +39,9 @@ trait GameService {
   /** Configures our 'like' setting for `catId`. */
   def setLike (catId :Int, like :JBoolean) :RFuture[Unit]
 
+  /** Configures our 'want' setting for `catId`. */
+  def setWant (catId :Int, want :Boolean) :RFuture[Unit]
+
   /** Opens the specified gift. */
   def openGift (thingId :Int, created :Long) :RFuture[GiftResult]
 
