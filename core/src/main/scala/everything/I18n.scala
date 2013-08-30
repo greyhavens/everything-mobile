@@ -11,6 +11,7 @@ object I18n {
   import EveryAPI._
 
   def xlate (msg :String) = msg match {
+    case E_FACEBOOK_DOWN => "Egad! We're having difficulty talking to Facebook."
     case GameAPI.E_UNKNOWN_USER => "That player doesn't seem to exist."
     case E_UNKNOWN_SERIES => "That series doesn't seem to exist."
     case E_TOO_FEW_SERIES => "You must have at least 8 unfinished series to use this powerup."
