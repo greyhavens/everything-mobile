@@ -218,19 +218,20 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
 
     // update our info displays (TODO: fade the old one out and the new one in?)
     info.removeAll()
-    // TODO: should we request this immediately?
-    // if (cardp.giver != null) {
-    //   _giftLbl.text.update(card.giver.name match {
-    //     case null => "A birthday gift from Everything!"
-    //     case name => s"A gift from ${card.giver}!"
-    //   })
-    //   info.add(_giftLbl)
-    // }
+
+    // TODO: giver is always null when viewing from series screen, what to do?
+    if (cardp.giver != null) {
+      _giftLbl.text.update(cardp.giver.name match {
+        case null => "A birthday gift from Everything!"
+        case name => s"A gift from ${cardp.giver}!"
+      })
+      info.add(_giftLbl)
+    }
 
     // omit the count info if this is a gift and we lack the space for two lines
-    // if (cardp.giver == null || height > 485) { // TODO
-    info.add(countLabel(cardp, source.counts))
-    // }
+    if (cardp.giver == null || height > 485) { // TODO
+      info.add(countLabel(cardp, source.counts))
+    }
 
     this
   }
