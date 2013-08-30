@@ -46,10 +46,12 @@ class CardButton (
   })
 
   /** Provides access to our card. */
-  lazy val cardF :RFuture[Card] = game.gameSvc.getCard(
-    new CardIdent(_ownerId, _card.thingId, _card.received)).
-    bindComplete(enabled.slot). // disable cards while req is in-flight
-    onFailure(host.onFailure)
+  lazy val cardF :RFuture[Card] = _card match {
+    case null => game.gameSvc.getCard(new CardIdent(_ownerId, _tcard.thingId, _tcard.received)).
+        bindComplete(enabled.slot). // disable cards while req is in-flight
+        onFailure(host.onFailure)
+    case card => RFuture.success(card)
+  }
 
   bindEnabled(enabled)
   upStatus(SlotStatus.UNFLIPPED)
@@ -57,8 +59,9 @@ class CardButton (
   var counts :Option[(Int,Int)] = None
 
   protected var _ownerId = 0
-  protected var _card :ThingCard = _
-  protected var _cardp :ThingCardPlus = _
+  protected var _card :Card = _
+  protected var _tcard :ThingCard = _
+  protected var _tcardp :ThingCardPlus = _
   protected var _msg :String = null
   protected var _entree :Entree = CardButton.fadeIn
 
@@ -69,19 +72,19 @@ class CardButton (
   def canViewNext = false
 
   def update (status :SlotStatus, ownerId :Int, cardp :ThingCardPlus) :this.type = {
-    _cardp = cardp
+    _tcardp = cardp
     update(status, ownerId, cardp.thing)
   }
 
   def update (status :SlotStatus, ownerId :Int, card :ThingCard) :this.type = {
     _ownerId = ownerId
-    _card = card
+    _tcard = card
     upStatus(status)
     this
   }
 
   def view (target :CardScreen, dir :Swipe.Dir) {
-    if (_cardp != null) viewCard(target, dir)
+    if (_tcardp != null) viewCard(target, dir)
     else cardF.onSuccess(slot { c => viewCard(c, target, dir) })
   }
 
@@ -125,6 +128,8 @@ class CardButton (
   protected def reveal (res :GameAPI.CardResult) {
     // disable card interaction during the reveal animation
     enabled.update(false)
+    // note that we got all of our card data in reveal
+    _card = res.card
     // wait until our thing image is ready, then start the flip
     cache(res.card.thing.image).addCallback(cb { thing =>
       shaking.update(false) // we can stop shaking now
@@ -176,23 +181,23 @@ class CardButton (
   }
 
   protected def viewCard (card :Card, target :CardScreen, dir :Swipe.Dir) {
-    _cardp = new ThingCardPlus(card)
+    _tcardp = new ThingCardPlus(card)
     viewCard(target, dir)
   }
 
   protected def viewCard (target :CardScreen, dir :Swipe.Dir) {
     enabled.update(true) // reenable card interaction
     val screen = if (target == null) new CardScreen(game, cache) else target
-    screen.update(_cardp, this, dir).setMessage(_msg)
+    screen.update(_tcardp, this, dir).setMessage(_msg)
     if (target == null) screen.push()
   }
 
   protected def sell () {
     shaking.update(true)
-    game.gameSvc.sellCard(_card.thingId, _card.received).onFailure(host.onFailure).
+    game.gameSvc.sellCard(_tcard.thingId, _tcard.received).onFailure(host.onFailure).
       onSuccess(slot { res =>
         shaking.update(false)
-        val catId = _card.categoryId
+        val catId = _tcard.categoryId
         res.newLike match {
           case null => game.likes.remove(catId)
           case like => game.likes.put(catId, like)
@@ -204,7 +209,7 @@ class CardButton (
         val tgtPos = if (pl.isAdded()) host.pos(pl.layer).addLocal(pl.size.width/2, pl.size.height/2)
                      else new Point(host.width/2, -10)
         val cimage = ilayer.image
-        val (xparts, yparts) = saleFrags(_card.rarity.ordinal)
+        val (xparts, yparts) = saleFrags(_tcard.rarity.ordinal)
         val (fwidth, fheight) = (cimage.width/xparts, cimage.height/yparts)
         val cardPos = Layer.Util.layerToParent(ilayer, host.layer, 0, 0)
         for (yy <- 0 until yparts ; xx <- 0 until xparts) {
@@ -251,7 +256,7 @@ class CardButton (
   protected def gift (friend :PlayerName, msg :String) {
     setEnabled(false)
     // issue our service call to gift the card, but don't process the result just yet
-    val result = game.gameSvc.giftCard(_card.thingId, _card.received, friend.userId, msg)
+    val result = game.gameSvc.giftCard(_tcard.thingId, _tcard.received, friend.userId, msg)
     // animate the card flipping back over to the gift back, then handle the service result
     animateFlip(ilayer.image) {
       // TODO: instead of flipping directly to gift card back, flip to normal card back then
@@ -281,7 +286,7 @@ class CardButton (
 
   protected def upStatus (status :SlotStatus) {
     def dispensed (msg :String) = {
-      _card = DISPENSED
+      _tcard = DISPENSED
       rendo.statusImage(msg)
     }
     import SlotStatus._
@@ -289,10 +294,10 @@ class CardButton (
       case        GIFTED|
           RECRUIT_GIFTED => dispensed("Gifted!")
       case          SOLD => dispensed("Sold!")
-      case     UNFLIPPED => if (_card != null && _card.name != null) rendo.partImage(_card)
+      case     UNFLIPPED => if (_tcard != null && _tcard.name != null) rendo.partImage(_tcard)
                             else if (isGift) rendo.gift
                             else rendo.back
-      case       FLIPPED => rendo.image(cache, _card)
+      case       FLIPPED => rendo.image(cache, _tcard)
     })
   }
 
@@ -312,8 +317,8 @@ class CardButton (
 
   override protected def createBehavior = new Behavior.Select[CardButton](this) {
     override protected def onClick (event :Pointer.Event) {
-      if (_card != null && _card.image != null) onView()
-      else if (_card != DISPENSED) onReveal()
+      if (_tcard != null && _tcard.image != null) onView()
+      else if (_tcard != DISPENSED) onReveal()
     }
   }
 }
