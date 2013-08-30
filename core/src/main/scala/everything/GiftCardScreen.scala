@@ -50,7 +50,8 @@ class GiftCardScreen (
         res.friends.sorted.foreach { f =>
           val like = f.like match {
             case null => UI.shim(5, 5)
-            case like => UI.icon(UI.getImage(if (like) "like/pos.png" else "like/neg.png"))
+            case like if (like) => UI.icon(UI.likeImage(0))
+            case _    => UI.shim(5, 5)
           }
           val hasBits = if (f.hasThings == 0) "" else s" (has ${f.hasThings}/${res.things})"
           friends.add(like,
