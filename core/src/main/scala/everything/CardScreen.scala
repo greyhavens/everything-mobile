@@ -259,7 +259,8 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
 
     // if we have a message from this giver, show it here
     if (_msg != null && _bubble == null) {
-      _bubble = new Bubble(_msg, 210).above().tail(-75, 30).at(width-70, _giftLbl.y).toLayer(this)
+      _bubble = new Bubble(_msg, 210).above().tail(-75, 30).
+        at(width-70, pos(_giftLbl.layer).y).toLayer(this)
       _bubble.setScale(0.1f)
       iface.animator.tweenScale(_bubble).to(1f).in(200)
       layer.add(_bubble)
