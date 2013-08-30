@@ -19,7 +19,7 @@ import com.threerings.everything.rpc.GameAPI
 class CardButton (
   game :Everything, host :EveryScreen, cache :UI.ImageCache, rendo :UI.CardRenderer,
   enabled :Value[JBoolean]
-) extends SizableWidget(rendo.size) {
+) extends SizableWidget[CardButton](rendo.size) {
   import CardButton._
 
   /** The layer that contains our card image. */
@@ -51,7 +51,6 @@ class CardButton (
     bindComplete(enabled.slot). // disable cards while req is in-flight
     onFailure(host.onFailure)
 
-  enableInteraction()
   bindEnabled(enabled)
   upStatus(SlotStatus.UNFLIPPED)
 
@@ -311,9 +310,11 @@ class CardButton (
     }
   }
 
-  override protected def onClick (event :Pointer.Event) {
-    if (_card != null && _card.image != null) onView()
-    else if (_card != DISPENSED) onReveal()
+  override protected def createBehavior = new Behavior.Select[CardButton](this) {
+    override protected def onClick (event :Pointer.Event) {
+      if (_card != null && _card.image != null) onView()
+      else if (_card != DISPENSED) onReveal()
+    }
   }
 }
 
