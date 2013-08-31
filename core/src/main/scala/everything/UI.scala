@@ -209,55 +209,8 @@ object UI {
   }
   def glyphWidget (renderer :GlyphRenderer) = new RenderedWidget(renderer)
 
-  def pathLabel (path :Seq[String], fontSize :Int = 14) = glyphWidget(new GlyphRenderer() {
-    final val MinFontSize = 8
-    var lay :Layout = _
-    var hint = 0f
-
-    def computeSize (hintX :Float, hintY :Float) = {
-      lay = (if (hint == hintX && lay != null) lay
-             else if (hintX == 0) new Layout(fontSize)
-             else layForSize(hintX, fontSize))
-      hint = hintX
-      lay.size
-    }
-
-    def render (canvas :Canvas) {
-      (if (lay != null && lay.size.width <= canvas.width) lay
-       else layForSize(canvas.width, fontSize)).render(canvas)
-    }
-
-    def layForSize (width :Float, fontSize :Int) :Layout = {
-      val lay = new Layout(fontSize)
-      if (lay.size.width <= width || fontSize <= MinFontSize) lay
-      else layForSize(width, fontSize-1)
-    }
-
-    class Layout (fontSize :Int) {
-      val (font, gfont) = (writingFont(fontSize), glyphFont(fontSize))
-      val sepFmt = new TextFormat().withFont(gfont)
-      val sepLay = graphics.layoutText(Category.SEP_CHAR, sepFmt)
-      val pathFmt = new TextFormat().withFont(font)
-      val pathLays = path.map(graphics.layoutText(_, pathFmt))
-      val size = new Dimension((sepLay.width + Gap*2) * (path.size-1) + pathLays.map(_.width).sum,
-                               math.max(sepLay.height, pathLays.map(_.height).max))
-      def render (canvas :Canvas) {
-        canvas.setFillColor(textColor)
-        val dx = (canvas.width - size.width)/2
-        val nx = render(canvas, pathLays.head, dx)
-        (nx /: pathLays.drop(1)) { (x, lay) =>
-          val nx = render(canvas, sepLay, x+Gap)
-          render(canvas, lay, nx+Gap)
-        }
-      }
-      def render (canvas :Canvas, text :TextLayout, dx :Float) = {
-        canvas.fillText(text, dx, (canvas.height - text.height)/2)
-        dx + text.width
-      }
-
-      final val Gap = 2f
-    }
-  })
+  def pathLabel (path :Seq[String], fontSize :Int = 14) =
+    label(path.mkString(" \u2022 "), writingFont(fontSize)).addStyles(Style.AUTO_SHRINK.on)
 
   def inertButton (label :String, styles :Style.Binding[_]*) :Button =
     new Button(label).addStyles(styles :_*)
