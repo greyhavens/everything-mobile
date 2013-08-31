@@ -267,7 +267,8 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
     }
   }
 
-  override protected def layout () :Layout = AxisLayout.vertical().gap(0).offStretch
+  override protected def layout () = AxisLayout.vertical().gap(0).offStretch
+  override protected def insets () = super.insets().adjust(0, 0, -5, 0)
 
   override protected def onGestureStart (startedOnChild :Boolean) = new Interaction(startedOnChild) {
     override def onDrag (event :Pointer.Event) {
