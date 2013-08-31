@@ -5,6 +5,7 @@
 package everything
 
 import android.content.Intent
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.WindowManager
 import java.text.DateFormat
@@ -45,6 +46,7 @@ class EverythingActivity extends GameActivity {
     platform.assets.setAssetScale(2)
     // register our custom fonts
     platform.graphics.registerFont("fonts/copper.ttf", "CopperplateGothic-Bold", Font.Style.PLAIN)
+    platform.graphics.registerFont(Typeface.SERIF, "Copperplate", Font.Style.BOLD)
     platform.graphics.registerFont("fonts/treasure.ttf", "Treasure Map Deadhand", Font.Style.PLAIN)
     platform.graphics.registerFont("fonts/josschrift.ttf", "Josschrift", Font.Style.PLAIN)
     // start the ball rolling
