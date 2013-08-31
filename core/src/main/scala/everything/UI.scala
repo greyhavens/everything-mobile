@@ -32,8 +32,8 @@ object UI {
                       shadow :Insets, border :Insets) {
     val front = getImage(prefix + "/front.png")
     val back  = getImage(prefix + "/back.png")
-    val gift  = getImage(prefix + "/gift.png")
-    val part  = getImage(prefix + "/part.png")
+    lazy val gift  = getImage(prefix + "/gift.png")
+    lazy val part  = getImage(prefix + "/part.png")
 
     val textHt = textSize + 4 // TODO: really?
     val size   = new Dimension(width, height)
