@@ -27,6 +27,14 @@
       <type>apklib</type>
     </dependency>
 
+    <!-- installed locally via https://github.com/JakeWharton/gms-mvn-install -->
+    <dependency>
+      <groupId>com.google.android.gms</groupId>
+      <artifactId>google-play-services</artifactId>
+      <version>7</version>
+      <type>apklib</type>
+    </dependency>
+
     <dependency>
       <groupId>com.googlecode.playn</groupId>
       <artifactId>playn-android</artifactId>
@@ -41,10 +49,11 @@
       <type>so</type>
     </dependency>
 
+    <!-- installed locally via https://github.com/mosabua/maven-android-sdk-deployer -->
     <dependency>
-      <groupId>com.google.android</groupId>
+      <groupId>android</groupId>
       <artifactId>android</artifactId>
-      <version>${android.version}</version>
+      <version>4.3_r1</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
@@ -113,7 +122,7 @@
           <assetsDirectory>${project.basedir}/assets</assetsDirectory>
           <resourceDirectory>${project.basedir}/res</resourceDirectory>
           <sdk>
-            <platform>11</platform>
+            <platform>18</platform>
           </sdk>
           <deleteConflictingFiles>true</deleteConflictingFiles>
           <undeployBeforeDeploy>true</undeployBeforeDeploy>
@@ -122,6 +131,7 @@
           </jvmArguments>
           <proguard>
             <skip>false</skip>
+            <includeJdkLibs>false</includeJdkLibs>
           </proguard>
           <dex>
             <jvmArguments>

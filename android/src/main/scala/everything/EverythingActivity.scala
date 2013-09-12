@@ -4,12 +4,16 @@
 
 package everything
 
-import android.content.Intent
-import android.graphics.Typeface
-import android.os.Bundle
-import android.view.WindowManager
 import java.text.DateFormat
 import java.util.{Date, TimeZone}
+
+import android.content.{Context, ComponentName, Intent, ServiceConnection}
+import android.graphics.Typeface
+import android.os.{Bundle, IBinder}
+import android.view.WindowManager
+
+import com.android.vending.billing.IInAppBillingService
+
 import playn.android.GameActivity
 import playn.core.{Font, PlayN}
 import react.RFuture
@@ -29,9 +33,30 @@ class EverythingActivity extends GameActivity {
   val facebook = new DroidBook(this)
   lazy val game = new Everything(false, device, facebook)
 
+  // android billing stuffs; yay for mutability!
+  var billSvc :IInAppBillingService = _
+  var billConn = new ServiceConnection() {
+    override def onServiceDisconnected(name :ComponentName) {
+      billSvc = null
+    }
+    override def onServiceConnected(name :ComponentName, service :IBinder) {
+      billSvc = IInAppBillingService.Stub.asInterface(service)
+    }
+  }
+
   override def onCreate (savedInstanceState :Bundle) {
     super.onCreate(savedInstanceState)
     facebook.onCreate()
+    bindService(new Intent("com.android.vending.billing.InAppBillingService.BIND"),
+                billConn, Context.BIND_AUTO_CREATE);
+  }
+
+  override def onDestroy () {
+    super.onDestroy()
+    if (billConn != null) {
+      unbindService(billConn)
+      billConn = null
+    }
   }
 
   override def onActivityResult (requestCode :Int, resultCode :Int, data :Intent) {
