@@ -21,6 +21,8 @@ object EverythingJava {
     }
   }
 
+  var game :Everything = _
+
   def main (args :Array[String]) {
     val fbId = if (true) "1008138021" /*testy*/ else "540615819" /*mdb*/
 
@@ -53,8 +55,25 @@ object EverythingJava {
         // Java returns millis to add to GMT, we want minutes to subtract from GMT
         -tz.getOffset(System.currentTimeMillis)/MillisPerMinute
       }
+
       def formatDate (when :Long) = _dfmt.format(new Date(when))
       private val _dfmt = DateFormat.getDateInstance()
+
+      def getProducts = RFuture.success(Seq(
+        Product( "coins_5000", "$0.99"),
+        Product("coins_11000", "$1.99"),
+        Product("coins_24000", "$3.99")))
+
+      def buyProduct (sku :String) = sku match {
+        case "coins_11000" =>
+          RFuture.failure(new Exception("e.test_device_fail"))
+        case _ =>
+          pf.invokeLater(new Runnable() {
+            val curmin = System.currentTimeMillis / MillisPerMinute
+            def run = game.redeemPurchase(sku, "TEST", "test_tok:" + curmin, "test_rcpt:" + sku)
+          })
+          RFuture.success(())
+      }
     }
 
     // put a fake status bar atop the screen
@@ -64,7 +83,8 @@ object EverythingJava {
       }
     }).setDepth(Short.MaxValue))
 
-    PlayN.run(new Everything(args.contains("mock"), device, facebook))
+    game = new Everything(args.contains("mock"), device, facebook)
+    PlayN.run(game)
   }
 
   private final val MillisPerMinute = 1000*60

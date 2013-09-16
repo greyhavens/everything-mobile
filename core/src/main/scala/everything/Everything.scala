@@ -40,8 +40,8 @@ class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends G
   val herokuId = if (isCandidate) "everything-candidate" else "everything"
 
   val svcURL = s"http://$herokuId.herokuapp.com/json/"
-  val everySvc :EveryService = if (mock) MockEveryService else new EveryServiceClient(this, svcURL)
-  val gameSvc  :GameService  = if (mock) MockGameService  else new GameServiceClient(this, svcURL)
+  val everySvc :EveryService = if (mock) Mockery else new EveryServiceClient(this, svcURL)
+  val gameSvc  :GameService  = if (mock) Mockery else new GameServiceClient(this, svcURL)
 
   val screens = new ScreenStack()
   val keyDown = Signal.create[Key]()
@@ -81,6 +81,18 @@ class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends G
       pups.putAll(s.powerups)
       gifts.addAll(s.gifts)
     }
+  }
+
+  /** Initiates the redemption of an in-app purchase with the server. This is called by the device
+    * backends when they learn that a purchase has been completed. The server will check that a
+    * purchase with the specified `token` has not already been redeemed, validate the `receipt`
+    * with the appropriate `platform` provider and (assuming everything checks out) grant the
+    * appropriate number of coins to the user.
+    */
+  def redeemPurchase (sku :String, platform :String, token :String, receipt :String) {
+    everySvc.redeemPurchase(sku, platform, token, receipt).
+      onSuccess(slot { coinbal => coins.update(coinbal) }).
+      onFailure(slot { exn => screens.top.asInstanceOf[EveryScreen].onFailure(exn) })
   }
 
   override def init ()  {

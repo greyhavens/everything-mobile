@@ -26,4 +26,7 @@ trait EveryService {
 
   /** Returns the data needed for the credits page. */
   def getCredits () :RFuture[CreditsResult]
+
+  /** Redeems an in-app purchase for coins. Returns player's new coin balance. */
+  def redeemPurchase (sku :String, platform :String, tok :String, rcpt :String) :RFuture[JInteger]
 }

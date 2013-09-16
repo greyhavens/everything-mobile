@@ -25,11 +25,12 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
                              TableLayout.COL.fixed.alignLeft, TableLayout.COL.fixed.alignRight)
 
     def money (amount :Int) = UI.moneyIcon(amount).addStyles(Style.FONT.is(UI.writingFont(24)))
-    val coins = UI.hgroup(
-      UI.stretchShim(),
-      UI.vgroup0(money( 5000), UI.button("$0.99") { todo() }), UI.stretchShim(),
-      UI.vgroup0(money(11000), UI.button("$1.99") { todo() }), UI.stretchShim(),
-      UI.vgroup0(money(24000), UI.button("$3.99") { todo() }), UI.stretchShim())
+    val coins = UI.hgroup()
+    game.device.getProducts.onSuccess(slot { ps =>
+      coins.add(UI.stretchShim())
+      for (p <- ps) coins.add(UI.vgroup0(money(p.coins), UI.button(p.price) { buyProduct(p) }),
+                              UI.stretchShim())
+    }).onFailure(slot { cause => coins.add(UI.wrapLabel(cause.getMessage)) })
 
     // COLS: icon ; name+descrip ; cost+charges
     val pups = new Group(new TableLayout(cd, cl, cd).gaps(5, 5))
@@ -82,6 +83,16 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
 
   override protected def background () = parchmentBG()
 
+  protected def buyProduct (prod :Product) {
+    game.device.buyProduct(prod.sku).onSuccess(unitSlot {
+      val d = new Dialog().addTitle("Processing purchase").addText("One moment please...")
+      d.display()
+      iface.animator.delay(1000).`then`.action(new Runnable() {
+        def run = d.dismiss()
+      })
+    }).onFailure(onFailure)
+  }
+
   val PupInfo = Seq(
     (Powerup.SHOW_CATEGORY, "Reveal Category",
      "Reveals the category of all unflipped cards in your grid."),
@@ -102,6 +113,6 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
     // (Powerup.ALL_COLLECTED_SERIES, "No Surprises",
     //  "Creates a grid with only cards from (incomplete) series you have."),
     (Powerup.EXTRA_FLIP, "Free Flip",
-     "Grants you one extra free flip per day forever. Limit one per customer.")
+     "Grants you one extra free flip per day forever.")
   )
 }

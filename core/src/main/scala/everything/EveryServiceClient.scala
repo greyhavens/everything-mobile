@@ -23,4 +23,7 @@ class EveryServiceClient (game :Everything, url :String)
   override def getFriends () = request("getFriends", classOf[Array[PlayerStats]])
 
   override def getCredits () = request("getCredits", classOf[CreditsResult])
+
+  override def redeemPurchase (sku :String, platform :String, tok :String, sig :String) = request(
+    "redeemPurchase", new RedeemPurchase(sku, platform, tok, sig), classOf[JInteger])
 }
