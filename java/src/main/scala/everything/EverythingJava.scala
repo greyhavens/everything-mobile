@@ -58,8 +58,9 @@ object EverythingJava {
       private val _dfmt = DateFormat.getDateInstance()
 
       def getProducts = RFuture.success(Seq(
-        Product( "coins_5000", "$0.99"),
+        // return a weird order to verify that ShopScreen sorts them
         Product("coins_11000", "$1.99"),
+        Product( "coins_5000", "$0.99"),
         Product("coins_24000", "$3.99")))
 
       def buyProduct (game :Everything, sku :String) = sku match {

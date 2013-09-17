@@ -28,8 +28,8 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
     val coins = UI.hgroup()
     game.device.getProducts.onSuccess(slot { ps =>
       coins.add(UI.stretchShim())
-      for (p <- ps) coins.add(UI.vgroup0(money(p.coins), UI.button(p.price) { buyProduct(p) }),
-                              UI.stretchShim())
+      for (p <- ps.sortBy(_.coins)) coins.add(
+        UI.vgroup0(money(p.coins), UI.button(p.price) { buyProduct(p) }), UI.stretchShim())
     }).onFailure(slot { cause => coins.add(UI.wrapLabel(cause.getMessage)) })
 
     // COLS: icon ; name+descrip ; cost+charges
