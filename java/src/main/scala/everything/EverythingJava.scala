@@ -21,8 +21,6 @@ object EverythingJava {
     }
   }
 
-  var game :Everything = _
-
   def main (args :Array[String]) {
     val fbId = if (true) "1008138021" /*testy*/ else "540615819" /*mdb*/
 
@@ -64,7 +62,7 @@ object EverythingJava {
         Product("coins_11000", "$1.99"),
         Product("coins_24000", "$3.99")))
 
-      def buyProduct (sku :String) = sku match {
+      def buyProduct (game :Everything, sku :String) = sku match {
         case "coins_11000" =>
           RFuture.failure(new Exception("e.test_device_fail"))
         case _ =>
@@ -83,8 +81,7 @@ object EverythingJava {
       }
     }).setDepth(Short.MaxValue))
 
-    game = new Everything(args.contains("mock"), device, facebook)
-    PlayN.run(game)
+    PlayN.run(new Everything(args.contains("mock"), device, facebook))
   }
 
   private final val MillisPerMinute = 1000*60

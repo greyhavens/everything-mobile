@@ -84,7 +84,7 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
   override protected def background () = parchmentBG()
 
   protected def buyProduct (prod :Product) {
-    game.device.buyProduct(prod.sku).onSuccess(unitSlot {
+    game.device.buyProduct(game, prod.sku).onSuccess(unitSlot {
       val d = new Dialog().addTitle("Processing purchase").addText("One moment please...")
       d.display()
       iface.animator.delay(1000).`then`.action(new Runnable() {
