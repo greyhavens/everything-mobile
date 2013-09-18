@@ -5,7 +5,7 @@
 package everything
 
 import java.text.DateFormat
-import java.util.{Date, TimeZone}
+import java.util.{Arrays, ArrayList, Date, TimeZone}
 
 import android.content.{Context, ComponentName, Intent, ServiceConnection}
 import android.graphics.Typeface
@@ -16,7 +16,7 @@ import com.android.vending.billing.IInAppBillingService
 
 import playn.android.GameActivity
 import playn.core.{Font, PlayN}
-import react.RFuture
+import react.{RFuture, RPromise}
 
 class EverythingActivity extends GameActivity {
 
@@ -29,7 +29,18 @@ class EverythingActivity extends GameActivity {
     }
     def formatDate (when :Long) = _dfmt.format(new Date(when))
     private val _dfmt = DateFormat.getDateInstance()
+
+    def getProducts = {
+      val result = RPromise.create[Seq[Product]]()
+      platform.invokeAsync(new Runnable() {
+        def run = resolveProducts(result)
+      })
+      result
+    }
+
+    def buyProduct (game :Everything, sku :String) = RFuture.failure(new Exception("TODO!"))
   }
+
   val facebook = new DroidBook(this)
   lazy val game = new Everything(false, device, facebook)
 
@@ -82,6 +93,26 @@ class EverythingActivity extends GameActivity {
   override def makeWindowFlags = super.makeWindowFlags & ~WindowManager.LayoutParams.FLAG_FULLSCREEN
   override def usePortraitOrientation = true
   override def logIdent = "every"
+
+  protected def resolveProducts (result :RPromise[Seq[Product]]) {
+    val querySkus = new Bundle()
+    querySkus.putStringArrayList("ITEM_ID_LIST", new ArrayList(Arrays.asList(Product.skus :_*)))
+    val skuDetails = billSvc.getSkuDetails(3, getPackageName, "inapp", querySkus);
+    skuDetails.getInt("RESPONSE_CODE") match {
+      case 0 =>
+        val prods = skuDetails.getStringArrayList("DETAILS_LIST").toArray(Array(""))
+        result.succeed(prods flatMap toProduct)
+      case code =>
+        result.fail(new Exception(s"Android billing request failed (code $code)"))
+    }
+  }
+
+  protected def toProduct (json :String) :Option[Product] = try {
+    val obj = platform.json.parse(json)
+    Some(Product(obj.getString("productId"), obj.getString("price")))
+  } catch {
+    case e :Throwable => platform.log.warn(s"Failed to parse product JSON [json=$json", e) ; None
+  }
 
   override def scaleFactor = {
     val dm = getResources.getDisplayMetrics
