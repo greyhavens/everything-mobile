@@ -46,6 +46,7 @@ object EverythingJava {
       def authenticate () = RFuture.success("test:" + fbId)
       def showDialog (action :String, params :Array[String]) = RFuture.success[String](null)
     }
+
     val device = new Device {
       def statusBarHeight = fdev.statusBar
       def timeZoneOffset = {
@@ -73,6 +74,8 @@ object EverythingJava {
           })
           RFuture.success(())
       }
+
+      def purchaseRedeemed (sku :String, orderId :String) {} // yay, noop!
     }
 
     // put a fake status bar atop the screen

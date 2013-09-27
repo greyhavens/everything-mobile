@@ -91,8 +91,11 @@ class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends G
     */
   def redeemPurchase (sku :String, platform :String, token :String, receipt :String) {
     everySvc.redeemPurchase(sku, platform, token, receipt).
-      onSuccess(slot { coinbal => coins.update(coinbal) }).
-      onFailure(slot { exn => screens.top.asInstanceOf[EveryScreen].onFailure(exn) })
+      onFailure(slot { exn => screens.top.asInstanceOf[EveryScreen].onFailure(exn) }).
+      onSuccess(slot { coinbal =>
+        coins.update(coinbal)
+        device.purchaseRedeemed(sku, token)
+      })
   }
 
   override def init ()  {
