@@ -44,7 +44,7 @@ object EverythingJava {
     val facebook = new Facebook {
       def isAuthed = true
       def authenticate () = RFuture.success("test:" + fbId)
-      def showDialog (action :String, params :Array[String]) = RFuture.success[String](null)
+      def showDialog (action :String, params :Map[String,String]) = RFuture.success[String](null)
     }
 
     val device = new Device {

@@ -18,5 +18,8 @@ trait Facebook {
 
   /** Shows a Facebook feed dialog.
     * @return (via future) the story id on success, null if the dialog was canceled. */
-  def showDialog (action :String, params :Array[String]) :RFuture[String]
+  def showDialog (action :String, params :Map[String,String]) :RFuture[String]
+
+  // TODO: implementing sharing "got card", "completed series" via Open Graph API
+  // shareGraph (ogType :String, props :Map[String,String]) :RFuture[String]
 }
