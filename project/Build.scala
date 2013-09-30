@@ -19,5 +19,5 @@ object GameBuild extends samskivert.MavenBuild {
     case _ => Nil
   }
 
-  override def profiles = Seq("java")
+  override def profiles = Seq("java", "android")
 }
