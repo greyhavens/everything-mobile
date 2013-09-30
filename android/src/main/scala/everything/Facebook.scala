@@ -8,8 +8,8 @@ import android.app.Activity
 import android.content.Intent;
 import android.os.Bundle
 
-import com.facebook.android.{DialogError, FacebookError, Facebook => OldFacebook}
-import com.facebook.model.GraphUser
+import com.facebook.UiLifecycleHelper
+import com.facebook.widget.FacebookDialog
 import com.facebook.{Request, Response, Session, SessionState}
 
 import playn.core.PlayN._
@@ -18,13 +18,39 @@ import react.RFuture
 
 class DroidBook (activity :EverythingActivity) extends Facebook {
 
-  def onCreate () {
+  def onCreate (state :Bundle) {
+    helper.onCreate(state)
     Session.openActiveSession(activity, false, null)
   }
 
-  def onActivityResult (requestCode :Int, resultCode :Int, data :Intent) {
+  def onPause () {
+    helper.onPause()
+  }
+
+  def onResume () {
+    helper.onResume()
+  }
+
+  def onSaveInstanceState (outState :Bundle) {
+    helper.onSaveInstanceState(outState)
+  }
+
+  def onDestroy () {
+    helper.onDestroy()
+  }
+
+  def onActivityResult (reqCode :Int, resCode :Int, data :Intent) {
     val sess = Session.getActiveSession
-    if (sess != null) sess.onActivityResult(activity, requestCode, resultCode, data)
+    if (sess != null) sess.onActivityResult(activity, reqCode, resCode, data)
+
+    helper.onActivityResult(reqCode, resCode, data, new FacebookDialog.Callback() {
+      override def onComplete (call :FacebookDialog.PendingCall, data :Bundle) {
+        log.info(s"FB onComplete $call")
+      }
+      override def onError (call :FacebookDialog.PendingCall, err :Exception, data :Bundle) {
+        log.warn(s"FB onError $call $err")
+      }
+    })
   }
 
   def accessToken :String = Session.getActiveSession match {
@@ -46,22 +72,31 @@ class DroidBook (activity :EverythingActivity) extends Facebook {
   }
 
   // from Facebook
-  override def showDialog (action :String, params :Array[String]) = withSession { (sess, cb) =>
-    val fb = new OldFacebook(sess.getApplicationId)
-    fb.setAccessToken(sess.getAccessToken)
-    fb.setAccessExpires(sess.getExpirationDate.getTime)
-    activity.runOnUiThread(new Runnable() { def run () {
-      val bundle = new Bundle()
-      for (Array(key, value) <- params.grouped(2)) {
-        if (value != null) bundle.putString(key, value)
-      }
-      fb.dialog(activity, action, bundle, new OldFacebook.DialogListener() {
-        def onComplete (values :Bundle) { cb.onSuccess(values.getString("post_id")) }
-        def onFacebookError (e :FacebookError) { cb.onFailure(e) }
-        def onError (e :DialogError) { cb.onFailure(e) }
-        def onCancel () { cb.onSuccess(null) }
-      })
-    }})
+  override def showDialog (action :String, params :Map[String,String]) = withSession { (sess, cb) =>
+    val dialog = new FacebookDialog.ShareDialogBuilder(activity).
+      setName(params("name")).
+      setCaption(params("caption")).
+      setDescription(params("description")).
+      setPicture(params("picture")).
+      setLink(params("link")).
+      setRef(params("ref")).
+      build()
+    helper.trackPendingDialogCall(dialog.present())
+    // val fb = new OldFacebook(sess.getApplicationId)
+    // fb.setAccessToken(sess.getAccessToken)
+    // fb.setAccessExpires(sess.getExpirationDate.getTime)
+    // activity.runOnUiThread(new Runnable() { def run () {
+    //   val bundle = new Bundle()
+    //   for (Array(key, value) <- params.grouped(2)) {
+    //     if (value != null) bundle.putString(key, value)
+    //   }
+    //   fb.dialog(activity, action, bundle, new OldFacebook.DialogListener() {
+    //     def onComplete (values :Bundle) { cb.onSuccess(values.getString("post_id")) }
+    //     def onFacebookError (e :FacebookError) { cb.onFailure(e) }
+    //     def onError (e :DialogError) { cb.onFailure(e) }
+    //     def onCancel () { cb.onSuccess(null) }
+    //   })
+    // }})
   }
 
   class FBOp[T] (action :(Session, Callback[T]) => Unit) extends DeferredPromise[T] {
@@ -103,4 +138,10 @@ class DroidBook (activity :EverythingActivity) extends Facebook {
   // }
 
   protected var _pendingOp :FBOp[_] = _
+
+  private val helper = new UiLifecycleHelper(activity, new Session.StatusCallback() {
+    override def call (sess :Session, state :SessionState, exn :Exception) {
+      log.info(s"Session status [state=$state, exn=$exn]")
+    }
+  })
 }

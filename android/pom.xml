@@ -13,6 +13,13 @@
   <packaging>apk</packaging>
   <name>Everything Client Android</name>
 
+  <repositories>
+    <repository>
+      <id>facebook-api-android-maven</id>
+      <url>http://avianey.github.io/facebook-api-android-maven/</url>
+    </repository>
+  </repositories>
+
   <dependencies>
     <dependency>
       <groupId>com.threerings.everything</groupId>
@@ -21,9 +28,9 @@
     </dependency>
 
     <dependency>
-      <groupId>com.facebook</groupId>
-      <artifactId>android-facebook</artifactId>
-      <version>3.0</version>
+      <groupId>com.github.avianey</groupId>
+      <artifactId>facebook-android-api</artifactId>
+      <version>3.5</version>
       <type>apklib</type>
     </dependency>
 

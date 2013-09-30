@@ -99,34 +99,50 @@ class EverythingActivity extends GameActivity {
 
   override def onCreate (savedInstanceState :Bundle) {
     super.onCreate(savedInstanceState)
-    facebook.onCreate()
+    facebook.onCreate(savedInstanceState)
     bindService(new Intent("com.android.vending.billing.InAppBillingService.BIND"),
                 billConn, Context.BIND_AUTO_CREATE);
   }
 
+  override def onPause () {
+    super.onPause()
+    facebook.onPause()
+  }
+
+  override def onResume () {
+    super.onResume()
+    facebook.onResume()
+  }
+
+  override def onSaveInstanceState (outState :Bundle) {
+    super.onSaveInstanceState(outState)
+    facebook.onSaveInstanceState(outState)
+  }
+
   override def onDestroy () {
     super.onDestroy()
+    facebook.onDestroy()
     if (billConn != null) {
       unbindService(billConn)
       billConn = null
     }
   }
 
-  override def onActivityResult (requestCode :Int, resultCode :Int, data :Intent) {
-    super.onActivityResult(requestCode, resultCode, data)
-    requestCode match {
+  override def onActivityResult (reqCode :Int, resCode :Int, data :Intent) {
+    super.onActivityResult(reqCode, resCode, data)
+    reqCode match {
       case BuyCode =>
         val responseCode = data.getIntExtra("RESPONSE_CODE", 0) // TODO ???
-        resultCode match {
+        resCode match {
           case Activity.RESULT_OK =>
             toPurchase(data.getStringExtra("INAPP_PURCHASE_DATA"),
                        data.getStringExtra("INAPP_DATA_SIGNATURE")) foreach redeemPurchase("bought")
           case _ => // TODO: do we need to inform the user when billing unavailable?
-            platform.log.info(s"Non-success purchase result: $resultCode")
+            platform.log.info(s"Non-success purchase result: $resCode")
         }
 
       case _ =>
-        facebook.onActivityResult(requestCode, resultCode, data)
+        facebook.onActivityResult(reqCode, resCode, data)
     }
   }
 
