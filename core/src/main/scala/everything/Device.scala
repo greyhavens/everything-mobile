@@ -19,11 +19,11 @@ trait Device {
   def formatDate (when :Long) :String
 
   /** Returns info on the in-app billing products. */
-  def getProducts :RFuture[Seq[Product]]
+  def getProducts :RFuture[Array[Product]]
 
   /** Initiates a purchase of the specified product. Will either result in a callback to
     * `game.redeemPurchase` or a failure will be reported on the returned future. */
-  def buyProduct (game :Everything, sku :String) :RFuture[Unit]
+  def buyProduct (game :Everything, sku :String) :RFuture[JVoid]
 
   /** Informs the device that a purchase has been redeemed with the server. The device should
     * "consume" the purchase or mark it as fully processed, or whatever is appropriate for its

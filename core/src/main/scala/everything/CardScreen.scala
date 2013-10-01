@@ -339,16 +339,10 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
         (s"$me got the $thing card as a birthday present!", "got_bgift", null)
       else
         (s"$me got the $thing from ${card.giver}.", "got_gift", card.giver.facebookId.toString)
-    val toArgs = if (tgtId != null) Map("to" -> tgtId) else Map[String,String]()
-    game.fb.showDialog("feed", toArgs ++ Map(
-      "name" -> thing,
-      "caption" -> msg,
-      "description" -> card.thing.descrip,
-      "link" -> everyURL,
-      "picture" -> s"${game.sess.get.backendURL}cardimg?thing=${card.thing.thingId}",
-      "actions" -> s"[ { 'name': 'Collect Everything!', 'link': '${everyURL}' } ]",
-      "ref" -> ref)).onFailure(onFailure).onSuccess(slot { id =>
-        PlayN.log.info(s"Shared on FB $id.")
-      })
+    val picURL = s"${game.sess.get.backendURL}cardimg?thing=${card.thing.thingId}"
+    game.fb.showDialog(name=thing, caption=msg, descrip=card.thing.descrip, picURL=picURL,
+                       link=everyURL, ref=ref, tgtFriendId=tgtId).
+      onFailure(onFailure).
+      onSuccess(slot { id => PlayN.log.info(s"Shared on FB $id.") })
   }
 }

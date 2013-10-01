@@ -8,6 +8,7 @@ import react.{AbstractSignal, AbstractValue, Slot, UnitSlot}
 /** Global stuffs; mostly implicits to make using React/TriplePlay more pleasant. */
 package object everything {
 
+  type JVoid     = java.lang.Void
   type JBoolean  = java.lang.Boolean
   type JInteger  = java.lang.Integer
   type JList[T]  = java.util.List[T]

@@ -44,7 +44,8 @@ object EverythingJava {
     val facebook = new Facebook {
       def isAuthed = true
       def authenticate () = RFuture.success("test:" + fbId)
-      def showDialog (action :String, params :Map[String,String]) = RFuture.success[String](null)
+      def showDialog (name :String, caption :String, descrip :String, picURL :String, link :String,
+                      ref :String, tgtFriendId :String) = RFuture.success[String](null)
     }
 
     val device = new Device {
@@ -58,7 +59,7 @@ object EverythingJava {
       def formatDate (when :Long) = _dfmt.format(new Date(when))
       private val _dfmt = DateFormat.getDateInstance()
 
-      def getProducts = RFuture.success(Seq(
+      def getProducts = RFuture.success(Array(
         // return a weird order to verify that ShopScreen sorts them
         Product("coins_11000", "$1.99"),
         Product( "coins_5000", "$0.99"),
@@ -72,7 +73,7 @@ object EverythingJava {
             val curmin = System.currentTimeMillis / MillisPerMinute
             def run = game.redeemPurchase(sku, "TEST", "test_tok:" + curmin, "test_rcpt:" + sku)
           })
-          RFuture.success(())
+          RFuture.success(null :JVoid)
       }
 
       def purchaseRedeemed (sku :String, orderId :String) {} // yay, noop!

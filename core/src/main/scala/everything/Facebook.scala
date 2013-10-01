@@ -16,9 +16,10 @@ trait Facebook {
     * @return (via future) the user's Facebook auth token. */
   def authenticate () :RFuture[String]
 
-  /** Shows a Facebook feed dialog.
+  /** Shows a Facebook feed dialog. `tgtFriendId` may be null.
     * @return (via future) the story id on success, null if the dialog was canceled. */
-  def showDialog (action :String, params :Map[String,String]) :RFuture[String]
+  def showDialog (name :String, caption :String, descrip :String, picURL :String, link :String,
+                  ref :String, tgtFriendId :String) :RFuture[String]
 
   // TODO: implementing sharing "got card", "completed series" via Open Graph API
   // shareGraph (ogType :String, props :Map[String,String]) :RFuture[String]
