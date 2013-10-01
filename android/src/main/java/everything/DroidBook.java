@@ -5,7 +5,9 @@
 package everything;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -14,6 +16,9 @@ import android.os.Bundle;
 import com.facebook.Session;
 import com.facebook.SessionState;
 import com.facebook.UiLifecycleHelper;
+import com.facebook.model.GraphObject;
+import com.facebook.model.OpenGraphAction;
+import com.facebook.model.OpenGraphObject;
 import com.facebook.widget.FacebookDialog;
 
 import playn.core.util.Callback;
@@ -91,34 +96,45 @@ public class DroidBook implements Facebook {
                                        String link, String ref, String tgtFriendId) {
         List<String> friends = new ArrayList<String>();
         if (tgtFriendId != null) friends.add(tgtFriendId);
-        FacebookDialog dialog = new FacebookDialog.ShareDialogBuilder(_activity).
+        FacebookDialog.ShareDialogBuilder builder = new FacebookDialog.ShareDialogBuilder(_activity).
             setName(name).
             setCaption(caption).
             setDescription(descrip).
             setPicture(picURL).
             setLink(link).
             setRef(ref).
-            setFriends(friends).
-            build();
-        _helper.trackPendingDialogCall(dialog.present());
+            setFriends(friends);
+        if (!builder.canPresent()) return RFuture.failure(
+            new Exception("Facebook app must be installed to share."));
+        else {
+            _helper.trackPendingDialogCall(builder.build().present());
+            return RFuture.success("TODO");
+        }
+    }
 
-        return null; // TODO
+    // from Facebook
+    public RFuture<String> showGraphDialog (String ogAction, String ogType, Map<String,String> props,
+                                            String ref) {
+        String fbns = _activity.game.facebookNS(); // open graph namespace (e.g. everythinggame)
+        OpenGraphObject obj = OpenGraphObject.Factory.createForPost(fbns + ":" + ogType);
+        for (Map.Entry<String,String> entry : props.entrySet())
+            obj.setProperty(entry.getKey(), entry.getValue());
 
-        // val fb = new OldFacebook(sess.getApplicationId)
-        // fb.setAccessToken(sess.getAccessToken)
-        // fb.setAccessExpires(sess.getExpirationDate.getTime)
-        // activity.runOnUiThread(new Runnable() { def run () {
-        //   val bundle = new Bundle()
-        //   for (Array(key, value) <- params.grouped(2)) {
-        //     if (value != null) bundle.putString(key, value)
-        //   }
-        //   fb.dialog(activity, action, bundle, new OldFacebook.DialogListener() {
-        //     def onComplete (values :Bundle) { cb.onSuccess(values.getString("post_id")) }
-        //     def onFacebookError (e :FacebookError) { cb.onFailure(e) }
-        //     def onError (e :DialogError) { cb.onFailure(e) }
-        //     def onCancel () { cb.onSuccess(null) }
-        //   })
-        // }})
+        OpenGraphAction action = GraphObject.Factory.create(OpenGraphAction.class);
+        action.setType(fbns + ":" + ogAction);
+        action.setProperty(ogType, obj);
+        action.setRef(ref);
+        // action.setExplicitlyShared(true); // disabled until we get approval?
+
+        FacebookDialog.OpenGraphActionDialogBuilder builder =
+            new FacebookDialog.OpenGraphActionDialogBuilder(
+                _activity, action, action.getType(), ogType);
+        if (!builder.canPresent()) return RFuture.failure(
+            new Exception("Facebook app must be installed to share."));
+        else {
+            _helper.trackPendingDialogCall(builder.build().present());
+            return RFuture.success("TODO");
+        }
     }
 
     abstract class Action<T> extends DeferredPromise<T>  {

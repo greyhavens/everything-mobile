@@ -30,7 +30,7 @@
     <dependency>
       <groupId>com.github.avianey</groupId>
       <artifactId>facebook-android-api</artifactId>
-      <version>3.5</version>
+      <version>3.5.1</version>
       <type>apklib</type>
     </dependency>
 

@@ -45,7 +45,9 @@ object EverythingJava {
       def isAuthed = true
       def authenticate () = RFuture.success("test:" + fbId)
       def showDialog (name :String, caption :String, descrip :String, picURL :String, link :String,
-                      ref :String, tgtFriendId :String) = RFuture.success[String](null)
+                      tgtFriendId :String, ref :String) = RFuture.success("TODO")
+      def showGraphDialog (ogAction :String, ogType :String, props :JMap[String,String],
+                           tgtFriendId: String, ref :String) = RFuture.success("TODO")
     }
 
     val device = new Device {

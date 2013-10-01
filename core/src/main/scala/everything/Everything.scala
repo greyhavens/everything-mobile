@@ -18,9 +18,9 @@ class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends G
   // revalidate our session if we're paused for > 5 mins
   final val RevalidatePeriod = 5*60*60*1000L
 
-  // some are-we-testing bits
   val isCandidate = platformType == Platform.Type.JAVA
   val herokuId = if (isCandidate) "everything-candidate" else "everything"
+  val facebookNS = if (isCandidate) "everythingcandidate" else "everythinggame"
 
   val svcURL = s"http://$herokuId.herokuapp.com/json/"
   val everySvc :EveryService = if (mock) Mockery else new EveryServiceClient(this, svcURL)

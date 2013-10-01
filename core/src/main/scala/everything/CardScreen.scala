@@ -329,20 +329,28 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
   }
 
   protected def showShareDialog (card :Card, counts :Option[(Int,Int)]) {
-    val (me, thing, everyURL) = (game.self.get.name, card.thing.name, game.sess.get.everythingURL)
-    val (msg, ref, tgtId) =
-      if (counts.map(_._2 == 0).getOrElse(false)) //  series completed
-        (s"$me got the $thing card and completed the ${card.getSeries} series!", "got_comp", null)
+    val (action, ref, tgtId) =
+      if (counts.map(_._2 == 0).getOrElse(false))
+        // (s"$me got the $thing card and completed the ${card.getSeries} series!", "got_comp", null)
+        ("get", "got_comp", null) // TODO: how to express series completion as open graph object?
       else if (card.giver == null)
-        (s"$me got the $thing card", "got_card", null)
+        // (s"$me got the $thing card", "got_card", null)
+        ("get", "got_card", null)
       else if (card.giver.userId == Card.BIRTHDAY_GIVER_ID)
-        (s"$me got the $thing card as a birthday present!", "got_bgift", null)
+        // (s"$me got the $thing card as a birthday present!", "got_bgift", null)
+        ("get", "got_bgift", null)
       else
-        (s"$me got the $thing from ${card.giver}.", "got_gift", card.giver.facebookId.toString)
-    val picURL = s"${game.sess.get.backendURL}cardimg?thing=${card.thing.thingId}"
-    game.fb.showDialog(name=thing, caption=msg, descrip=card.thing.descrip, picURL=picURL,
-                       link=everyURL, ref=ref, tgtFriendId=tgtId).
-      onFailure(onFailure).
+        // (s"$me got the $thing from ${card.giver}.", "got_gift", card.giver.facebookId.toString)
+        ("get", "got_gift", card.giver.facebookId.toString)
+
+    import scala.collection.JavaConversions._
+    val props = Map("title" -> card.thing.name,
+                    "image" -> game.cardImageURL(card.thing.image),
+                    "url" -> game.sess.get.everythingURL,
+                    "description" -> card.thing.descrip,
+                    "category" -> Category.getHierarchy(card.categories),
+                    "series" -> card.getSeries.toString)
+    game.fb.showGraphDialog(action, "card", props, tgtId, ref).onFailure(onFailure).
       onSuccess(slot { id => PlayN.log.info(s"Shared on FB $id.") })
   }
 }

@@ -19,8 +19,10 @@ trait Facebook {
   /** Shows a Facebook feed dialog. `tgtFriendId` may be null.
     * @return (via future) the story id on success, null if the dialog was canceled. */
   def showDialog (name :String, caption :String, descrip :String, picURL :String, link :String,
-                  ref :String, tgtFriendId :String) :RFuture[String]
+                  tgtFriendId :String, ref :String) :RFuture[String]
 
-  // TODO: implementing sharing "got card", "completed series" via Open Graph API
-  // shareGraph (ogType :String, props :Map[String,String]) :RFuture[String]
+  /** Shows a Facebook open graph dialog. `tgtFriendId` may be null.
+    * @return (via future) the story id on success, null if the dialog was canceled. */
+  def showGraphDialog (ogAction :String, ogType :String, props :JMap[String,String],
+                       tgtFriendId :String, ref :String) :RFuture[String]
 }
