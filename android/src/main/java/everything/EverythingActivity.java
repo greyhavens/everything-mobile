@@ -42,7 +42,7 @@ import com.threerings.everything.rpc.EveryAPI;
 
 public class EverythingActivity extends GameActivity {
 
-    public Device device = new Device() {
+    public final Device device = new Device() {
         public float statusBarHeight () { return 0; }
         public int timeZoneOffset () {
             TimeZone tz = TimeZone.getDefault();
@@ -109,8 +109,8 @@ public class EverythingActivity extends GameActivity {
         }
     };
 
-    public DroidBook facebook = new DroidBook(this);
-    public Everything game = new Everything(false, device, facebook);
+    public final DroidBook facebook = new DroidBook(this);
+    public Everything game;
 
     // android billing stuffs; yay for mutability!
     public IInAppBillingService billSvc;
@@ -120,13 +120,7 @@ public class EverythingActivity extends GameActivity {
         }
         public void onServiceConnected (ComponentName name, IBinder service) {
             billSvc = IInAppBillingService.Stub.asInterface(service);
-            // re-redeem any lingering unconsumed purchases when our session is refreshed
-            game.sess().connectNotify(new Slot<SessionData>() {
-                public void onEmit (SessionData sess) {
-                    if (sess == null) return;
-                    for (Purchase purch : readPurchases(null)) redeemPurchase("linger", purch);
-                }
-            });
+            maybeRedeemPurchases();
         }
     };
 
@@ -202,7 +196,12 @@ public class EverythingActivity extends GameActivity {
                                            Font.Style.PLAIN);
         platform().graphics().registerFont("fonts/josschrift.ttf", "Josschrift", Font.Style.PLAIN);
         // start the ball rolling
-        PlayN.run(game);
+        PlayN.run(game = new Everything(false, device, facebook));
+        // re-redeem any lingering unconsumed purchases when our session is refreshed
+        game.sess().connectNotify(new Slot<SessionData>() {
+            public void onEmit (SessionData sess) { maybeRedeemPurchases(); }
+        });
+
     }
 
     @Override protected AndroidPlatform platform () {
@@ -228,6 +227,11 @@ public class EverythingActivity extends GameActivity {
             height = dheight;
         }
         return Math.min(width / 320f, height / 480f);
+    }
+
+    protected void maybeRedeemPurchases () {
+        if (game == null || game.sess().get() == null || billSvc == null) return;
+        for (Purchase purch : readPurchases(null)) redeemPurchase("linger", purch);
     }
 
     protected void redeemPurchase (String source, Purchase purch) {

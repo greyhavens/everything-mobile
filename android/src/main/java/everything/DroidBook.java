@@ -24,14 +24,14 @@ public class DroidBook implements Facebook {
 
     public DroidBook (EverythingActivity activity) {
         _activity = activity;
-        _helper = new UiLifecycleHelper(activity, new Session.StatusCallback() {
+    }
+
+    public void onCreate (Bundle state) {
+        _helper = new UiLifecycleHelper(_activity, new Session.StatusCallback() {
             public void call (Session sess, SessionState state, Exception exn) {
                 log().info("Session status [state=" + state + ", exn=" + exn + "]");
             }
         });
-    }
-
-    public void onCreate (Bundle state) {
         _helper.onCreate(state);
         Session.openActiveSession(_activity, false, null);
     }
@@ -151,7 +151,7 @@ public class DroidBook implements Facebook {
         return action;
     }
 
-    protected Action<?> _pendingOp;
     protected final EverythingActivity _activity;
-    protected final UiLifecycleHelper _helper;
+    protected UiLifecycleHelper _helper;
+    protected Action<?> _pendingOp;
 }

@@ -18,23 +18,6 @@ class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends G
   // revalidate our session if we're paused for > 5 mins
   final val RevalidatePeriod = 5*60*60*1000L
 
-  // propagate events so that our scroller can usurp button clicks
-  platform.setPropagateEvents(true)
-  platform.setLifecycleListener(new PlayN.LifecycleListener() {
-    var _paused = System.currentTimeMillis
-    override def onPause () {
-      _paused = System.currentTimeMillis
-    }
-    override def onResume () {
-      val pauseTime = System.currentTimeMillis - _paused
-      if (pauseTime > RevalidatePeriod) {
-        log.info(s"Paused for ${pauseTime/60*1000}s, revalidating session.")
-        validateSession()
-      }
-    }
-    override def onExit () {} // nada
-  })
-
   // some are-we-testing bits
   val isCandidate = platformType == Platform.Type.JAVA
   val herokuId = if (isCandidate) "everything-candidate" else "everything"
@@ -99,6 +82,23 @@ class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends G
   }
 
   override def init ()  {
+    // propagate events so that our scroller can usurp button clicks
+    platform.setPropagateEvents(true)
+    platform.setLifecycleListener(new PlayN.LifecycleListener() {
+      var _paused = System.currentTimeMillis
+      override def onPause () {
+        _paused = System.currentTimeMillis
+      }
+      override def onResume () {
+        val pauseTime = System.currentTimeMillis - _paused
+        if (pauseTime > RevalidatePeriod) {
+          log.info(s"Paused for ${pauseTime/60*1000}s, revalidating session.")
+          validateSession()
+        }
+      }
+      override def onExit () {} // nada
+    })
+    // listen for "keyboard" events (used for back button on Android)
     keyboard.setListener(new Keyboard.Adapter {
       override def onKeyDown (event :Keyboard.Event) = keyDown.emit(event.key)
     })
