@@ -27,6 +27,7 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
     java.lang.Boolean.valueOf(sess != null && sess.news != null &&
       (System.currentTimeMillis - sess.news.reported.getTime < FreshnessPeriod))
   })
+  val welcome = UI.tipLabel("")
 
   override def wasAdded () {
     super.wasAdded()
@@ -41,7 +42,7 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
       display()
 
     // add our buttons once we're authed
-    game.self.connect(unitSlot {
+    game.sess.connect(slot { sess =>
       val entree = entrees(Random.nextInt(entrees.size))
       bbox.set(new Group(AxisLayout.vertical.offEqualize).add(
         menuButton("Gifts", entree) { openGifts() }.
@@ -53,6 +54,7 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
         menuButton("Collection", entree) { new CollectionScreen(game, game.self.get).push() },
         menuButton("Goings On", entree) { new ActivityScreen(game).push() },
         menuButton("Shop", entree) { new ShopScreen(game).push() }))
+      welcome.text.update(greeting(sess))
     }).once()
   }
 
@@ -63,7 +65,8 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
              new Label("Game").addStyles(Style.FONT.is(UI.menuFont)),
              UI.stretchShim,
              bbox.set(new Label("Logging in...")),
-             UI.stretchShim)
+             UI.stretchShim,
+             welcome)
   }
 
   protected def menuButton (label :String, entree :Entree)(action : =>Unit) :Button = {
@@ -103,6 +106,16 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
     new Dialog().addTitle("Open Your Gifts!").
       add(AxisLayout.stretch(UI.vscroll(cards))).
       addButton("Done", ()).display()
+  }
+
+  protected def greeting (sess :SessionData) = {
+    val name = sess.name.name
+    game.device.hourOfDay match {
+      case h if (h < 4)  => s"Hi $name! Burning the midnight oil?"
+      case h if (h < 9)  => s"Good morning $name!"
+      case h if (h < 17) => if (sess.gridsConsumed < 4) s"Hi $name!" else s"Welcome back $name!"
+      case _             => s"Good evening $name!"
+    }
   }
 
   override def pop () {} // don't pop, we got nowhere to go
