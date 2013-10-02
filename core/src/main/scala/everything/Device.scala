@@ -18,6 +18,9 @@ trait Device {
   /** Formats a date for `flipped on` etc. UI. */
   def formatDate (when :Long) :String
 
+  /** Returns the current hour of the day. */
+  def hourOfDay :Int
+
   /** Returns info on the in-app billing products. */
   def getProducts :RFuture[Array[Product]]
 

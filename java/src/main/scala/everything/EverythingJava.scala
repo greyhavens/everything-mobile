@@ -5,7 +5,7 @@
 package everything
 
 import java.text.DateFormat
-import java.util.{Date, TimeZone}
+import java.util.{Calendar, Date, TimeZone}
 import playn.core.{ImmediateLayer, PlayN, Surface}
 import playn.core.util.Callback
 import playn.java.JavaPlatform
@@ -60,6 +60,8 @@ object EverythingJava {
 
       def formatDate (when :Long) = _dfmt.format(new Date(when))
       private val _dfmt = DateFormat.getDateInstance()
+
+      def hourOfDay = Calendar.getInstance.get(Calendar.HOUR_OF_DAY)
 
       def getProducts = RFuture.success(Array(
         // return a weird order to verify that ShopScreen sorts them

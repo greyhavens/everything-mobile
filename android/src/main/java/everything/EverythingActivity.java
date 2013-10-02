@@ -7,6 +7,7 @@ package everything;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -53,6 +54,9 @@ public class EverythingActivity extends GameActivity {
             return _dfmt.format(new Date(when));
         }
         private DateFormat _dfmt = DateFormat.getDateInstance();
+        public int hourOfDay () {
+            return Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        }
 
         public RFuture<Product[]> getProducts () {
             final RPromise<Product[]> result = RPromise.create();
