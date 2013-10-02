@@ -119,7 +119,7 @@
             <platform>18</platform>
           </sdk>
           <deleteConflictingFiles>true</deleteConflictingFiles>
-          <undeployBeforeDeploy>true</undeployBeforeDeploy>
+          <undeployBeforeDeploy>false</undeployBeforeDeploy>
           <jvmArguments>
             <jvmArgument>-Xmx1024m</jvmArgument>
           </jvmArguments>
