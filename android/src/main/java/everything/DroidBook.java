@@ -17,6 +17,7 @@ import com.facebook.Session;
 import com.facebook.SessionState;
 import com.facebook.UiLifecycleHelper;
 import com.facebook.model.GraphObject;
+import com.facebook.model.GraphUser;
 import com.facebook.model.OpenGraphAction;
 import com.facebook.model.OpenGraphObject;
 import com.facebook.widget.FacebookDialog;
@@ -114,7 +115,7 @@ public class DroidBook implements Facebook {
 
     // from Facebook
     public RFuture<String> showGraphDialog (String ogAction, String ogType, Map<String,String> props,
-                                            String ref) {
+                                            String tgtFriendId, String ref) {
         String fbns = _activity.game.facebookNS(); // open graph namespace (e.g. everythinggame)
         OpenGraphObject obj = OpenGraphObject.Factory.createForPost(fbns + ":" + ogType);
         for (Map.Entry<String,String> entry : props.entrySet())
@@ -125,6 +126,11 @@ public class DroidBook implements Facebook {
         action.setProperty(ogType, obj);
         action.setRef(ref);
         // action.setExplicitlyShared(true); // disabled until we get approval?
+        if (tgtFriendId != null) {
+            GraphUser user = GraphObject.Factory.create(GraphUser.class);
+            user.setId(tgtFriendId);
+            action.setTags(Collections.singletonList(user));
+        }
 
         FacebookDialog.OpenGraphActionDialogBuilder builder =
             new FacebookDialog.OpenGraphActionDialogBuilder(
