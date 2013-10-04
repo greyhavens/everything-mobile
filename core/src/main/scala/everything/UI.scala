@@ -106,7 +106,8 @@ object UI {
     "bigcard", 206/2, 246/2, 14, new Insets(1.5f, 4, 4, 1.5f), new Insets(2.5f, 7, 2, 7))
 
   val textColor = 0xFF442D17
-  lazy val coinsIcon = getImage("money.png")
+  lazy val coinsImg = getImage("money.png")
+  lazy val coinsIcon = Icons.image(coinsImg)
   lazy val tradeLike = getImage("tradelike.png")
   lazy val megaCard = getImage("megacard/front.png")
   lazy val pageBG = getImage("page_repeat.png")
@@ -216,28 +217,40 @@ object UI {
     new Button(label).addStyles(styles :_*)
   def button (label :String, styles :Style.Binding[_]*)(action : =>Unit) :Button =
     inertButton(label, styles :_*).onClick(unitSlot(action))
-  def labelButton (text :String, styles :Style.Binding[_]*)(action : => Unit) :Button =
+  def labelButton (text :String, styles :Style.Binding[_]*)(action : =>Unit) :Button =
     new LabelButton(text).addStyles(styles :_*).onClick(unitSlot(action))
-  def toggleButton (text :String, styles :Style.Binding[_]*)(action : => Unit) :ToggleButton = {
+  def toggleButton (text :String, styles :Style.Binding[_]*)(action : =>Unit) :ToggleButton = {
     val tb = new ToggleButton(text) {
       override protected def getStyleClass = classOf[Button]
     }.addStyles(styles :_*)
     tb.clicked.connect(unitSlot(action))
     tb
   }
-  def imageButton (up :Image, down :Image)(action : => Unit) :ImageButton =
+  def imageButton (up :Image, down :Image)(action : =>Unit) :ImageButton =
     new ImageButton(up, down).onClick(unitSlot(action))
   def moneyButton (amount :Int)(action :(Button => Unit)) = {
     val b = button(amount.toString)(())
     b.clicked.connect(action)
-    b.icon.update(Icons.image(coinsIcon))
+    b.icon.update(coinsIcon)
     b.addStyles(Style.ICON_GAP.is(0))
     b
   }
 
+  def shareImg :Image = platformType match {
+    case Platform.Type.ANDROID => getImage("share/android.png")
+    case Platform.Type.IOS     => getImage("share/ios.png")
+    case _                     => getImage("share/ios.png")
+  }
+  def shareButton (action : =>Unit) :Button = {
+    val stamp = graphics.createImage(shareImg.width, shareImg.height)
+    stamp.canvas.setFillColor(textColor).fillRect(0, 0, stamp.width, stamp.height)
+    stamp.canvas.setCompositeOperation(Canvas.Composite.DST_IN).drawImage(shareImg, 0, 0)
+    new Button(Icons.image(stamp)).onClick(unitSlot(action))
+  }
+
   def icon (image :Image) = new Label(Icons.image(image))
   /** Creates a label that displays a currency amount. */
-  def moneyIcon (coins :Int) = new Label(coins.toString, Icons.image(coinsIcon)).
+  def moneyIcon (coins :Int) = new Label(coins.toString, coinsIcon).
     addStyles(Style.FONT.is(moneyFont), Style.ICON_GAP.is(0))
   /** Creates a label that displays a (reactive) currency amount. */
   def moneyIcon (coins :IntValue, dbag :DestroyableBag) :Label = {
@@ -245,6 +258,7 @@ object UI {
     dbag.add(coins.map(Functions.TO_STRING).connectNotify(label.text.slot()))
     label
   }
+  /** Creates an icon for the specified powerup. */
   def pupIcon (pup :Powerup) = icon(pupImage(pup))
 
   lazy val backImage = {

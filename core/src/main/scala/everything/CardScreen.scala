@@ -247,10 +247,7 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
                UI.stretchShim(),
                UI.button("Gift") { new GiftCardScreen(game, cache, _cardp, _source).push() },
                UI.stretchShim(),
-               UI.button("Share") {
-                 // TODO: shake the button or something if we have to wait...
-                 _source.cardF.onSuccess(slot { card => showShareDialog(card, _source.counts) })
-               },
+               UI.shareButton { showShareMenu() },
                UI.stretchShim()))
   }
 
@@ -328,7 +325,24 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
     }
   }
 
-  protected def showShareDialog (card :Card, counts :Option[(Int,Int)]) {
+  protected def showShareMenu () {
+    // "force" the loading of the card (which we'll need if we actually share); this allows the
+    // loading to happen while the user is choosing a network; hide that latency!
+    _source.cardF.onSuccess(unitSlot { /*noop!*/ })
+
+    val dialog = new Dialog() {
+      override def layout () = AxisLayout.vertical // no off-stretch
+    }
+    dialog.addTitle("Share to...").
+      add(new Button("Facebook", Icons.image(UI.getImage("socks/facebook.png"))).onClick(unitSlot {
+        dialog.dismiss()
+        _source.cardF.onSuccess(slot { card => shareToFacebook(card, _source.counts) })
+      })).
+      addButton("Cancel", { dialog.dismiss() }).
+      display()
+  }
+
+  protected def shareToFacebook (card :Card, counts :Option[(Int,Int)]) {
     val (action, ref, tgtId) =
       if (counts.map(_._2 == 0).getOrElse(false))
         // (s"$me got the $thing card and completed the ${card.getSeries} series!", "got_comp", null)

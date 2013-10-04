@@ -217,7 +217,7 @@ class CardButton (
           val fimage = cimage.subImage(xoff, yoff, fwidth, fheight)
           val flayer = graphics.createImageLayer(fimage)
           flayer.setOrigin(fwidth/2, fheight/2)
-          val clayer = graphics.createImageLayer(UI.coinsIcon)
+          val clayer = graphics.createImageLayer(UI.coinsImg)
           clayer.setOrigin(clayer.width/2, clayer.height/2)
           clayer.setAlpha(0)
           val center = new Point(xoff + fwidth/2, yoff + fheight/2)
