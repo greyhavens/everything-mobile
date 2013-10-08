@@ -14,6 +14,8 @@ import react.RPromise
   */
 class DeferredPromise[T] extends RPromise[T] with Callback[T] {
 
+  def alreadyComplete :Boolean = _result.get != null
+
   override def onSuccess (result :T) = invokeLater(new Runnable() {
     def run () = succeed(result)
   })
