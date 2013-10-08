@@ -6,6 +6,7 @@ package everything;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -93,6 +94,19 @@ public class DroidBook implements Facebook {
     }
 
     // from Facebook
+    public RFuture<String> shareGotCard (String name, String descrip, String image, String link,
+                                         String category, String series, String tgtFriendId,
+                                         String ref) {
+        Map<String,String> props = new HashMap<String,String>();
+        props.put("title", name);
+        props.put("description", descrip);
+        props.put("image", image);
+        props.put("url", link);
+        props.put("category", category);
+        props.put("series", series);
+        return showGraphDialog("get", "card", props, tgtFriendId, ref);
+    }
+
     public RFuture<String> showDialog (String name, String caption, String descrip, String picURL,
                                        String link, String ref, String tgtFriendId) {
         List<String> friends = new ArrayList<String>();
@@ -113,9 +127,8 @@ public class DroidBook implements Facebook {
         }
     }
 
-    // from Facebook
-    public RFuture<String> showGraphDialog (String ogAction, String ogType, Map<String,String> props,
-                                            String tgtFriendId, String ref) {
+    protected RFuture<String> showGraphDialog (
+        String ogAction, String ogType, Map<String,String> props, String tgtFriendId, String ref) {
         String fbns = _activity.game.facebookNS(); // open graph namespace (e.g. everythinggame)
         OpenGraphObject obj = OpenGraphObject.Factory.createForPost(fbns + ":" + ogType);
         for (Map.Entry<String,String> entry : props.entrySet())

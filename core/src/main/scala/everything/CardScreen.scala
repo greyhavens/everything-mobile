@@ -343,28 +343,24 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
   }
 
   protected def shareToFacebook (card :Card, counts :Option[(Int,Int)]) {
-    val (action, ref, tgtId) =
+    val (ref, tgtId) =
       if (counts.map(_._2 == 0).getOrElse(false))
         // (s"$me got the $thing card and completed the ${card.getSeries} series!", "got_comp", null)
-        ("get", "got_comp", null) // TODO: how to express series completion as open graph object?
+        ("got_comp", null) // TODO: how to express series completion as open graph object?
       else if (card.giver == null)
         // (s"$me got the $thing card", "got_card", null)
-        ("get", "got_card", null)
+        ("got_card", null)
       else if (card.giver.userId == Card.BIRTHDAY_GIVER_ID)
         // (s"$me got the $thing card as a birthday present!", "got_bgift", null)
-        ("get", "got_bgift", null)
+        ("got_bgift", null)
       else
         // (s"$me got the $thing from ${card.giver}.", "got_gift", card.giver.facebookId.toString)
-        ("get", "got_gift", card.giver.facebookId.toString)
+        ("got_gift", card.giver.facebookId.toString)
 
-    import scala.collection.JavaConversions._
-    val props = Map("title" -> card.thing.name,
-                    "image" -> game.cardImageURL(card.thing.image),
-                    "url" -> game.sess.get.everythingURL,
-                    "description" -> card.thing.descrip,
-                    "category" -> Category.getHierarchy(card.categories),
-                    "series" -> card.getSeries.toString)
-    game.fb.showGraphDialog(action, "card", props, tgtId, ref).onFailure(onFailure).
+    game.fb.shareGotCard(card.thing.name, card.thing.descrip, game.cardImageURL(card.thing.image),
+                         game.sess.get.everythingURL, Category.getHierarchy(card.categories),
+                         card.getSeries.toString, tgtId, ref).
+      onFailure(onFailure).
       onSuccess(slot { id => PlayN.log.info(s"Shared on FB $id.") })
   }
 }

@@ -16,13 +16,7 @@ trait Facebook {
     * @return (via future) the user's Facebook auth token. */
   def authenticate () :RFuture[String]
 
-  /** Shows a Facebook feed dialog. `tgtFriendId` may be null.
-    * @return (via future) the story id on success, null if the dialog was canceled. */
-  def showDialog (name :String, caption :String, descrip :String, picURL :String, link :String,
-                  tgtFriendId :String, ref :String) :RFuture[String]
-
-  /** Shows a Facebook open graph dialog. `tgtFriendId` may be null.
-    * @return (via future) the story id on success, null if the dialog was canceled. */
-  def showGraphDialog (ogAction :String, ogType :String, props :JMap[String,String],
-                       tgtFriendId :String, ref :String) :RFuture[String]
+  /** Shows a dialog allowing player to share that they got a card. */
+  def shareGotCard (name :String, descrip :String, image :String, link :String, category :String,
+                    series :String, tgtFriendId :String, ref :String) :RFuture[String]
 }
