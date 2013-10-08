@@ -60,6 +60,22 @@ namespace everything
       return _fmt.ToString(NSDate.FromTimeIntervalSince1970(when/1000d));
     }
 
+    public int hourOfDay () {
+      return DateTime.Now.Hour;
+    }
+
+    public RFuture getProducts () {
+      return RFuture.failure(new Exception("TODO"));
+    }
+
+    public RFuture buyProduct (Everything game, string sku) {
+      return RFuture.failure(new Exception("TODO"));
+    }
+
+    public void purchaseRedeemed (string sku, string orderId) {
+      // TODO
+    }
+
     protected readonly UIApplication _app;
     protected NSDateFormatter _fmt = new NSDateFormatter();
   }

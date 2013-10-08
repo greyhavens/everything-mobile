@@ -32,13 +32,6 @@
       <artifactId>playn-ios</artifactId>
       <version>${playn.version}</version>
     </dependency>
-
-    <dependency>
-      <groupId>com.facebook.ios</groupId>
-      <artifactId>MonoTouch.FacebookConnect</artifactId>
-      <version>3.5.2</version>
-      <type>dll</type>
-    </dependency>
   </dependencies>
 
   <build>
@@ -77,21 +70,6 @@
                     <filter token="app_cert" value="${app_cert}"/>
                   </filterset>
                 </copy>
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-
-          <!-- adds our assets to the .csproj file -->
-          <execution>
-            <id>add-assets</id>
-            <phase>generate-resources</phase>
-            <configuration>
-              <target>
-                <property file="../etc/${app}-app.properties"/>
-                <exec executable="${project.basedir}/add-assets"/>
               </target>
             </configuration>
             <goals>

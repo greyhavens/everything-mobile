@@ -91,7 +91,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Web.Services" />
     <Reference Include="MonoTouch.FacebookConnect">
-      <HintPath>bin\MonoTouch.FacebookConnect.dll</HintPath>
+      <HintPath>Components\facebookios-3.8.0.1\lib\ios\MonoTouch.FacebookConnect.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -103,6 +103,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup Label="assets">
+    <Content Include="assets\**\*" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\" />
@@ -111,12 +112,16 @@
     <BundleResource Include="Resources\Default%402x.png" />
     <BundleResource Include="Resources\Default-568h%402x.png" />
     <BundleResource Include="Resources\Default-Portrait.png" />
-    <BundleResource Include="Resources\FacebookSDKResources.bundle\FBDialog\images\close%402x.png" />
-    <BundleResource Include="Resources\FacebookSDKResources.bundle\FBDialog\images\close.png" />
-    <BundleResource Include="Resources\FacebookSDKResources.bundle\FBDialog\images\fbicon.png" />
     <BundleResource Include="Resources\Icon%402x.png" />
     <BundleResource Include="Resources\Icon-72%402x.png" />
     <BundleResource Include="Resources\Icon-72.png" />
     <BundleResource Include="Resources\Icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <XamarinComponentReference Include="facebookios">
+      <InstallationInProgress>True</InstallationInProgress>
+      <Version>3.8.0.1</Version>
+      <Visible>False</Visible>
+    </XamarinComponentReference>
   </ItemGroup>
 </Project>
