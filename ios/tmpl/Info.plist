@@ -4,13 +4,6 @@
 <dict>
 	<key>CFBundleDisplayName</key>
 	<string>@app_name@</string>
-	<key>CFBundleIconFiles</key>
-	<array>
-		<string>Icon</string>
-		<string>Icon-72</string>
-		<string>Icon@2x</string>
-		<string>Icon-72@2x</string>
-	</array>
 	<key>CFBundleIdentifier</key>
 	<string>@app_id@</string>
 	<key>CFBundleVersion</key>
@@ -50,5 +43,9 @@
 	</array>
 	<key>FacebookAppID</key>
 	<string>@facebook_appid@</string>
+	<key>XSAppIconAssets</key>
+	<string>Resources/Images.xcassets/AppIcons.appiconset</string>
+	<key>XSLaunchImageAssets</key>
+	<string>Resources/Images.xcassets/LaunchImage.launchimage</string>
 </dict>
 </plist>
