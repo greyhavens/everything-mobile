@@ -63,7 +63,7 @@ namespace everything
           action.Card = card;
           action.Ref = refid;
 
-          FBRequestConnection.StartForPostWithGraphPath("me/everything:get", action,
+          FBRequestConnection.StartForPostWithGraphPath("me/everythinggame:get", action,
             (FBRequestConnection conn, NSObject result, NSError error) => {
               PlayN.log().info("Graph share " + conn + ", result=" + result + ", error=" + error);
             });
