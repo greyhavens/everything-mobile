@@ -15,7 +15,7 @@ import pythagoras.f.{Dimension, IDimension, FloatMath, MathUtil, Point}
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
 import tripleplay.ui.util.Insets
-import tripleplay.util.{DestroyableBag, TextConfig}
+import tripleplay.util.{DestroyableBag, Glyph, TextConfig}
 
 import com.threerings.everything.data._
 
@@ -206,7 +206,7 @@ object UI {
         }
       }
     }
-    protected val _glyph = new Glyph()
+    protected val _glyph = new Glyph(layer)
   }
   def glyphWidget (renderer :GlyphRenderer) = new RenderedWidget(renderer)
 
