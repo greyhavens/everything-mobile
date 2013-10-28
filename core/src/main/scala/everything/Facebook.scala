@@ -13,8 +13,9 @@ trait Facebook {
   def isAuthed :Boolean
 
   /** Authenticates with Facebook, adding the app if necessary.
+    * @param forceReauth if true, any cached authentication information will be ignored.
     * @return (via future) the user's Facebook auth token. */
-  def authenticate () :RFuture[String]
+  def authenticate (forceReauth :Boolean) :RFuture[String]
 
   /** Shows a dialog allowing player to share that they got a card. */
   def shareGotCard (name :String, descrip :String, image :String, link :String, category :String,

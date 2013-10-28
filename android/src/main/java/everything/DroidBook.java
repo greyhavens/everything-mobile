@@ -82,8 +82,8 @@ public class DroidBook implements Facebook {
     public boolean isAuthed () { return Session.getActiveSession() != null; }
 
     // from Facebook
-    public RFuture<String> authenticate () {
-        return withSession(new Action<String>() { public void invoke (Session sess) {
+    public RFuture<String> authenticate (boolean forceReauth) {
+        return withSession(forceReauth, new Action<String>() { public void invoke (Session sess) {
             onSuccess(accessToken());
         }});
     }
@@ -160,15 +160,16 @@ public class DroidBook implements Facebook {
         public abstract void invoke (Session sess);
     }
 
-    protected <T> RFuture<T> withSession (Action<T> action) {
+    protected <T> RFuture<T> withSession (boolean forceReauth, Action<T> action) {
         Session sess = Session.getActiveSession();
-        if (sess != null && sess.isOpened()) action.invoke(sess);
+        if (!forceReauth && sess != null && sess.isOpened()) action.invoke(sess);
         else {
             if (_pendingOp != null) {
                 log().warn("Canceling existing pending FB op [op=" + _pendingOp + "]");
                 _pendingOp.onFailure(new Exception("Usurped"));
             }
             _pendingOp = action;
+            if (forceReauth && sess != null) sess.closeAndClearTokenInformation();
             Session.openActiveSession(_activity, true, new Session.StatusCallback() {
                 public void call (Session sess, SessionState state, Exception err) {
                     if (_pendingOp != null) {

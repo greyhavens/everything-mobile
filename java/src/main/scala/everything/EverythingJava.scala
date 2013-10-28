@@ -43,7 +43,7 @@ object EverythingJava {
 
     val facebook = new Facebook {
       def isAuthed = true
-      def authenticate () = RFuture.success("test:" + fbId)
+      def authenticate (forceReauth :Boolean) = RFuture.success("test:" + fbId)
       def shareGotCard (name :String, descrip :String, image :String, link :String, category :String,
                         series :String, tgtFriendId :String, ref :String) = RFuture.success("TODO")
     }
