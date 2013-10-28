@@ -34,6 +34,7 @@ import playn.android.GameActivity;
 import playn.core.Font;
 import playn.core.Json;
 import playn.core.PlayN;
+import playn.core.util.Callback;
 import react.RFuture;
 import react.RPromise;
 import react.Slot;
@@ -59,7 +60,7 @@ public class EverythingActivity extends GameActivity {
         }
 
         public RFuture<Product[]> getProducts () {
-            final RPromise<Product[]> result = RPromise.create();
+            final DeferredPromise<Product[]> result = new DeferredPromise<Product[]>();
             platform().invokeAsync(new Runnable() {
                 public void run () { resolveProducts(result); }
             });
@@ -243,25 +244,25 @@ public class EverythingActivity extends GameActivity {
         game.redeemPurchase(purch.sku, EveryAPI.PF_PLAYSTORE, purch.orderId, purch.receipt);
     }
 
-    protected void resolveProducts (RPromise<Product[]> result) {
+    protected void resolveProducts (Callback<Product[]> cb) {
         Bundle querySkus = new Bundle();
         querySkus.putStringArrayList(
             "ITEM_ID_LIST", new ArrayList<String>(Arrays.asList(Product.skus())));
         try {
             Bundle skuDetails = billSvc.getSkuDetails(3, getPackageName(), "inapp", querySkus);
             int rc = skuDetails.getInt("RESPONSE_CODE");
-            if (rc != 0) result.fail(new Exception("Android billing request failed: " + rc));
+            if (rc != 0) cb.onFailure(new Exception("Android billing request failed: " + rc));
             else {
                 List<Product> prods = new ArrayList<Product>();
                 for (String deets : skuDetails.getStringArrayList("DETAILS_LIST")) {
                     Product prod = toProduct(deets);
                     if (prod != null) prods.add(prod);
                 }
-                result.succeed(prods.toArray(new Product[prods.size()]));
+                cb.onSuccess(prods.toArray(new Product[prods.size()]));
             }
         } catch (RemoteException re) {
             platform().log().warn("resolveProducts() failed", re);
-            result.fail(re);
+            cb.onFailure(re);
         }
     }
 
