@@ -80,7 +80,7 @@
             <phase>initialize</phase>
             <configuration>
               <target>
-                <property file="../etc/${app}-app.properties"/>
+                <property file="../etc/app.properties"/>
                 <copy file="${project.basedir}/tmpl/AndroidManifest.xml"
                       tofile="${project.basedir}/AndroidManifest.xml"
                       overwrite="true">
@@ -176,7 +176,7 @@
                   <includes>
                     <include>target/*.apk</include>
                   </includes>
-                  <keystore>../etc/${app}.keystore</keystore>
+                  <keystore>../etc/app.keystore</keystore>
                   <storepass>threerings</storepass>
                   <keypass>threerings</keypass>
                   <alias>threerings</alias>

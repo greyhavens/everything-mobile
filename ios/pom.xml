@@ -51,7 +51,7 @@
             <phase>generate-sources</phase>
             <configuration>
               <target>
-                <property file="../etc/${app}-app.properties"/>
+                <property file="../etc/app.properties"/>
                 <copy file="${project.basedir}/tmpl/Info.plist"
                       tofile="${project.basedir}/Info.plist"
                       overwrite="true">
