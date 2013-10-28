@@ -33,12 +33,12 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
     super.wasAdded()
 
     // if we've authed with Facebook at least once already, then just go
-    if (game.fb.isAuthed) game.validateSession()
+    if (game.fb.isAuthed) game.validateSession(false)
     // otherwise pop up a little notice saying this is a FB game and we're going to auth
     else new Dialog().addTitle("Welcome!").addText(
       "The Everything Game is played with your Facebook friends. " +
         "Click 'OK' to connect to The Everything Game on Facebook and start playing!").
-      addButton("OK", game.validateSession()).
+      addButton("OK", game.validateSession(true)).
       display()
 
     // add our buttons once we're authed

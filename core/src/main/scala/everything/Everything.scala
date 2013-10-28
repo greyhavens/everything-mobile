@@ -7,11 +7,12 @@ package everything
 import playn.core.PlayN._
 import playn.core._
 import playn.core.util.{Callback, Clock}
-import react.{IntValue, Signal, RList, RMap, RSet, Value}
+import react.{IntValue, Signal, Slot, RList, RMap, RSet, Value}
 import scala.collection.JavaConversions._
 import tripleplay.game.ScreenStack
 
 import com.threerings.everything.data._
+import com.threerings.everything.rpc.EveryAPI
 
 class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends Game.Default(33) {
 
@@ -52,10 +53,15 @@ class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends G
   // token
 
   /** Validates our session with the server. */
-  def validateSession () {
-    fb.authenticate().flatMap(rf { fbToken :String =>
+  def validateSession (forceReauth :Boolean) {
+    fb.authenticate(forceReauth).flatMap(rf { fbToken :String =>
       everySvc.validateSession(fbToken, device.timeZoneOffset)
-    }).onFailure(main.onFailure).onSuccess { s :SessionData =>
+    }).onFailure { cause :Throwable => cause.getMessage match {
+      // if we get a weird facebook error and have not already forced a reauth, do so without
+      // requiring any user intervention
+      case EveryAPI.E_FACEBOOK_DOWN if (!forceReauth) => validateSession(true)
+      case _ => main.failureDialog(cause, "Retry", validateSession(true)).display()
+    }}.onSuccess { s :SessionData =>
       self.update(s.name)
       coins.update(s.coins)
       sess.update(s)
@@ -93,7 +99,7 @@ class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends G
         val pauseTime = System.currentTimeMillis - _paused
         if (pauseTime > RevalidatePeriod) {
           log.info(s"Paused for ${pauseTime/60*1000}s, revalidating session.")
-          validateSession()
+          validateSession(false)
         }
       }
       override def onExit () {} // nada
