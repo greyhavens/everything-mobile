@@ -150,11 +150,7 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
   val onShown = Signal.create[EveryScreen]()
 
   /** Handles service failure by popping up a dialog. */
-  val onFailure = (cause :Throwable) => {
-    val msg = cause.getMessage
-    if (msg == null || !msg.startsWith("e.")) log.warn("Erm, failure", cause)
-    new Dialog().addTitle("Oops!").addText(I18n.xlate(msg)).addButton("OK", ()).display()
-  }
+  val onFailure = (cause :Throwable) => failureDialog(cause, "OK", ()).display()
 
   /** A purse label, which may or may not get incorporated into the UI. It's broken out here so that
     * we can fling coins at it when we create the card sold animation. */
@@ -172,6 +168,12 @@ abstract class EveryScreen (game :Everything) extends UIScreen {
 
   val root = iface.createRoot(layout(), UI.sheet, layer)
   def createUI () :Unit
+
+  def failureDialog (cause :Throwable, button :String, action : =>Unit) :Dialog = {
+    val msg = cause.getMessage
+    if (msg == null || !msg.startsWith("e.")) log.warn("Erm, failure", cause)
+    new Dialog().addTitle("Oops!").addText(I18n.xlate(msg)).addButton(button, action)
+  }
 
   override def wasAdded () {
     root.addStyles(Style.BACKGROUND.is(_background.insets(insets())))
