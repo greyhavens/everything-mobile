@@ -66,6 +66,11 @@
             <phase>compile</phase>
           </execution>
         </executions>
+        <configuration>
+          <jvmArgs>
+            <jvmArg>-mx512M</jvmArg>
+          </jvmArgs>
+        </configuration>
       </plugin>
     </plugins>
   </build>

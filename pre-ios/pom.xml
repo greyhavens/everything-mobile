@@ -47,6 +47,7 @@
           <outputDirectory>${project.build.directory}</outputDirectory>
           <outjar>${project.build.finalName}.jar</outjar>
           <injar>${project.build.finalName}.jar</injar>
+          <maxMemory>512M</maxMemory>
           <assembly>
             <inclusions>
               <inclusion>
