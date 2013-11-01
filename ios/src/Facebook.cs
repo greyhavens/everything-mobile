@@ -23,6 +23,12 @@ namespace everything
       return (session == null) ? false : session.HandleOpenURL(url);
     }
 
+    public void onActivated () {
+      // We need to properly handle activation of the application with regards to SSO (e.g.,
+      // returning from iOS 6.0 authorization dialog or from fast app switching).
+      FBSession.ActiveSession.HandleDidBecomeActive();
+    }
+
     public string accessToken () {
       var session = FBSession.ActiveSession;
       if (session == null) return null;
@@ -39,8 +45,8 @@ namespace everything
     }
 
     // from Facebook interface
-    public RFuture authenticate () {
-      return withSession(true, delegate (Callback cb) { cb.onSuccess(accessToken()); });
+    public RFuture authenticate (bool forceReauth) {
+      return withSession(forceReauth, delegate (Callback cb) { cb.onSuccess(accessToken()); });
     }
 
     public void deauthorize () {
@@ -105,10 +111,17 @@ namespace everything
 
     protected delegate void SessionAction (Callback cb);
 
-    protected RFuture withSession (bool forceAuth, SessionAction action) {
+    protected RFuture withSession (bool forceReauth, SessionAction action) {
       var result = new DeferredPromise();
-      if (!forceAuth && accessToken() != null) action(result);
+      if (!forceReauth && accessToken() != null) action(result);
       else {
+        var sess = FBSession.ActiveSession;
+        if (forceReauth && sess != null) {
+          // apparently per-FB retardation, we have to do all three of these things
+          sess.CloseAndClearTokenInformation();
+          if (sess.IsOpen) sess.Close();
+          // FBSession.ActiveSession = null; // this crashes the Mono binding, yay!
+        }
         PlayN.log().info("Authenticating with Facebook...");
         FBSession.OpenActiveSession(new string[] { "email" }, true,
           delegate (FBSession session, FBSessionState state, NSError nserr) {

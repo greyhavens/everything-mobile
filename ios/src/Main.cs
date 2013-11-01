@@ -26,6 +26,10 @@ namespace everything
       return true;
     }
 
+    override public void OnActivated (UIApplication app) {
+      _facebook.onActivated();
+    }
+
     // this is never executed, but forces MonoTouch to avoid stripping these reflected types and
     // methods; configuring the linker via its XML file was an undocumented unworking mess
     private void preventStripping () {
