@@ -138,7 +138,7 @@ public class DroidBook implements Facebook {
         action.setType(fbns + ":" + ogAction);
         action.setProperty(ogType, obj);
         action.setRef(ref);
-        // action.setExplicitlyShared(true); // disabled until we get approval?
+        action.setExplicitlyShared(true);
         if (tgtFriendId != null) {
             GraphUser user = GraphObject.Factory.create(GraphUser.class);
             user.setId(tgtFriendId);
