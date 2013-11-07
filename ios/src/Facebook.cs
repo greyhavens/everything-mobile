@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Web;
 
-using MonoTouch.UIKit;
 using MonoTouch.Foundation;
+using MonoTouch.UIKit;
 using MonoTouch.FacebookConnect;
 
 using playn.core;
@@ -58,21 +58,23 @@ namespace everything
     public RFuture shareGotCard (string name, string descrip, string image, string link,
                                  string category, string series, string tgtFriendId, string refid) {
       return withSession(false, delegate (Callback cb) {
-          var card = new OGCard(FBGraphObject.GraphObject().Handle);
-          card.Title = name;
-          card.Description = descrip;
-          card.Image = image;
-          card.Url = link;
-          card.Category = category;
+        var card = new FBOpenGraphObject(FBGraphObject.OpenGraphObject.Handle);
+        // card.SetType("everythinggame:get");
+        card.SetTitle(name);
+        card.SetDescription(new NSString(descrip));
+        card.SetImage(new NSString(image));
+        card.SetUrl(new NSString(link));
+        card.SetObject(new NSString(category), "category");
 
-          var action = new OGGetCardAction(FBGraphObject.GraphObject().Handle);
-          action.Card = card;
-          action.Ref = refid;
+        var action = new FBOpenGraphAction(FBGraphObject.OpenGraphAction.Handle);
+        // action.SetType("everythinggame:get");
+        action.SetObject(card, "card");
+        action.SetRef(refid);
 
-          FBRequestConnection.StartForPostWithGraphPath("me/everythinggame:get", action,
-            (FBRequestConnection conn, NSObject result, NSError error) => {
-              PlayN.log().info("Graph share " + conn + ", result=" + result + ", error=" + error);
-            });
+        FBRequestConnection.StartForPostWithGraphPath("me/everythinggame:get", action,
+          (FBRequestConnection conn, NSObject result, NSError error) => {
+            PlayN.log().info("Graph share " + conn + ", result=" + result + ", error=" + error);
+          });
       });
     }
 
@@ -165,22 +167,5 @@ namespace everything
     //   // dict.Add(new NSString("show_error"), new NSString("true"));
     //   return dict;
     // }
-  }
-
-  public class OGCard : FBGraphObject {
-    public OGCard () {}
-    public OGCard (IntPtr ptr) : base (ptr) {}
-    public string Id { get; set; }
-    public string Url { get; set; }
-    public string Title { get; set; }
-    public string Image { get; set; }
-    public string Description { get; set; }
-    public string Category { get; set; }
-  }
-
-  public class OGGetCardAction : FBOpenGraphAction {
-    public OGGetCardAction () {}
-    public OGGetCardAction (IntPtr ptr) : base (ptr) {}
-    public OGCard Card { get; set; }
   }
 }
