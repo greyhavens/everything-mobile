@@ -76,14 +76,19 @@ class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends G
     * backends when they learn that a purchase has been completed. The server will check that a
     * purchase with the specified `token` has not already been redeemed, validate the `receipt`
     * with the appropriate `platform` provider and (assuming everything checks out) grant the
-    * appropriate number of coins to the user.
+    * appropriate number of coins to the user. `callback` will be notified of success (passing back
+    * the `purch` record) or failure.
     */
-  def redeemPurchase (sku :String, platform :String, token :String, receipt :String) {
+  def redeemPurchase[T] (sku :String, platform :String, token :String, receipt :String,
+                         purch :T, callback: Callback[T]) {
     everySvc.redeemPurchase(sku, platform, token, receipt).
-      onFailure(slot { exn => screens.top.asInstanceOf[EveryScreen].onFailure(exn) }).
+      onFailure(slot { exn =>
+        screens.top.asInstanceOf[EveryScreen].onFailure(exn)
+        callback.onFailure(exn)
+      }).
       onSuccess(slot { coinbal =>
         coins.update(coinbal)
-        device.purchaseRedeemed(sku, token)
+        callback.onSuccess(purch)
       })
   }
 

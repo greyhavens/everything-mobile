@@ -73,12 +73,14 @@ object EverythingJava {
         case _ =>
           pf.invokeLater(new Runnable() {
             val curmin = System.currentTimeMillis / MillisPerMinute
-            def run = game.redeemPurchase(sku, "TEST", "test_tok:" + curmin, "test_rcpt:" + sku)
+            def run = game.redeemPurchase(sku, "TEST", "test_tok:" + curmin, "test_rcpt:" + sku,
+                                          sku, new Callback[String] () {
+                                            def onSuccess (sku :String) {}
+                                            def onFailure (cause :Throwable) {}
+                                          })
           })
           RFuture.success(null :JVoid)
       }
-
-      def purchaseRedeemed (sku :String, orderId :String) {} // yay, noop!
     }
 
     // put a fake status bar atop the screen

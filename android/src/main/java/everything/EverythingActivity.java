@@ -92,26 +92,6 @@ public class EverythingActivity extends GameActivity {
             }
             return result;
         }
-
-        public void purchaseRedeemed (String sku, final String orderId) {
-            List<Purchase> purchs = readPurchases(null);
-            for (final Purchase purch : purchs) {
-                if (!purch.orderId.equals(orderId)) continue;
-                platform().log().info("Consuming purchase " +purch);
-                platform().invokeAsync(new Runnable() { public void run () {
-                    try {
-                        int rv = billSvc.consumePurchase(3, getPackageName(), purch.purchaseToken);
-                        if (rv != 0) platform().log().warn(
-                            "consumePurchase(" + orderId + ") fail: " + rv);
-                    } catch (RemoteException re) {
-                        platform().log().warn("consumePurchase(" + orderId + ") fail", re);
-                    }
-                }});
-                return;
-            }
-            platform().log().warn("consumePurchase(" + orderId + ") found no such order " +
-                                  "[have=" + purchs + "]");
-        }
     };
 
     public final DroidBook facebook = new DroidBook(this);
@@ -241,7 +221,24 @@ public class EverythingActivity extends GameActivity {
 
     protected void redeemPurchase (String source, Purchase purch) {
         platform().log().info("Redeeming [" + source + "] purchase " + purch);
-        game.redeemPurchase(purch.sku, EveryAPI.PF_PLAYSTORE, purch.orderId, purch.receipt);
+        game.redeemPurchase(purch.sku, EveryAPI.PF_PLAYSTORE, purch.orderId, purch.receipt, purch,
+                            new Callback<Purchase>() {
+                                public void onSuccess (Purchase purch) { consumePurchase(purch); }
+                                public void onFailure (Throwable exn) {} // nada
+                            });
+    }
+
+    protected void consumePurchase (final Purchase purch) {
+        platform().log().info("Consuming purchase " + purch);
+        platform().invokeAsync(new Runnable() { public void run () {
+            try {
+                int rv = billSvc.consumePurchase(3, getPackageName(), purch.purchaseToken);
+                if (rv != 0) platform().log().warn(
+                    "consumePurchase(" + purch.orderId + ") fail: " + rv);
+            } catch (RemoteException re) {
+                platform().log().warn("consumePurchase(" + purch.orderId + ") fail", re);
+            }
+        }});
     }
 
     protected void resolveProducts (Callback<Product[]> cb) {
