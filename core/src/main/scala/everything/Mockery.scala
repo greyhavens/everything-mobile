@@ -113,6 +113,9 @@ object Mockery extends EveryService with GameService {
     data.backendURL = "https://everything-candidate.herokuapp.com/"
     data.facebookAppId = "107211406428"
     data.gifts = List()
+    data.notices = Seq(new Notice(Notice.Kind.FRIEND_JOINED, "Testy Testerson", 500),
+                       new Notice(Notice.Kind.FRIEND_JOINED, "Dolly Pardon\tMahatma Ghandi", 1000),
+                       new Notice(Notice.Kind.PLAYED_MOBILE, null, 2000))
     success(data)
   }
 

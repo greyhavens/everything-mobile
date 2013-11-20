@@ -4,13 +4,14 @@
 
 package everything
 
+import com.threerings.everything.data.Notice
 import com.threerings.everything.rpc._
 
 object I18n {
   import GameAPI._
   import EveryAPI._
 
-  def xlate (msg :String) = msg match {
+  def xlate (msg :String) :String = msg match {
     case E_FACEBOOK_DOWN => "Egad! We're having difficulty talking to Facebook."
     case GameAPI.E_UNKNOWN_USER => "That player doesn't seem to exist."
     case E_UNKNOWN_SERIES => "That series doesn't seem to exist."
@@ -25,5 +26,15 @@ object I18n {
     case E_NSF_FOR_PURCHASE => "You don't have enough coins to buy that powerup."
     case E_LACK_CHARGE => "You don't have any charges left for that powerup."
     case _ => if (msg.length > 256) s"${msg.substring(0, 256)}..." else msg
+  }
+
+  import Notice.Kind._
+  def xlate (n :Notice) :Option[String] = n.kind match {
+    case FRIEND_JOINED => Some(n.subject.split("\t") match {
+      case Array(name) => s"Your friend $name started playing!"
+      case       names => s"Your friends started playing:\n${names mkString "\n"}"
+    })
+    case PLAYED_MOBILE => Some("Thanks for trying out the mobile client!")
+    case _             => None
   }
 }

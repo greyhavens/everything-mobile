@@ -29,6 +29,18 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
   })
   val welcome = UI.tipLabel("")
 
+  def displayNotices (notices :List[Notice]) :Unit = notices match {
+    case n :: t => I18n.xlate(n) match {
+      case None => displayNotices(t)
+      case Some(msg) => {
+        val d = new Dialog().addTitle("Notice!").addText(msg)
+        if (n.coins > 0) d.add(UI.hgroup(UI.tipLabel("Reward:"), UI.moneyIcon(n.coins)))
+        d.addButton("Yay!", displayNotices(t)).display()
+      }
+    }
+    case Nil => // done!
+  }
+
   override def wasAdded () {
     super.wasAdded()
 
