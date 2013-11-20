@@ -69,8 +69,9 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
 
   override def createUI () {
     val haveFree = freeFlips.map(Functions.greaterThan(0))
+    val showNextFree = Values.and(haveFree, haveUnflipped)
     val lackFree = freeFlips.map(Functions.lessThanEqual(0))
-    val showNextFree = Values.and(lackFree, nextFlipCost.map(Functions.greaterThan(0)))
+    val showNextCost = Values.and(lackFree, nextFlipCost.map(Functions.greaterThan(0)))
     val showNoFlips = haveUnflipped.map(Functions.NOT)
 
     val uflabels = new Group(AxisLayout.horizontal).
@@ -88,10 +89,10 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
 
     val status = UI.hgroup(
       AxisLayout.stretch(UI.hgroup(
-        new Label("Free flips:").bindVisible(haveFree),
-        new ValueLabel(freeFlips).bindVisible(haveFree),
-        new Label("Next flip:").bindVisible(showNextFree),
-        UI.moneyIcon(nextFlipCost, _dbag).bindVisible(showNextFree),
+        new Label("Free flips:").bindVisible(showNextFree),
+        new ValueLabel(freeFlips).bindVisible(showNextFree),
+        new Label("Next flip:").bindVisible(showNextCost),
+        UI.moneyIcon(nextFlipCost, _dbag).bindVisible(showNextCost),
         new Label("No more flips.").bindVisible(showNoFlips))),
       AxisLayout.stretch(UI.hgroup(
         pupsBtn.bindEnabled(haveUnflipped).onClick(unitSlot { showPupMenu() }))))
