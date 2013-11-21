@@ -106,6 +106,7 @@ class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends G
         val pauseTime = System.currentTimeMillis - _paused
         if (pauseTime > RevalidatePeriod) {
           log.info(s"Paused for ${pauseTime/60*1000}s, revalidating session.")
+          screens.popTo(main) // pop back to the main menu screen
           validateSession(false)
         }
       }
