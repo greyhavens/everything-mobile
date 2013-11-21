@@ -33,7 +33,8 @@ class MainMenuScreen (game :Everything) extends EveryScreen(game) {
     case n :: t => I18n.xlate(n) match {
       case None => displayNotices(t)
       case Some(msg) => {
-        val d = new Dialog().addTitle("Notice!").addText(msg)
+        val title = if (n.coins > 0) "Reward Time!" else "Notice!"
+        val d = new Dialog().addTitle(title).addText(msg)
         if (n.coins > 0) d.add(UI.hgroup(UI.tipLabel("Reward:"), UI.moneyIcon(n.coins)))
         d.addButton("Yay!", displayNotices(t)).display()
       }
