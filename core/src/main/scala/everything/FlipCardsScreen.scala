@@ -72,12 +72,13 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
     val showNextFree = Values.and(haveFree, haveUnflipped)
     val lackFree = freeFlips.map(Functions.lessThanEqual(0))
     val showNextCost = Values.and(lackFree, nextFlipCost.map(Functions.greaterThan(0)))
-    val showNoFlips = haveUnflipped.map(Functions.NOT)
+    val lackUnflipped = haveUnflipped.map(Functions.NOT)
 
     val uflabels = new Group(AxisLayout.horizontal).
       setStylesheet(Stylesheet.builder.add(
         classOf[Label], Style.FONT.is(UI.machineFont(12))).create).
-      add(new Label("Unflipped cards:"))
+      add(new Label("Unflipped cards:").bindVisible(haveUnflipped),
+          new Label("Come back tomorrow for a fresh new grid!").bindVisible(lackUnflipped))
     Rarity.values foreach { r =>
       val label = new Label()
         unflipped.getView(r).connectNotify { count :Int =>
@@ -93,7 +94,7 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
         new ValueLabel(freeFlips).bindVisible(showNextFree),
         new Label("Next flip:").bindVisible(showNextCost),
         UI.moneyIcon(nextFlipCost, _dbag).bindVisible(showNextCost),
-        new Label("No more flips.").bindVisible(showNoFlips))),
+        new Label("No more flips.").bindVisible(lackUnflipped))),
       AxisLayout.stretch(UI.hgroup(
         pupsBtn.bindEnabled(haveUnflipped).onClick(unitSlot { showPupMenu() }))))
 
