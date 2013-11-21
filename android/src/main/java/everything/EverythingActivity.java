@@ -14,16 +14,23 @@ import java.util.List;
 import java.util.TimeZone;
 
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.support.v4.app.NotificationCompat;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
 
@@ -41,8 +48,28 @@ import react.Slot;
 
 import com.threerings.everything.data.SessionData;
 import com.threerings.everything.rpc.EveryAPI;
+import com.threerings.everything.R;
 
 public class EverythingActivity extends GameActivity {
+
+    public static class NoteReceiver extends BroadcastReceiver {
+        @Override public void onReceive (Context ctx, Intent intent) {
+            Bitmap icon = BitmapFactory.decodeStream(
+                ctx.getResources().openRawResource(R.drawable.icon));
+            Intent onTap = ctx.getPackageManager().getLaunchIntentForPackage(
+                "com.threerings.everything");
+            onTap.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            Notification note = new NotificationCompat.Builder(ctx).
+                setLargeIcon(icon).
+                setSmallIcon(R.drawable.noteicon).
+                setContentTitle("The Everything Game").
+                setContentText("A fresh new grid is ready for flipping!").
+                setContentIntent(PendingIntent.getActivity(ctx, 0, onTap, 0)).
+                setAutoCancel(true).
+                getNotification();
+            ((NotificationManager)ctx.getSystemService(NOTIFICATION_SERVICE)).notify(1, note);
+        }
+    }
 
     public final Device device = new Device() {
         public float statusBarHeight () { return 0; }
@@ -63,7 +90,11 @@ public class EverythingActivity extends GameActivity {
         }
 
         public void scheduleGridNotification (long when) {
-            // TODO!
+            Intent intent = new Intent(EverythingActivity.this, NoteReceiver.class);
+            ((AlarmManager)getSystemService(ALARM_SERVICE)).set(
+                AlarmManager.RTC_WAKEUP, when,
+                PendingIntent.getBroadcast(
+                    EverythingActivity.this, 3771, intent, PendingIntent.FLAG_CANCEL_CURRENT));
         }
 
         public RFuture<Product[]> getProducts () {
