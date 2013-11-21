@@ -82,6 +82,18 @@ namespace everything
       return DateTime.Now.Hour;
     }
 
+    public void scheduleGridNotification (long when) {
+      _app.CancelAllLocalNotifications();
+      _app.ApplicationIconBadgeNumber = 0;
+      var note = new UILocalNotification();
+      note.FireDate = NSDate.FromTimeIntervalSince1970(when/1000d);
+      note.TimeZone = NSTimeZone.LocalTimeZone;
+      note.ApplicationIconBadgeNumber = 1;
+      note.AlertBody = "A fresh new grid is ready for flipping!";
+      _app.ScheduleLocalNotification(note);
+      PlayN.log().info("Scheduled new grid note for " + note.FireDate + ".");
+    }
+
     public RFuture getProducts () {
       var result = new DeferredPromise();
 

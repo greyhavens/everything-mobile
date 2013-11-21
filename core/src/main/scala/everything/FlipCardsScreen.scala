@@ -64,6 +64,10 @@ class FlipCardsScreen (game :Everything) extends EveryScreen(game) {
         }
       }
       cbox.set(cards)
+
+      // we've now seen this grid, so schedule our "you have a new grid" notification and also
+      // clear out any currently active app icon badge until then
+      game.device.scheduleGridNotification(res.grid.expires.getTime)
     })
   }).once()
 

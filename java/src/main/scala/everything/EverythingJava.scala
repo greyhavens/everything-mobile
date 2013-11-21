@@ -61,6 +61,10 @@ object EverythingJava {
 
       def hourOfDay = Calendar.getInstance.get(Calendar.HOUR_OF_DAY)
 
+      def scheduleGridNotification (when :Long) {
+        println(s"scheduleGridNotification(${new Date(when)})")
+      }
+
       def getProducts = RFuture.success(Array(
         // return a weird order to verify that ShopScreen sorts them
         Product("coins_11000", "$1.99"),

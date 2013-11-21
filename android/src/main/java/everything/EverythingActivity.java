@@ -46,17 +46,24 @@ public class EverythingActivity extends GameActivity {
 
     public final Device device = new Device() {
         public float statusBarHeight () { return 0; }
+
         public int timeZoneOffset () {
             TimeZone tz = TimeZone.getDefault();
             // Java returns millis to add to GMT, we want minutes to subtract from GMT
             return -tz.getOffset(System.currentTimeMillis())/MillisPerMinute;
         }
+
         public String formatDate (long when) {
             return _dfmt.format(new Date(when));
         }
         private DateFormat _dfmt = DateFormat.getDateInstance();
+
         public int hourOfDay () {
             return Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        }
+
+        public void scheduleGridNotification (long when) {
+            // TODO!
         }
 
         public RFuture<Product[]> getProducts () {

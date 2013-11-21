@@ -21,6 +21,10 @@ trait Device {
   /** Returns the current hour of the day. */
   def hourOfDay :Int
 
+  /** Schedules the next grid notification and app icon badge, clearing any currently scheduled
+    * notification and app icon badge in the process. */
+  def scheduleGridNotification (when :Long) :Unit
+
   /** Returns info on the in-app billing products. */
   def getProducts :RFuture[Array[Product]]
 
