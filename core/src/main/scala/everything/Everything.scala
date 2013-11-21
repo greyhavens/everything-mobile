@@ -69,7 +69,8 @@ class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends G
       for (id <- s.dislikes) likes.put(id, false)
       pups.putAll(s.powerups)
       gifts.addAll(s.gifts)
-      main.displayNotices(s.notices.toList)
+      if (s.notices != null) // TEMP: cope with old server
+        main.displayNotices(s.notices.toList)
     }
   }
 
