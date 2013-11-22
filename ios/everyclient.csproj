@@ -143,10 +143,13 @@
   </ItemGroup>
   <ItemGroup>
     <ImageAsset Include="Resources\Images.xcassets\AppIcons.appiconset\Contents.json" />
-    <ImageAsset Include="Resources\Images.xcassets\AppIcons.appiconset\Icon.png" />
     <ImageAsset Include="Resources\Images.xcassets\AppIcons.appiconset\Icon%402x.png" />
-    <ImageAsset Include="Resources\Images.xcassets\AppIcons.appiconset\Icon-72.png" />
+    <ImageAsset Include="Resources\Images.xcassets\AppIcons.appiconset\Icon-60%402x.png" />
     <ImageAsset Include="Resources\Images.xcassets\AppIcons.appiconset\Icon-72%402x.png" />
+    <ImageAsset Include="Resources\Images.xcassets\AppIcons.appiconset\Icon-72.png" />
+    <ImageAsset Include="Resources\Images.xcassets\AppIcons.appiconset\Icon-76%402x.png" />
+    <ImageAsset Include="Resources\Images.xcassets\AppIcons.appiconset\Icon-76.png" />
+    <ImageAsset Include="Resources\Images.xcassets\AppIcons.appiconset\Icon.png" />
     <ImageAsset Include="Resources\Images.xcassets\LaunchImage.launchimage\Contents.json" />
     <ImageAsset Include="Resources\Images.xcassets\LaunchImage.launchimage\Default%402x.png" />
     <ImageAsset Include="Resources\Images.xcassets\LaunchImage.launchimage\Default-568h%402x.png" />
