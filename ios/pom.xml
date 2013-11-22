@@ -62,14 +62,6 @@
                     <filter token="facebook_appid" value="${facebook_appid}"/>
                   </filterset>
                 </copy>
-                <copy file="${project.basedir}/tmpl/everyclient.csproj"
-                      tofile="${project.basedir}/everyclient.csproj"
-                      overwrite="true">
-                  <filterset>
-                    <filter token="app_signer" value="${app_signer}"/>
-                    <filter token="app_cert" value="${app_cert}"/>
-                  </filterset>
-                </copy>
               </target>
             </configuration>
             <goals>
@@ -142,7 +134,6 @@
               <directory>${project.basedir}</directory>
               <includes>
                 <include>Info.plist</include>
-                <include>everyclient.csproj</include>
               </includes>
             </fileset>
           </filesets>
