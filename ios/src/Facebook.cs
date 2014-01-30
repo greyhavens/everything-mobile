@@ -57,36 +57,41 @@ namespace everything
     // from Facebook interface
     public RFuture shareGotCard (string name, string descrip, string image, string link,
                                  string category, string series, string tgtFriendId, string refid) {
-      return withSession(false, delegate (Callback cb) {
-        var card = new FBOpenGraphObject(FBGraphObject.OpenGraphObject.Handle);
-        // card.SetType("everythinggame:get");
-        card.SetTitle(name);
-        card.SetDescription(new NSString(descrip));
-        card.SetImage(new NSString(image));
-        card.SetUrl(new NSString(link));
-        card.SetObject(new NSString(category), "category");
 
-        var action = new FBOpenGraphAction(FBGraphObject.OpenGraphAction.Handle);
-        // action.SetType("everythinggame:get");
-        action.SetObject(card, "card");
-        action.SetRef(refid);
+      // this results in com.facebook.sdk.error 5 for whatever reason; the same code (modulo
+      // bullshit platform differences) works on Android; who fucking knows...
 
-        FBRequestConnection.StartForPostWithGraphPath("me/everythinggame:get", action,
-          (FBRequestConnection conn, NSObject result, NSError error) => {
-            PlayN.log().info("Graph share " + conn + ", result=" + result + ", error=" + error);
-          });
-      });
+      // return withSession(false, delegate (Callback cb) {
+      //   var card = new FBOpenGraphObject(FBGraphObject.OpenGraphObject.Handle);
+      //   // card.SetType("everythinggame:get");
+      //   card.SetTitle(name);
+      //   card.SetDescription(new NSString(descrip));
+      //   card.SetImage(new NSString(image));
+      //   card.SetUrl(new NSString(link));
+      //   card.SetObject(new NSString(category), "category");
+
+      //   var action = new FBOpenGraphAction(FBGraphObject.OpenGraphAction.Handle);
+      //   // action.SetType("everythinggame:get");
+      //   action.SetObject(card, "card");
+      //   action.SetRef(refid);
+
+      //   FBRequestConnection.StartForPostWithGraphPath("me/everythinggame:get", action,
+      //     (FBRequestConnection conn, NSObject result, NSError error) => {
+      //       PlayN.log().info("Graph share " + conn + ", result=" + result + ", error=" + error);
+      //     });
+      // });
+      return showDialog(name, category, descrip, image, link, tgtFriendId, refid);
     }
 
-    // public RFuture showDialog (string name, string caption, string descrip, string picURL,
-    //                            string link, string tgtFriendId, string refid) {
-    //   return withSession(false, delegate (Callback cb) {
-    //     var paramz = toDict("title", name, "caption", caption, "description", descrip,
-    //                         "image", picURL, "link", link, "ref", refid);
-    //     // TODO: tgtFriendId
-    //     FBWebDialogs.PresentFeedDialogModally(null, paramz, handler(cb));
-    //   });
-    // }
+    public RFuture showDialog (string name, string caption, string descrip, string picURL,
+                               string link, string tgtFriendId, string refid) {
+      return withSession(false, delegate (Callback cb) {
+        var paramz = toDict("name", name, "caption", caption, "description", descrip,
+                            "picture", picURL, "link", link, "ref", refid);
+        if (tgtFriendId != null) addToDict(paramz, "to", tgtFriendId);
+        FBWebDialogs.PresentFeedDialogModally(null, paramz, handler(cb));
+      });
+    }
 
     // public RFuture nativeDialog (UIViewController rctrl, string name, string caption,
     //                              string descrip, string link, UIImage photo) {
@@ -148,24 +153,28 @@ namespace everything
       return result;
     }
 
-    // protected FBWebDialogHandler handler (Callback cb) {
-    //   return (result, url, error) => {
-    //     if (error != null) cb.onFailure(new Exception(error.Description));
-    //     else if (result == FBWebDialogResult.NotCompleted) cb.onSuccess(null);
-    //     else if (url.Query == null) cb.onSuccess(null);
-    //     else cb.onSuccess(HttpUtility.ParseQueryString(url.Query)["post_id"]);
-    //   };
-    // }
+    protected FBWebDialogHandler handler (Callback cb) {
+      return (result, url, error) => {
+        if (error != null) cb.onFailure(new Exception(error.Description));
+        else if (result == FBWebDialogResult.NotCompleted) cb.onSuccess(null);
+        else if (url.Query == null) cb.onSuccess(null);
+        else cb.onSuccess(HttpUtility.ParseQueryString(url.Query)["post_id"]);
+      };
+    }
 
-    // protected static NSMutableDictionary toDict (params string[] paramz) {
-    //   NSMutableDictionary dict = new NSMutableDictionary();
-    //   for (int ii = 0; ii < paramz.Length; ii += 2) {
-    //     if (paramz[ii] != null) {
-    //       dict.Add(new NSString(paramz[ii]), new NSString(paramz[ii+1]));
-    //     }
-    //   }
-    //   // dict.Add(new NSString("show_error"), new NSString("true"));
-    //   return dict;
-    // }
+    protected static NSMutableDictionary toDict (params string[] paramz) {
+      NSMutableDictionary dict = new NSMutableDictionary();
+      for (int ii = 0; ii < paramz.Length; ii += 2) {
+        if (paramz[ii] != null) {
+          addToDict(dict, paramz[ii], paramz[ii+1]);
+        }
+      }
+      // addToDict(dict, "show_error", "true");
+      return dict;
+    }
+
+    protected static void addToDict (NSMutableDictionary dict, string key, string value) {
+      dict.Add(new NSString(key), new NSString(value));
+    }
   }
 }
