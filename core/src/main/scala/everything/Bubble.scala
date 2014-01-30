@@ -8,6 +8,7 @@ import playn.core.PlayN.graphics
 import playn.core._
 import pythagoras.f.{IPoint, IDimension, Dimension, Point, Points}
 import tripleplay.ui.Element
+import tripleplay.util.{StyledText, TextStyle}
 
 object Bubbles {
 
@@ -26,8 +27,8 @@ object Bubbles {
   val RAD = 20f
   val HRAD = RAD/2
   val TVGAP = 15
-  val NAME_FORMAT = new TextFormat().withFont(UI.writingFont(16))
-  val DEETS_FORMAT = new TextFormat().withFont(UI.writingFont(12))
+  val NAME_STYLE = TextStyle.normal(UI.writingFont(16), UI.textColor)
+  val DEETS_STYLE = TextStyle.normal(UI.writingFont(12), UI.textColor)
 
   sealed trait VPos
   object VPos {
@@ -134,21 +135,21 @@ object Bubbles {
   }
 
   def makeContents (text :String, wrapWidth :Float) = new Contents {
-    val layout = graphics.layoutText(text, NAME_FORMAT.withWrapWidth(wrapWidth))
-    def width = layout.width
-    def height = layout.height
-    def render (canvas :Canvas, x :Float, y :Float) = canvas.fillText(layout, x, y)
+    val block = StyledText.block(text, NAME_STYLE, wrapWidth)
+    def width = block.width
+    def height = block.height
+    def render (canvas :Canvas, x :Float, y :Float) = block.render(canvas, x, y)
   }
 
   def makeContents (icon :Image, name :String, details :String, wrapWidth :Float) = new Contents {
-    val nl = graphics.layoutText(name, NAME_FORMAT.withWrapWidth(wrapWidth))
-    val dl = graphics.layoutText(details, DEETS_FORMAT.withWrapWidth(wrapWidth))
-    def width = icon.width + HGAP + math.max(nl.width, dl.width)
-    def height = nl.height + VGAP + dl.height
+    val nb = StyledText.block(name, NAME_STYLE, wrapWidth)
+    val db = StyledText.block(details, DEETS_STYLE, wrapWidth)
+    def width = icon.width + HGAP + math.max(nb.width, db.width)
+    def height = nb.height + VGAP + db.height
     def render (canvas :Canvas, x :Float, y :Float) {
       canvas.drawImage(icon, x, y)
-      canvas.fillText(nl, x + icon.width + HGAP, y)
-      canvas.fillText(dl, x + icon.width + HGAP, y + nl.height + VGAP)
+      nb.render(canvas, x + icon.width + HGAP, y)
+      db.render(canvas, x + icon.width + HGAP, y + nb.height + VGAP)
     }
   }
 }
@@ -281,7 +282,6 @@ class Bubble (contents :Contents) {
 
     // draw everything into the canvas image
     image.canvas().setFillColor(0xFFFFF1DA).fillPath(path)
-    image.canvas().setFillColor(UI.textColor)
     contents.render(image.canvas(), left+RAD, top+TVGAP)
     image.canvas().setStrokeColor(0xFF321601).setStrokeWidth(STROKE_WIDTH)
     image.canvas().setLineJoin(Canvas.LineJoin.ROUND).strokePath(path)

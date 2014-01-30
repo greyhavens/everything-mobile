@@ -11,11 +11,12 @@ import react.IntValue
 
 import playn.core.PlayN._
 import playn.core._
+import playn.core.util.TextBlock
 import pythagoras.f.{Dimension, IDimension, FloatMath, MathUtil, Point}
 import tripleplay.ui._
 import tripleplay.ui.layout.AxisLayout
 import tripleplay.ui.util.Insets
-import tripleplay.util.{DestroyableBag, Glyph, TextConfig}
+import tripleplay.util.{DestroyableBag, Glyph, StyledText, TextStyle}
 
 import com.threerings.everything.data._
 
@@ -42,23 +43,23 @@ object UI {
                             shadow.bottom+border.bottom, shadow.left+border.left)
     val imgBox = new Dimension(size.width-insets.width, size.height-insets.height-2*textHt)
 
-    val cfg = new TextConfig(textColor).withFont(writingFont(textSize))
-    val smallCfg = cfg.withFont(writingFont(MathUtil.ifloor(textSize*0.8f))).withWrapping(
-      front.width-shadow.width-4, TextFormat.Alignment.CENTER)
+    val style = TextStyle.normal(writingFont(textSize), textColor)
+    val smallStyle = style.withFont(writingFont(MathUtil.ifloor(textSize*0.8f)))
+    val smallWrap = new TextWrap(front.width-shadow.width-4)
 
-    val partCfg = new TextConfig(0xFF640000).withFont(glyphFont(10))
-    val smallPartCfg = partCfg.withFont(glyphFont(8)).withWrapping(
-      front.width-shadow.width-10, TextFormat.Alignment.CENTER)
+    val partStyle = TextStyle.normal(glyphFont(10), 0xFF640000)
+    val smallPartStyle = partStyle.withFont(glyphFont(8))
+    val smallPartWrap = new TextWrap(front.width-shadow.width-10)
 
     def image (cache :ImageCache, card :ThingCard) = {
       val cardimg = graphics.createImage(front.width, front.height)
       cardimg.canvas.drawImage(front, 0, 0)
-      val (nameCfg, name) = {
-        val full = cfg.layout(card.name)
-        if (full.width <= smallCfg.format.wrapWidth) (cfg, full)
-        else (smallCfg, smallCfg.layout(card.name))
+      val name = {
+        val full = StyledText.span(card.name, style)
+        if (full.width <= smallWrap.width) full
+        else new StyledText.Block(card.name, smallStyle, smallWrap, TextBlock.Align.CENTER)
       }
-      val rarity = cfg.layout(card.rarity.toString)
+      val rarity = StyledText.span(card.rarity.toString, style)
       cache(card.image).addCallback(cb { thing =>
         // TODO: if the name wraps and cuts into the card area, use a smaller imgBox to determine
         // how much we should scale our card, and move the card image down as well
@@ -69,10 +70,10 @@ object UI {
         // cardimg.canvas.setStrokeColor(textColor).strokeRect(
         //   sx-0.5f, sy-0.5f, swidth+0.5f, sheight+0.5f)
         cardimg.canvas.drawImage(thing, sx, sy, swidth, sheight)
-        nameCfg.renderCX(cardimg.canvas, name, cardimg.width/2,
-                         insets.top + math.max((textHt-name.height)/2, -1))
-        cfg.renderCX(cardimg.canvas, rarity, cardimg.width/2,
-                     cardimg.height - rarity.height - insets.bottom)
+        name.render(cardimg.canvas, (cardimg.width - name.width)/2,
+                    insets.top + math.max((textHt-name.height)/2, -1))
+        rarity.render(cardimg.canvas, (cardimg.width - rarity.width)/2,
+                      cardimg.height - rarity.height - insets.bottom)
       })
       cardimg
     }
@@ -80,22 +81,22 @@ object UI {
     def partImage (card :ThingCard) = {
       val cardimg = graphics.createImage(part.width, part.height)
       cardimg.canvas.drawImage(part, 0, 0)
-      val (nameCfg, name) = {
-        val full = partCfg.layout(card.name)
-        if (full.width <= smallPartCfg.format.wrapWidth) (partCfg, full)
-        else (smallPartCfg, smallPartCfg.layout(card.name))
+      val name = {
+        val full = StyledText.span(card.name, partStyle)
+        if (full.width <= smallPartWrap.width) full
+        else new StyledText.Block(card.name, smallPartStyle, smallPartWrap, TextBlock.Align.CENTER)
       }
-      nameCfg.renderCX(cardimg.canvas, name,
-                       insets.left + (cardimg.width - insets.width)/2,
-                       // subtract one more here because box is not vertically centered, sigh
-                       insets.top + (cardimg.height - insets.height - name.height)/2 - 1)
+      name.render(cardimg.canvas,
+                  insets.left + (cardimg.width - insets.width)/2 - name.width/2,
+                  // subtract one more here because box is not vertically centered, sigh
+                  insets.top + (cardimg.height - insets.height - name.height)/2 - 1)
       cardimg
     }
 
     def statusImage (status :String) = {
       val image = graphics.createImage(front.width, front.height)
-      val slay = statusCfg.layout(status)
-      statusCfg.renderCX(image.canvas, slay, image.width/2, (image.height - slay.height)/2)
+      val stxt = StyledText.span(status, statusStyle)
+      stxt.render(image.canvas, (image.width - stxt.width)/2, (image.height - stxt.height)/2)
       image
     }
   }
@@ -130,8 +131,8 @@ object UI {
   def writingFont (size :Float) = graphics.createFont("Josschrift", Font.Style.PLAIN, size)
   def glyphFont (size :Int) = graphics.createFont("Copperplate", Font.Style.BOLD, size)
 
-  val statusCfg = new TextConfig(textColor).withFont(writingFont(18))
-  val collectCfg = new TextConfig(textColor).withFont(collectFont)
+  val statusStyle = TextStyle.normal(writingFont(18), textColor)
+  val collectStyle = TextStyle.normal(collectFont, textColor)
 
   val absorber = new Layer.HitTester {
     def hitTest (layer :Layer, p :Point) = layer.hitTestDefault(p) match {

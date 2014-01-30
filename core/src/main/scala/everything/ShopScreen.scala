@@ -6,6 +6,7 @@ package everything
 
 import tripleplay.ui._
 import tripleplay.ui.layout._
+import tripleplay.util.StyledText
 
 import com.threerings.everything.data._
 
@@ -53,7 +54,7 @@ class ShopScreen (game :Everything) extends EveryScreen(game) {
             }
             game.pups.put(pup, have + pup.charges)
             game.coins.decrementClamp(pup.cost, 0)
-            val bought = UI.statusCfg.toLayer("Purchased!")
+            val bought = StyledText.span("Purchased!", UI.statusStyle).toLayer()
             bought.setOrigin(bought.width/2, bought.height)
             iface.animator.addAt(btn.layer, bought, btn.size.width/2, btn.size.height).`then`.
               tweenY(bought).to(0).in(500).`then`.

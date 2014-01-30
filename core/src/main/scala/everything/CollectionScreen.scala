@@ -15,9 +15,8 @@ import pythagoras.f.{Dimension, MathUtil}
 import react.{IntValue, Value}
 import tripleplay.anim.Flicker
 import tripleplay.ui._
-import tripleplay.ui.layout.AxisLayout
-import tripleplay.ui.layout.TableLayout
-import tripleplay.util.Interpolator
+import tripleplay.ui.layout.{AxisLayout, TableLayout}
+import tripleplay.util.{Interpolator, StyledText}
 
 import com.threerings.everything.data._
 
@@ -114,7 +113,7 @@ class CollectionScreen (game :Everything, who :PlayerName) extends EveryScreen(g
 
     abstract class FloatingLabel (val text :String, parent :ParentLabel, val next :FloatingLabel) {
       lazy val image = renderImage
-      def renderImage = UI.collectCfg.toImage(text)
+      def renderImage = StyledText.span(text, UI.collectStyle).toImage()
 
       def left :Float = if (parent == null) 0 else parent.left + 15
       def last :FloatingLabel = if (next == nil) this else next.last
@@ -183,7 +182,7 @@ class CollectionScreen (game :Everything, who :PlayerName) extends EveryScreen(g
       text :String, kidCount :Int, parent :ParentLabel, next :FloatingLabel, sel :Selection
     ) extends FloatingLabel(text, parent, next) {
 
-      val numImg = UI.statusCfg.toImage(kidCount.toString)
+      val numImg = StyledText.span(kidCount.toString, UI.statusStyle).toImage()
       lazy val children = makeChildren
       lazy val lastChild = children.last
 
@@ -293,13 +292,11 @@ class CollectionScreen (game :Everything, who :PlayerName) extends EveryScreen(g
                 val pie = UI.pieImage(s.owned / s.things.toFloat, 8)
                 override def renderImage = {
                   val avail = size.width - left - pie.width - 2
-                  var cfg = UI.collectCfg
-                  var lay = cfg.layout(text)
-                  while (lay.width > avail && cfg.format.font.size > 10) {
-                    cfg = cfg.withFont(cfg.format.font.derive(cfg.format.font.size-1))
-                    lay = cfg.layout(text)
+                  var stxt = StyledText.span(text, UI.collectStyle)
+                  while (stxt.width > avail && stxt.style.font.size > 10) {
+                    stxt = stxt.resize(stxt.style.font.size-1)
                   }
-                  cfg.toImage(lay)
+                  stxt.toImage()
                 }
 
                 override def renderSelf (surf :Surface, x :Float, y :Float, maxy :Float) = {
