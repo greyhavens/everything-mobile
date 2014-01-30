@@ -8,11 +8,13 @@ import playn.core.PlayN._
 import playn.core._
 import pythagoras.f.{Dimension, IDimension, IPoint, FloatMath, Point}
 import react.{Value, UnitSignal}
+import scala.util.Random
+
 import tripleplay.anim.Animation
 import tripleplay.shaders.RotateYShader
 import tripleplay.ui._
 import tripleplay.ui.layout._
-import tripleplay.util.Interpolator
+import tripleplay.util.{Interpolator, StyledText, TextStyle}
 
 import com.threerings.everything.data._
 
@@ -37,6 +39,11 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
   val cardSize = new Dimension(UI.megaCard.width, UI.megaCard.height-4-12)
   val cardPos = new Point((width-cardSize.width)/2, 0)
   val info = UI.vgroup0().setConstraint(AxisLayout.stretched(2))
+
+  // DEBUG: key to trigger series complete animation
+  // _dbag.add(game.keyDown.connect(slot { k =>
+  //   if (k == Key.C) displayCompleteAnim()
+  // }))
 
   abstract class CardGroup (cardp :ThingCardPlus)
       extends Group(AxisLayout.vertical().offStretch.gap(0)) {
@@ -233,6 +240,12 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
       info.add(countLabel(cardp, source.counts))
     }
 
+    // if they just completed this series, show some fanfare
+    source.counts match {
+      case Some((_, 0)) => displayCompleteAnim()
+      case _ => // nevermind
+    }
+
     this
   }
 
@@ -323,6 +336,41 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
       // trigger the download and display of the next card
       _source.viewNext(CardScreen.this, dir)
     }
+  }
+
+  protected def displayCompleteAnim () {
+    val bigStyle = TextStyle.normal(UI.machineFont(46), UI.textColor).withOutline(0xFFFFFFFF, 2)
+    val biggerStyle = bigStyle.withFont(UI.machineFont(72))
+
+    def splashIn (preDelay :Long, text :ImageLayer, y :Float, midDelay :Long,
+                  destX :Float, destY :Float) {
+      text.setOrigin(text.width/2, text.height/2).setScale(0.01f).setDepth(Short.MaxValue)
+      iface.animator.delay(preDelay).`then`.
+        addAt(layer, text, width/2, y).`then`.
+        tweenScale(text).easeOut.to(3).in(200).`then`.
+        tweenScale(text).easeIn.to(1).in(300).`then`.
+        delay(midDelay).`then`.
+        tweenXY(text).easeOut.to(destX, destY).in(500).`then`.
+        destroy(text)
+    }
+
+    val series = StyledText.span("SERIES", biggerStyle).toLayer()
+    val sy = height/2-series.height/2
+    splashIn(500, series, sy, 2000, -series.width/2, sy)
+
+    val complete = StyledText.span("COMPLETE!", bigStyle).toLayer()
+    val cy = height/2+complete.height/2
+    splashIn(1000, complete, cy, 1500, width+complete.width/2, cy)
+
+    val wtxt = Random.shuffle(Seq("YAY!", "WOO!", "YIPPEE!", "WHEE!", "HOORAY!")).head
+    val woo = StyledText.span(wtxt, bigStyle).toLayer()
+    woo.setOrigin(woo.width/2, woo.height/2).setDepth(Short.MaxValue)
+    iface.animator.delay(4000).`then`.
+      addAt(layer, woo, width/2, -woo.height/2).`then`.
+      tweenY(woo).easeOut.to(height/2).in(300).`then`.
+      delay(300).`then`.
+      tweenY(woo).easeOut.to(height+woo.height/2).in(300).`then`.
+      destroy(woo)
   }
 
   protected def showShareMenu () {
