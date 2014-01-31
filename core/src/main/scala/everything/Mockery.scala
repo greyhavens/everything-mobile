@@ -100,6 +100,7 @@ object Mockery extends EveryService with GameService {
 
   // EveryService methods
   def validateSession (fbToken :String, tzOffset :Int) = {
+    val now = System.currentTimeMillis
     val data = new SessionData
     data.name = player("Testy", "Testerson", 2, 2)
     data.coins = coins.get
@@ -107,12 +108,12 @@ object Mockery extends EveryService with GameService {
     data.likes = new ArrayList[JInteger]
     data.dislikes = new ArrayList[Integer]
     data.gridsConsumed = 5
-    data.gridExpires = System.currentTimeMillis + 24*60*60*1000L
+    data.gridExpires = now + 24*60*60*1000L
     data.news = news("No gnus is good gnus.")
     data.everythingURL = "http://apps.facebook.com/everythingcandidate"
     data.backendURL = "https://everything-candidate.herokuapp.com/"
     data.facebookAppId = "107211406428"
-    data.gifts = List()
+    data.gifts = List(FakeData.yanluoCard(now).toThingCard)
     data.notices = Seq(new Notice(Notice.Kind.FRIEND_JOINED, "Testy Testerson", 500),
                        new Notice(Notice.Kind.FRIEND_JOINED, "Dolly Pardon\tMahatma Ghandi", 1000),
                        new Notice(Notice.Kind.PLAYED_MOBILE, null, 2000))
@@ -182,7 +183,7 @@ object Mockery extends EveryService with GameService {
 
   def flipCard (gridId :Int, pos :Int, expectCost :Int) = {
     val card = cards(pos)
-    def cardres = {
+    def flipres = {
       val r = new FlipResult
       r.card = card
       r.haveCount = 1
@@ -202,11 +203,11 @@ object Mockery extends EveryService with GameService {
           grid.slots(pos) = SlotStatus.FLIPPED
           grid.unflipped(card.thing.rarity.ordinal) -= 1
           grid.flipped(pos) = card.toThingCard
-          success(cardres)
+          success(flipres)
         }
 
       case SlotStatus.FLIPPED =>
-        success(cardres)
+        success(flipres)
 
       case _ => failure(s"Card gone: ${grid.slots(pos)}")
     }
@@ -252,7 +253,17 @@ object Mockery extends EveryService with GameService {
   }
 
   def openGift (thingId :Int, created :Long) = {
-    failure("TODO")
+    cards.find(c => c.thing.thingId == thingId) match {
+      case None => failure("No such card " + thingId)
+      case Some(card) =>
+        val res = new GiftResult
+        res.card = card
+        res.haveCount = 1
+        res.thingsRemaining = 10
+        res.trophies = List()
+        res.message = "Who was that man?"
+        success(res)
+    }
   }
 
   def getShopInfo () = success({
