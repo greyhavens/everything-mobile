@@ -405,8 +405,10 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
         // (s"$me got the $thing from ${card.giver}.", "got_gift", card.giver.facebookId.toString)
         ("got_gift", card.giver.facebookId.toString)
 
+    val url = game.sess.get.backendURL +
+      s"#CARD~${card.owner.userId}~${card.thing.thingId}~${card.received}"
     game.fb.shareGotCard(card.thing.name, card.thing.descrip, game.cardImageURL(card.thing.image),
-                         game.sess.get.everythingURL, Category.getHierarchy(card.categories),
+                         url, Category.getHierarchy(card.categories),
                          card.getSeries.toString, tgtId, ref).
       onFailure(onFailure).
       onSuccess(slot { id => PlayN.log.info(s"Shared on FB $id.") })
