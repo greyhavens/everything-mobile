@@ -44,8 +44,12 @@ object EverythingJava {
     val facebook = new Facebook {
       def isAuthed = true
       def authenticate (forceReauth :Boolean) = RFuture.success("test:" + fbId)
-      def shareGotCard (name :String, descrip :String, image :String, link :String, category :String,
-                        series :String, tgtFriendId :String, ref :String) = RFuture.success("TODO")
+      def shareGotCard (name :String, descrip :String, image :String, link :String, cat :String,
+                        series :String, tgtFriendId :String, ref :String) = {
+        println(s"Share to FB [name=$name, desc=$descrip, image=$image, link=$link, cat=$cat, " +
+          s"series=$series, tgtFriend=$tgtFriendId, ref=$ref]")
+        RFuture.success("TODO")
+      }
     }
 
     val device = new Device {
