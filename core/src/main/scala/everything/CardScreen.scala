@@ -242,7 +242,7 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
 
     // if they just completed this series, show some fanfare
     source.counts match {
-      case Some((_, 0)) => displayCompleteAnim()
+      case Some((0, 0)) => displayCompleteAnim()
       case _ => // nevermind
     }
 
@@ -392,7 +392,7 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
 
   protected def shareToFacebook (card :Card, counts :Option[(Int,Int)]) {
     val (ref, tgtId) =
-      if (counts.map(_._2 == 0).getOrElse(false))
+      if (counts.map(_ == (0, 0)).getOrElse(false))
         // (s"$me got the $thing card and completed the ${card.getSeries} series!", "got_comp", null)
         ("got_comp", null) // TODO: how to express series completion as open graph object?
       else if (card.giver == null)
