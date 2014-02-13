@@ -37,7 +37,7 @@ object FakeData {
   )
 
   def yanluoCard (created :Long) = card(
-    mikeB, Array(mythology, general, psychopomps), yanluo, 6, 10, created, mikeD)
+    mikeB, Array(mythology, general, psychopomps), yanluo, 6, 10, created, null)
 
   val maltesers = thing(
     id = 2,
