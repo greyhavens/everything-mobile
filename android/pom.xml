@@ -28,10 +28,10 @@
     </dependency>
 
     <dependency>
-      <groupId>com.github.avianey</groupId>
+      <groupId>fr.avianey</groupId>
       <artifactId>facebook-android-api</artifactId>
-      <version>3.5.1</version>
-      <type>apklib</type>
+      <version>3.6.0</version>
+      <type>aar</type>
     </dependency>
 
     <!-- installed locally via https://github.com/JakeWharton/gms-mvn-install -->
