@@ -97,14 +97,15 @@ public class DroidBook implements Facebook {
     public RFuture<String> shareGotCard (String name, String descrip, String image, String link,
                                          String category, String series, String tgtFriendId,
                                          String ref) {
-        Map<String,String> props = new HashMap<String,String>();
-        props.put("title", name);
-        props.put("description", descrip);
-        props.put("image", image);
-        props.put("url", link);
-        props.put("category", category);
-        props.put("series", series);
-        return showGraphDialog("get", "card", props, tgtFriendId, ref);
+        // Map<String,String> props = new HashMap<String,String>();
+        // props.put("title", name);
+        // props.put("description", descrip);
+        // props.put("image", image);
+        // props.put("url", link);
+        // props.put("category", category);
+        // props.put("series", series);
+        // return showGraphDialog("get", "card", props, tgtFriendId, ref);
+        return showDialog(name, category, descrip, image, link, ref, tgtFriendId);
     }
 
     public RFuture<String> showDialog (String name, String caption, String descrip, String picURL,
