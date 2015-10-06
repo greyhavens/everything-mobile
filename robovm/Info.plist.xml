@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleDisplayName</key>
+    <string>${app.name}</string>
+    <key>CFBundleExecutable</key>
+    <string>${app.executable}</string>
+    <key>CFBundleIdentifier</key>
+    <string>${app.id}</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>${app.name}</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>${app.version}</string>
+    <key>CFBundleSignature</key>
+    <string>????</string>
+    <key>CFBundleVersion</key>
+    <string>${app.build}</string>
+
+    <key>MinimumOSVersion</key>
+    <string>7.0</string>
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+      <string>armv7</string>
+    </array>
+    <key>UIDeviceFamily</key>
+    <array>
+      <integer>1</integer>
+      <integer>2</integer>
+    </array>
+
+    <key>UIAppFonts</key>
+    <array>
+      <string>assets/fonts/copper.ttf</string>
+      <string>assets/fonts/josschrift.ttf</string>
+      <string>assets/fonts/treasure.ttf</string>
+    </array>
+
+    <key>UIStatusBarHidden</key>
+    <false/>
+    <key>UIStatusBarStyle</key>
+    <string>UIStatusBarStyleBlackTranslucent</string>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+      <string>UIInterfaceOrientationPortrait</string>
+      <string>UIInterfaceOrientationPortraitUpsideDown</string>
+    </array>
+
+    <key>XSAppIconAssets</key>
+    <string>Resources/Images.xcassets/AppIcons.appiconset</string>
+    <key>XSLaunchImageAssets</key>
+    <string>Resources/Images.xcassets/LaunchImage.launchimage</string>
+
+    <key>NSAppTransportSecurity</key>
+    <dict>
+      <key>NSExceptionDomains</key>
+      <dict>
+        <key>s3.amazonaws.com</key>
+        <dict>
+          <key>NSExceptionAllowsInsecureHTTPLoads</key>
+          <true/>
+<!--
+          <key>NSIncludesSubdomains</key>
+          <false/>
+          <key>NSExceptionRequiresForwardSecrecy</key>
+          <true/>
+          <key>NSExceptionMinimumTLSVersion</key>
+          <string>TLSv1.2</string>
+          <key>NSThirdPartyExceptionAllowsInsecureHTTPLoads</key>
+          <false/>
+          <key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
+          <true/>
+          <key>NSThirdPartyExceptionMinimumTLSVersion</key>
+          <string>TLSv1.2</string>
+          <key>NSRequiresCertificateTransparency</key>
+          <false/>
+-->
+        </dict>
+      </dict>
+    </dict>
+
+    <key>CFBundleURLTypes</key>
+    <array>
+      <dict>
+        <key>CFBundleURLName</key>
+        <string>facebook</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>fb118743765954</string>
+        </array>
+      </dict>
+    </array>
+    <key>FacebookAppID</key>
+    <string>118743765954</string>
+  </dict>
+</plist>
