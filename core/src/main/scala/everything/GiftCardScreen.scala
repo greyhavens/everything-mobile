@@ -72,7 +72,7 @@ class GiftCardScreen (
     addButton("Cancel", ()).
     addButton("Give", giveCard(friend, "")).
     addButton("+Message", keyboard.getText(
-      Keyboard.TextType.DEFAULT, s"Message to ${friend.name}:", "", cb { msg =>
+      Keyboard.TextType.DEFAULT, s"Message to ${friend.name}:", "", cb("give_text") { msg =>
         if (msg == null) showGivePopup(friend)
         else if (platformType != Platform.Type.IOS) giveCard(friend, msg)
         // for some reason, iOS (7 beta at least) causes some jerkiness when dismissing the getText

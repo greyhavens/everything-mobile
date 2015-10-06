@@ -131,7 +131,7 @@ class CardButton (
     // note that we got all of our card data in reveal
     _card = res.card
     // wait until our thing image is ready, then start the flip
-    cache(res.card.thing.image).addCallback(cb { thing =>
+    cache(res.card.thing.image).addCallback(cb(s"cbutton:${res.card.thing.image}") { thing =>
       shaking.update(false) // we can stop shaking now
       // flip the card over (use the current image as the old image for the flip)
       animateFlip(ilayer.image)(viewCard(res.card, null, null))

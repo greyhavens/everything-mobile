@@ -60,7 +60,7 @@ object UI {
         else new StyledText.Block(card.name, smallStyle, smallWrap, TextBlock.Align.CENTER)
       }
       val rarity = StyledText.span(card.rarity.toString, style)
-      cache(card.image).addCallback(cb { thing =>
+      cache(card.image).addCallback(cb(s"card:${card.image}") { thing =>
         // TODO: if the name wraps and cuts into the card area, use a smaller imgBox to determine
         // how much we should scale our card, and move the card image down as well
         val scale = math.min(imgBox.width/thing.width, imgBox.height/thing.height)
@@ -283,14 +283,14 @@ object UI {
   def friendImage (name :PlayerName) :Image = friendImage(name.facebookId)
   def friendImage (fbId :Long) :Image = {
     _friends.getOrElseUpdate(fbId, assets.getRemoteImage(
-      s"https://graph.facebook.com/$fbId/picture?width=100&height=100"))
+      s"https://graph.facebook.com/v2.4/$fbId/picture?width=100&height=100"))
   }
   private val _friends = MMap[Long,Image]()
 
   def frameImage (image :Image, width :Float, height :Float) = {
     val frame = graphics.createImage(width, height)
     // frame.canvas.setFillColor(0xFFCC99CC).fillRect(0, 0, width, height)
-    image.addCallback(cb { img =>
+    image.addCallback(cb(s"frameImage:$image") { img =>
       val b = 1f
       val scale = math.min((width-2*b)/img.width, (height-2*b)/img.height)
       val (iwidth, iheight) = (img.width*scale, img.height*scale)

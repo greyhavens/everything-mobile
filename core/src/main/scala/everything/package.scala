@@ -18,9 +18,11 @@ package object everything {
     def apply (a :A) = f(a)
   }
 
-  def cb[T] (f :T => Unit) = new Callback[T] {
+  def cb[T] (id: String)(f :T => Unit) = new Callback[T] {
     def onSuccess (t :T) = f(t)
-    def onFailure (cause :Throwable) {} // unused
+    def onFailure (cause :Throwable) {
+      System.err.println(s"Callback failed: $id")
+      cause.printStackTrace(System.err) }
   }
 
   implicit def slot[A] (f :Function1[A,_]) = new Slot[A] {
