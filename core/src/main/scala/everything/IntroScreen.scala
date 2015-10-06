@@ -9,7 +9,7 @@ import tripleplay.ui._
 class IntroScreen (game :Everything) extends EveryScreen(game) {
 
   override def createUI () {
-    val arrow = "\u2b07"
+    val arrow = "\u261F"
     val go = new Button("Let's Go!") {
       override protected def layout () {
         super.layout()
@@ -25,11 +25,11 @@ class IntroScreen (game :Everything) extends EveryScreen(game) {
                addStyles(Style.HALIGN.center),
              UI.stretchShim(),
              UI.headerLabel("Wake up in morning"),
-             UI.glyphLabel(arrow),
+             UI.label(arrow, UI.titleFont),
              UI.headerLabel("Flip cards"),
-             UI.glyphLabel(arrow),
+             UI.label(arrow, UI.titleFont),
              UI.headerLabel("Trade with friends"),
-             UI.glyphLabel(arrow),
+             UI.label(arrow, UI.titleFont),
              UI.headerLabel("Amass awesome collection!"),
              UI.stretchShim(),
              UI.bgroup(go),
