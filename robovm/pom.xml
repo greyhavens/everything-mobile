@@ -30,6 +30,29 @@
     </dependency>
   </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>properties-maven-plugin</artifactId>
+        <version>1.0-alpha-2</version>
+        <executions>
+          <execution>
+            <phase>initialize</phase>
+            <goals>
+              <goal>read-project-properties</goal>
+            </goals>
+            <configuration>
+              <files>
+                <file>../etc/app.properties</file>
+              </files>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
   <profiles>
     <profile>
       <id>robosim</id>
@@ -63,11 +86,43 @@
             <groupId>org.robovm</groupId>
             <artifactId>robovm-maven-plugin</artifactId>
             <version>${robovm.maven.version}</version>
+            <configuration>
+              <iosSignIdentity>${test_app_signer}</iosSignIdentity>
+              <iosProvisioningProfile>${test_app_cert}</iosProvisioningProfile>
+              <arch>arm64</arch>
+            </configuration>
             <executions>
               <execution>
                 <phase>install</phase>
                 <goals>
                   <goal>ios-device</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <!-- mvn package -Proboipa -->
+    <profile>
+      <id>ipa</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.robovm</groupId>
+            <artifactId>robovm-maven-plugin</artifactId>
+            <version>${robovm.maven.version}</version>
+            <configuration>
+              <iosSignIdentity>${ipa_app_signer}</iosSignIdentity>
+              <iosProvisioningProfile>${ipa_app_cert}</iosProvisioningProfile>
+              <ipaArchs>thumbv7:arm64</ipaArchs>
+            </configuration>
+            <executions>
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>create-ipa</goal>
                 </goals>
               </execution>
             </executions>

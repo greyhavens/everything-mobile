@@ -5,6 +5,7 @@
 package everything;
 
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,7 +54,7 @@ public class IOSDevice implements Device {
   }
 
   public int hourOfDay () {
-    return 0; // TODO: return DateTime.Now.Hour;
+    return Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
   }
 
   public void scheduleGridNotification (long when) {
@@ -80,11 +81,10 @@ public class IOSDevice implements Device {
     return _paymentObs.buyProduct(sku);
   }
 
-  private static class ProductFetcher implements SKProductsRequestDelegate {
+  private static class ProductFetcher extends SKProductsRequestDelegateAdapter {
     public ProductFetcher (Callback<Product[]> cb) {
       _cb = cb;
     }
-
     @Override public void didReceiveResponse (SKProductsRequest req, SKProductsResponse rsp) {
       Product[] products = new Product[rsp.getProducts().size()];
       int ii = 0;
@@ -94,13 +94,9 @@ public class IOSDevice implements Device {
       }
       _cb.onSuccess(products);
     }
-
     @Override public void didFail (SKRequest req, NSError error) {
       _cb.onFailure(new Exception(error.getLocalizedDescription()));
     }
-
-    @Override public void didFinish(SKRequest req) {} // NADA
-
     protected final Callback<Product[]> _cb;
   }
 

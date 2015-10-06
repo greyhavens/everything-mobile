@@ -3,7 +3,7 @@
   <mainClass>${app.mainclass}</mainClass>
   <os>ios</os>
   <arch>thumbv7</arch>
-  <treeShaker>conservative</treeShaker>
+  <treeShaker>aggressive</treeShaker>
   <resources>
     <resource>
       <directory>resources</directory>
@@ -16,8 +16,7 @@
     <pattern>com.threerings.everything.data.*</pattern>
     <pattern>com.threerings.everything.rpc.*</pattern>
     <!-- these are needed for Storage -->
-    <pattern>SQLite.JDBCDriver</pattern>
-    <pattern>SQLite.JDBC2z.JDBCConnection</pattern>
+    <pattern>SQLite.**</pattern>
     <!-- these are needed for WebSocket support in Net -->
     <pattern>com.android.org.conscrypt.OpenSSLProvider</pattern>
     <pattern>org.apache.harmony.security.provider.cert.DRLCertFactory</pattern>

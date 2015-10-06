@@ -37,15 +37,15 @@
     </profile>
     <profile>
       <id>robosim</id>
-      <modules>
-        <module>robovm</module>
-      </modules>
+      <modules><module>robovm</module></modules>
     </profile>
     <profile>
       <id>robodev</id>
-      <modules>
-        <module>robovm</module>
-      </modules>
+      <modules><module>robovm</module></modules>
+    </profile>
+    <profile>
+      <id>roboipa</id>
+      <modules><module>robovm</module></modules>
     </profile>
   </profiles>
 </project>
