@@ -106,7 +106,7 @@
 
     <!-- mvn package -Proboipa -->
     <profile>
-      <id>ipa</id>
+      <id>roboipa</id>
       <build>
         <plugins>
           <plugin>
