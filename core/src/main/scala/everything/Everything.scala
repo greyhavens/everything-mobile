@@ -23,7 +23,7 @@ class Everything (mock :Boolean, val device :Device, val fb :Facebook) extends G
   val herokuId = if (isCandidate) "everything-candidate" else "everything"
   val facebookNS = if (isCandidate) "everythingcandidate" else "everythinggame"
 
-  val svcURL = s"http://$herokuId.herokuapp.com/json/"
+  val svcURL = s"https://$herokuId.herokuapp.com/json/"
   val everySvc :EveryService = if (mock) Mockery else new EveryServiceClient(this, svcURL)
   val gameSvc  :GameService  = if (mock) Mockery else new GameServiceClient(this, svcURL)
 
