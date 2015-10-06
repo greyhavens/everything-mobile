@@ -259,8 +259,8 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
                UI.button("Sell") { maybeSellCard(_cardp.thing) { _source.queueSell() ; pop() }},
                UI.stretchShim(),
                UI.button("Gift") { new GiftCardScreen(game, cache, _cardp, _source).push() },
-               UI.stretchShim(),
-               UI.shareButton { showShareMenu() },
+               // UI.stretchShim(),
+               // UI.shareButton { showShareMenu() },
                UI.stretchShim()))
   }
 
@@ -373,44 +373,44 @@ class CardScreen (game :Everything, cache :UI.ImageCache) extends EveryScreen(ga
       destroy(woo)
   }
 
-  protected def showShareMenu () {
-    // "force" the loading of the card (which we'll need if we actually share); this allows the
-    // loading to happen while the user is choosing a network; hide that latency!
-    _source.cardF.onSuccess(unitSlot { /*noop!*/ })
+  // protected def showShareMenu () {
+  //   // "force" the loading of the card (which we'll need if we actually share); this allows the
+  //   // loading to happen while the user is choosing a network; hide that latency!
+  //   _source.cardF.onSuccess(unitSlot { /*noop!*/ })
 
-    val dialog = new Dialog() {
-      override def layout () = AxisLayout.vertical // no off-stretch
-    }
-    dialog.addTitle("Share to...").
-      add(new Button("Facebook", Icons.image(UI.getImage("socks/facebook.png"))).onClick(unitSlot {
-        dialog.dismiss()
-        _source.cardF.onSuccess(slot { card => shareToFacebook(card, _source.counts) })
-      })).
-      addButton("Cancel", { dialog.dismiss() }).
-      display()
-  }
+  //   val dialog = new Dialog() {
+  //     override def layout () = AxisLayout.vertical // no off-stretch
+  //   }
+  //   dialog.addTitle("Share to...").
+  //     add(new Button("Facebook", Icons.image(UI.getImage("socks/facebook.png"))).onClick(unitSlot {
+  //       dialog.dismiss()
+  //       _source.cardF.onSuccess(slot { card => shareToFacebook(card, _source.counts) })
+  //     })).
+  //     addButton("Cancel", { dialog.dismiss() }).
+  //     display()
+  // }
 
-  protected def shareToFacebook (card :Card, counts :Option[(Int,Int)]) {
-    val (ref, tgtId) =
-      if (counts.map(_ == (0, 0)).getOrElse(false))
-        // (s"$me got the $thing card and completed the ${card.getSeries} series!", "got_comp", null)
-        ("got_comp", null) // TODO: how to express series completion as open graph object?
-      else if (card.giver == null)
-        // (s"$me got the $thing card", "got_card", null)
-        ("got_card", null)
-      else if (card.giver.userId == Card.BIRTHDAY_GIVER_ID)
-        // (s"$me got the $thing card as a birthday present!", "got_bgift", null)
-        ("got_bgift", null)
-      else
-        // (s"$me got the $thing from ${card.giver}.", "got_gift", card.giver.facebookId.toString)
-        ("got_gift", card.giver.facebookId.toString)
+  // protected def shareToFacebook (card :Card, counts :Option[(Int,Int)]) {
+  //   val (ref, tgtId) =
+  //     if (counts.map(_ == (0, 0)).getOrElse(false))
+  //       // (s"$me got the $thing card and completed the ${card.getSeries} series!", "got_comp", null)
+  //       ("got_comp", null) // TODO: how to express series completion as open graph object?
+  //     else if (card.giver == null)
+  //       // (s"$me got the $thing card", "got_card", null)
+  //       ("got_card", null)
+  //     else if (card.giver.userId == Card.BIRTHDAY_GIVER_ID)
+  //       // (s"$me got the $thing card as a birthday present!", "got_bgift", null)
+  //       ("got_bgift", null)
+  //     else
+  //       // (s"$me got the $thing from ${card.giver}.", "got_gift", card.giver.facebookId.toString)
+  //       ("got_gift", card.giver.facebookId.toString)
 
-    val url = game.sess.get.backendURL +
-      s"#CARD~${card.owner.userId}~${card.thing.thingId}~${card.received}"
-    game.fb.shareGotCard(card.thing.name, card.thing.descrip, game.cardImageURL(card.thing.image),
-                         url, Category.getHierarchy(card.categories),
-                         card.getSeries.toString, tgtId, ref).
-      onFailure(onFailure).
-      onSuccess(slot { id => PlayN.log.info(s"Shared on FB $id.") })
-  }
+  //   val url = game.sess.get.backendURL +
+  //     s"#CARD~${card.owner.userId}~${card.thing.thingId}~${card.received}"
+  //   game.fb.shareGotCard(card.thing.name, card.thing.descrip, game.cardImageURL(card.thing.image),
+  //                        url, Category.getHierarchy(card.categories),
+  //                        card.getSeries.toString, tgtId, ref).
+  //     onFailure(onFailure).
+  //     onSuccess(slot { id => PlayN.log.info(s"Shared on FB $id.") })
+  // }
 }

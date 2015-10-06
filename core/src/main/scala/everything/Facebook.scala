@@ -17,7 +17,7 @@ trait Facebook {
     * @return (via future) the user's Facebook auth token. */
   def authenticate (forceReauth :Boolean) :RFuture[String]
 
-  /** Shows a dialog allowing player to share that they got a card. */
-  def shareGotCard (name :String, descrip :String, image :String, link :String, category :String,
-                    series :String, tgtFriendId :String, ref :String) :RFuture[String]
+  // /** Shows a dialog allowing player to share that they got a card. */
+  // def shareGotCard (name :String, descrip :String, image :String, link :String, category :String,
+  //                   series :String, tgtFriendId :String, ref :String) :RFuture[String]
 }
