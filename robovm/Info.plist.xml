@@ -35,13 +35,8 @@
       <integer>2</integer>
     </array>
 
-    <key>UIAppFonts</key>
-    <array>
-      <string>assets/fonts/copper.ttf</string>
-      <string>assets/fonts/josschrift.ttf</string>
-      <string>assets/fonts/treasure.ttf</string>
-    </array>
-
+    <key>UIRequiresFullScreen</key>
+    <true/>
     <key>UIStatusBarHidden</key>
     <false/>
     <key>UIStatusBarStyle</key>
@@ -50,6 +45,18 @@
     <array>
       <string>UIInterfaceOrientationPortrait</string>
       <string>UIInterfaceOrientationPortraitUpsideDown</string>
+    </array>
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+      <string>UIInterfaceOrientationPortrait</string>
+      <string>UIInterfaceOrientationPortraitUpsideDown</string>
+    </array>
+
+    <key>UIAppFonts</key>
+    <array>
+      <string>assets/fonts/copper.ttf</string>
+      <string>assets/fonts/josschrift.ttf</string>
+      <string>assets/fonts/treasure.ttf</string>
     </array>
 
     <key>XSAppIconAssets</key>
